@@ -12,13 +12,12 @@ import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
 import android.view.MotionEvent
-import android.view.View
+import android.view.ViewConfiguration
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import android.widget.FrameLayout
 import com.dynamicisland.app.util.PreferencesHelper
 import kotlin.math.abs
-import kotlin.math.atan2
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -32,7 +31,12 @@ import kotlin.random.Random
  * - Continuous natural floating, tiny bounces, and physics tilts
  * - Autonomous drift engine: never sits in one spot for > 10 seconds (drifts every 4-8s)
  * - Drifts left, right, underneath to dangle playfully, or leans to one side
- * - Zero back-and-forth walking (pure buoyant floating companion)
+ * - DRAGGABLE by user, strictly constrained within leash radius!
+ * - Elastic spring-back oscillation when released
+ * - TAP INTERACTIONS:
+ *   * Sleep / Wake toggle: tapping sleepy pet wakes it up; tapping again nods it back to sleep
+ *   * Rapid multi-taps (3+ times): gets furiously angry for a few seconds with steam & rage!
+ *   * Single tap: winks, waves, giggles, or adjusts glasses!
  */
 class TetheredPetStageView @JvmOverloads constructor(
     context: Context,
@@ -44,7 +48,7 @@ class TetheredPetStageView @JvmOverloads constructor(
     private val prefs = PreferencesHelper(context)
     private val handler = Handler(Looper.getMainLooper())
 
-    // Leash Paint
+    // Leash Paints
     private val leashPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeWidth = 2.5f
@@ -68,24 +72,46 @@ class TetheredPetStageView @JvmOverloads constructor(
     private var currentDriftXDp = -24f
     private var currentDriftYDp = 22f
 
-    private var targetDriftXDp = -24f
-    private var targetDriftYDp = 22f
-
     private var floatBobYDp = 0f
     private var tiltAngleDeg = 0f
     private var leashSlackFactor = 1.0f
 
     private var driftAnimator: ValueAnimator? = null
     private var continuousFloatAnimator: ValueAnimator? = null
+    private var snapBackAnimator: ValueAnimator? = null
     private var isDriftEngineRunning = false
+
+    // Drag Gesture State
+    private var isDraggingPet = false
+    private var hasMoved = false
+    private var downTouchX = 0f
+    private var downTouchY = 0f
+    private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop.toFloat()
+
+    // Tap Interaction State
+    private var tapCount = 0
+    private var lastTapTimeMs = 0L
+    private var isTemporarilyAngry = false
+    private var savedMoodBeforeAnger = PixelPetView.PetMood.IDLE
+    private var isManuallyAwoken = false
 
     // Autonomous drift scheduler (every 4 to 8 seconds)
     private val driftRunnable = object : Runnable {
         override fun run() {
-            if (!isDriftEngineRunning) return
+            if (!isDriftEngineRunning || isDraggingPet) return
             pickNextFloatingSpot()
-            val nextDelayMs = Random.nextLong(4500L, 8500L) // 4.5s to 8.5s (never sits > 10s)
-            handler.postDelayed(this, nextDelayMs)
+            scheduleNextDrift()
+        }
+    }
+
+    private val angryResetRunnable = Runnable {
+        if (isTemporarilyAngry) {
+            isTemporarilyAngry = false
+            tapCount = 0
+            petView.setMood(savedMoodBeforeAnger)
+            petView.triggerIdleActivity(PixelPetView.IdleActivity.BLUSHING, 1400L) // Cute embarrassed blush
+            leashSlackFactor = 1.0f
+            invalidate()
         }
     }
 
@@ -117,17 +143,18 @@ class TetheredPetStageView @JvmOverloads constructor(
             repeatCount = ValueAnimator.INFINITE
             interpolator = AccelerateDecelerateInterpolator()
             addUpdateListener { anim ->
-                val p = anim.animatedValue as Float
-                val intensity = prefs.animationIntensity
+                if (!isDraggingPet) {
+                    val p = anim.animatedValue as Float
+                    val intensity = prefs.animationIntensity
 
-                floatBobYDp = sin(p) * (2.8f * intensity)
-                // Tilt sways based on horizontal position from camera
-                val baseTilt = (currentDriftXDp * 0.28f).coerceIn(-12f, 12f)
-                val dynamicSway = sin(p) * (2.0f * intensity)
-                tiltAngleDeg = baseTilt + dynamicSway
+                    floatBobYDp = sin(p) * (2.8f * intensity)
+                    val baseTilt = (currentDriftXDp * 0.28f).coerceIn(-12f, 12f)
+                    val dynamicSway = sin(p) * (2.0f * intensity)
+                    tiltAngleDeg = baseTilt + dynamicSway
 
-                updatePetViewLayout()
-                invalidate() // Redraw curved leash
+                    updatePetViewLayout()
+                    invalidate()
+                }
             }
         }
     }
@@ -140,42 +167,44 @@ class TetheredPetStageView @JvmOverloads constructor(
             continuousFloatAnimator?.start()
         }
 
-        // Initial spot selection
         pickNextFloatingSpot()
-        handler.postDelayed(driftRunnable, 5000L)
+        scheduleNextDrift()
     }
 
     fun stopDriftEngine() {
         isDriftEngineRunning = false
         handler.removeCallbacksAndMessages(null)
         driftAnimator?.cancel()
+        snapBackAnimator?.cancel()
         continuousFloatAnimator?.cancel()
+    }
+
+    private fun scheduleNextDrift() {
+        handler.removeCallbacks(driftRunnable)
+        val nextDelayMs = Random.nextLong(4500L, 8500L) // 4.5s to 8.5s (never sits > 10s)
+        handler.postDelayed(driftRunnable, nextDelayMs)
     }
 
     /**
      * Autonomous spot picker: floats to a new organic spot around the camera cutout
      */
     fun pickNextFloatingSpot() {
+        if (isDraggingPet) return
         val leashLength = prefs.leashLengthDp.toFloat()
 
         // Spots around the camera:
-        // 1. Left of camera
-        // 2. Right of camera
-        // 3. Directly underneath (dangling pendant)
-        // 4. Leaning left
-        // 5. Leaning right
-        // 6. Close hover looking at lens
+        // 0: Left, 1: Right, 2: Underneath dangling, 3: Lean Left, 4: Lean Right, 5: Close Hover
         val spotPick = Random.nextInt(6)
 
         val (nextX, nextY) = when (spotPick) {
-            0 -> Pair(-(leashLength * 0.75f), leashLength * 0.55f) // Left
-            1 -> Pair(leashLength * 0.75f, leashLength * 0.55f)  // Right
-            2 -> Pair(0f, leashLength * 0.95f)                  // Underneath dangling
-            3 -> Pair(-(leashLength * 0.55f), leashLength * 0.8f) // Lean left
-            4 -> Pair(leashLength * 0.55f, leashLength * 0.8f)  // Lean right
+            0 -> Pair(-(leashLength * 0.75f), leashLength * 0.55f)
+            1 -> Pair(leashLength * 0.75f, leashLength * 0.55f)
+            2 -> Pair(0f, leashLength * 0.95f)
+            3 -> Pair(-(leashLength * 0.55f), leashLength * 0.8f)
+            4 -> Pair(leashLength * 0.55f, leashLength * 0.8f)
             else -> Pair(
                 if (Random.nextBoolean()) -(leashLength * 0.4f) else (leashLength * 0.4f),
-                leashLength * 0.4f // Close hover
+                leashLength * 0.4f
             )
         }
 
@@ -183,6 +212,7 @@ class TetheredPetStageView @JvmOverloads constructor(
     }
 
     fun driftTo(targetXDp: Float, targetYDp: Float, durationMs: Long = 1600L) {
+        if (isDraggingPet) return
         val startX = currentDriftXDp
         val startY = currentDriftYDp
 
@@ -191,17 +221,49 @@ class TetheredPetStageView @JvmOverloads constructor(
             duration = durationMs
             interpolator = OvershootInterpolator(1.15f)
             addUpdateListener { anim ->
-                val f = anim.animatedFraction
-                currentDriftXDp = startX + ((targetXDp - startX) * f)
-                currentDriftYDp = startY + ((targetYDp - startY) * f)
-
-                // Leash sags and tightens dynamically with momentum
-                leashSlackFactor = 1f + (sin(f * Math.PI.toFloat()) * 0.35f)
-                updatePetViewLayout()
-                invalidate()
+                if (!isDraggingPet) {
+                    val f = anim.animatedFraction
+                    currentDriftXDp = startX + ((targetXDp - startX) * f)
+                    currentDriftYDp = startY + ((targetYDp - startY) * f)
+                    leashSlackFactor = 1f + (sin(f * Math.PI.toFloat()) * 0.35f)
+                    updatePetViewLayout()
+                    invalidate()
+                }
             }
         }
         driftAnimator?.start()
+    }
+
+    private fun performElasticSnapBack() {
+        val startX = currentDriftXDp
+        val startY = currentDriftYDp
+
+        // Snap back to nearest comfortable hover spot
+        val leashLength = prefs.leashLengthDp.toFloat()
+        val targetX = if (startX < -8f) -(leashLength * 0.65f) else if (startX > 8f) (leashLength * 0.65f) else 0f
+        val targetY = if (targetX == 0f) leashLength * 0.85f else leashLength * 0.55f
+
+        snapBackAnimator?.cancel()
+        snapBackAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = 650
+            interpolator = OvershootInterpolator(2.2f) // Elastic spring-back bounce
+            addUpdateListener { anim ->
+                val f = anim.animatedFraction
+                currentDriftXDp = startX + ((targetX - startX) * f)
+                currentDriftYDp = startY + ((targetY - startY) * f)
+                // Spring wobble in leash slack
+                leashSlackFactor = 0.5f + (sin(f * Math.PI.toFloat() * 3) * 0.5f * (1f - f))
+                updatePetViewLayout()
+                invalidate()
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    leashSlackFactor = 1.0f
+                    scheduleNextDrift()
+                }
+            })
+        }
+        snapBackAnimator?.start()
     }
 
     private fun updatePetViewLayout() {
@@ -248,12 +310,11 @@ class TetheredPetStageView @JvmOverloads constructor(
         canvas.drawCircle(anchorX, anchorY, ringRadius, anchorRingPaint)
         canvas.drawCircle(anchorX, anchorY, ringRadius * 0.45f, anchorCenterPaint)
 
-        // 2. Calculate Pet Attachment Point (Head Sprout at col 14, row 5 of Pet)
+        // 2. Calculate Pet Attachment Point (Head Sprout at top of Pet)
         val petSizePx = prefs.petSizeDp.dpToPx().toFloat()
         val petCenterXPx = anchorX + currentDriftXDp.dpToPx()
         val petCenterYPx = anchorY + (currentDriftYDp + floatBobYDp).dpToPx()
 
-        // Top of pet head sprout attachment
         val petTopX = petCenterXPx
         val petTopY = petCenterYPx - (petSizePx * 0.42f)
 
@@ -261,12 +322,11 @@ class TetheredPetStageView @JvmOverloads constructor(
         leashPath.reset()
         leashPath.moveTo(anchorX, anchorY + ringRadius)
 
-        // Calculate natural curved sagging control point
         val midX = (anchorX + petTopX) / 2f
         val midY = (anchorY + petTopY) / 2f
         val dist = sqrt(((petTopX - anchorX) * (petTopX - anchorX)) + ((petTopY - anchorY) * (petTopY - anchorY)))
 
-        // Leash sags down slightly with gravity
+        // When dragging to max distance, leash is taut; when slack, sags with gravity
         val sagY = (dist * 0.18f * leashSlackFactor)
         val controlX = midX + (currentDriftXDp.dpToPx() * 0.12f)
         val controlY = midY + sagY
@@ -278,29 +338,173 @@ class TetheredPetStageView @JvmOverloads constructor(
         canvas.drawCircle(petTopX, petTopY, 2.dpToPx().toFloat(), anchorRingPaint)
     }
 
+    /**
+     * Touch dispatch: handles both dragging within leash radius AND tapping interactions
+     */
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (!prefs.isTouchReactionEnabled) {
             return false // 100% click-through when touch reactions disabled
         }
 
-        // Check if touch hit near the pet sprite
-        if (ev.action == MotionEvent.ACTION_DOWN) {
-            val petSizePx = prefs.petSizeDp.dpToPx().toFloat()
-            val petCenterXPx = (width / 2f) + currentDriftXDp.dpToPx()
-            val petCenterYPx = 8.dpToPx().toFloat() + (currentDriftYDp + floatBobYDp).dpToPx()
+        val anchorX = width / 2f
+        val anchorY = 8.dpToPx().toFloat()
+        val petSizePx = prefs.petSizeDp.dpToPx().toFloat()
+        val petCenterXPx = anchorX + currentDriftXDp.dpToPx()
+        val petCenterYPx = anchorY + (currentDriftYDp + floatBobYDp).dpToPx()
 
-            val dx = abs(ev.x - petCenterXPx)
-            val dy = abs(ev.y - petCenterYPx)
+        when (ev.action) {
+            MotionEvent.ACTION_DOWN -> {
+                val dx = abs(ev.x - petCenterXPx)
+                val dy = abs(ev.y - petCenterYPx)
 
-            if (dx <= petSizePx * 0.65f && dy <= petSizePx * 0.65f) {
-                petView.handleUserTap()
-                // Little leash jiggle on tap
-                leashSlackFactor = 1.6f
-                postDelayed({ leashSlackFactor = 1.0f; invalidate() }, 300)
-                return true
+                // Generous hit box around pet (85% of pet size radius)
+                if (dx <= petSizePx * 0.85f && dy <= petSizePx * 0.85f) {
+                    isDraggingPet = true
+                    hasMoved = false
+                    downTouchX = ev.x
+                    downTouchY = ev.y
+
+                    // Pause drift while user holds pet
+                    handler.removeCallbacks(driftRunnable)
+                    driftAnimator?.cancel()
+                    snapBackAnimator?.cancel()
+
+                    parent?.requestDisallowInterceptTouchEvent(true)
+                    return true
+                }
+                return false // Touches outside the pet pass through to underlying apps
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                if (isDraggingPet) {
+                    val moveDist = sqrt(
+                        ((ev.x - downTouchX) * (ev.x - downTouchX)) +
+                                ((ev.y - downTouchY) * (ev.y - downTouchY))
+                    )
+                    if (moveDist > touchSlop) {
+                        hasMoved = true
+                    }
+
+                    // Vector from Camera Anchor to touch point
+                    var vecX = ev.x - anchorX
+                    var vecY = ev.y - anchorY
+
+                    // Strict leash radius constraint (cannot exceed max leash radius)
+                    val distFromAnchor = sqrt(vecX * vecX + vecY * vecY)
+                    val maxLeashRadiusPx = (prefs.leashLengthDp * 1.15f).dpToPx().toFloat()
+
+                    if (distFromAnchor > maxLeashRadiusPx && distFromAnchor > 0f) {
+                        val clampScale = maxLeashRadiusPx / distFromAnchor
+                        vecX *= clampScale
+                        vecY *= clampScale
+                    }
+
+                    // Pet follows touch within leash radius
+                    val density = context.resources.displayMetrics.density
+                    currentDriftXDp = vecX / density
+                    currentDriftYDp = (vecY - (floatBobYDp * density)) / density
+
+                    // Dynamic tilt and tight leash tension during drag
+                    tiltAngleDeg = (currentDriftXDp * 0.35f).coerceIn(-25f, 25f)
+                    leashSlackFactor = 0.25f // Taut leash string!
+
+                    updatePetViewLayout()
+                    invalidate()
+                    return true
+                }
+            }
+
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (isDraggingPet) {
+                    isDraggingPet = false
+
+                    if (!hasMoved) {
+                        // User tapped the pet without dragging!
+                        handlePetInteractionTap()
+                        scheduleNextDrift()
+                    } else {
+                        // User released dragged pet -> Elastic spring-back!
+                        performElasticSnapBack()
+                    }
+                    return true
+                }
             }
         }
+
         return super.dispatchTouchEvent(ev)
+    }
+
+    /**
+     * Handles rich contextual tap interactions:
+     * - Rapid multi-taps (3+ times): Explodes into angry tantrum with steam for a few seconds!
+     * - Sleepy pet: Wakes up on tap; tapping again nods it back to sleep!
+     * - Single tap: Contextual reactions (happy wink, wave, chuckle, nerd glasses push)
+     */
+    private fun handlePetInteractionTap() {
+        val now = System.currentTimeMillis()
+        if (now - lastTapTimeMs < 650L) {
+            tapCount++
+        } else {
+            tapCount = 1
+        }
+        lastTapTimeMs = now
+
+        // 1. REPEATED RAPID TAPS -> GET ANGRY FOR A FEW SECONDS!
+        if (tapCount >= 3) {
+            triggerTemperTantrum()
+            return
+        }
+
+        // 2. SLEEP / WAKE TOGGLE
+        if (petView.getMood() == PixelPetView.PetMood.SLEEPY) {
+            // WAKE UP!
+            isManuallyAwoken = true
+            petView.setMood(PixelPetView.PetMood.HAPPY)
+            petView.triggerIdleActivity(PixelPetView.IdleActivity.STARTLED, 700L)
+            postDelayed({
+                if (petView.getMood() == PixelPetView.PetMood.HAPPY) {
+                    petView.triggerIdleActivity(PixelPetView.IdleActivity.YAWNING, 1400L)
+                }
+            }, 750L)
+            return
+        } else if (isManuallyAwoken) {
+            // GO BACK TO SLEEP!
+            isManuallyAwoken = false
+            petView.triggerIdleActivity(PixelPetView.IdleActivity.YAWNING, 1200L)
+            postDelayed({
+                petView.setMood(PixelPetView.PetMood.SLEEPY)
+            }, 1250L)
+            return
+        }
+
+        // 3. CONTEXTUAL MOOD TAP
+        petView.handleUserTap()
+
+        // Playful leash jiggle
+        leashSlackFactor = 1.6f
+        postDelayed({ leashSlackFactor = 1.0f; invalidate() }, 300)
+    }
+
+    /**
+     * Angry tantrum reaction when repeatedly tapped:
+     * Turns furious red, vents steam, trembles with rage for 3.8 seconds, then blushes and calms down!
+     */
+    private fun triggerTemperTantrum() {
+        handler.removeCallbacks(angryResetRunnable)
+        if (!isTemporarilyAngry) {
+            savedMoodBeforeAnger = petView.getMood()
+            isTemporarilyAngry = true
+        }
+
+        petView.setMood(PixelPetView.PetMood.ANGRY)
+        petView.triggerExcitedHop()
+
+        // Angry leash vibration
+        leashSlackFactor = 0.2f
+        invalidate()
+
+        // Calm down and return to normal after 3.8 seconds
+        handler.postDelayed(angryResetRunnable, 3800L)
     }
 
     private fun Number.dpToPx(): Int =
