@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Island Pill Body -->
+    <path
+        android:fillColor="#1E2330"
+        android:strokeColor="#6366F1"
+        android:strokeWidth="2"
+        android:pathData="M 32,38 L 76,38 A 16,16 0 0 1 76,70 L 32,70 A 16,16 0 0 1 32,38 Z" />
+    
+    <!-- Smiley Face inside Pill -->
+    <path
+        android:fillColor="#FFD43B"
+        android:pathData="M 54,42 A 12,12 0 1 0 54,66 A 12,12 0 1 0 54,42 Z" />
+    
+    <!-- Eyes -->
+    <path
+        android:fillColor="#1F2937"
+        android:pathData="M 49,51 A 1.8,1.8 0 1 0 49,54.6 A 1.8,1.8 0 1 0 49,51 Z" />
+    <path
+        android:fillColor="#1F2937"
+        android:pathData="M 59,51 A 1.8,1.8 0 1 0 59,54.6 A 1.8,1.8 0 1 0 59,51 Z" />
+    
+    <!-- Mouth Smile Arc -->
+    <path
+        android:strokeColor="#1F2937"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M 48,58 Q 54,64 60,58" />
+</vector>

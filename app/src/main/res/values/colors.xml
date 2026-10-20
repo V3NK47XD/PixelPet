@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Theme Palette: Modern Deep Black & Neon Accents -->
+    <color name="primary">#6366F1</color>
+    <color name="primary_variant">#4F46E5</color>
+    <color name="secondary">#10B981</color>
+    <color name="accent">#F59E0B</color>
+
+    <color name="background_dark">#0F1117</color>
+    <color name="surface_dark">#181B26</color>
+    <color name="surface_card">#202534</color>
+    <color name="surface_card_border">#2E344A</color>
+
+    <color name="text_primary">#F3F4F6</color>
+    <color name="text_secondary">#9CA3AF</color>
+    <color name="text_muted">#6B7280</color>
+
+    <!-- Dynamic Island Specific Colors -->
+    <color name="island_black">#0A0A0C</color>
+    <color name="island_border">#2A2A35</color>
+    <color name="island_glow">#334155</color>
+    <color name="island_accent">#FBBF24</color>
+
+    <!-- Smiley Colors -->
+    <color name="smiley_yellow">#FFD43B</color>
+    <color name="smiley_shadow">#F59F00</color>
+    <color name="smiley_eye">#1A1A1A</color>
+    <color name="smiley_mouth">#D9480F</color>
+    <color name="smiley_tongue">#FF6B6B</color>
+    <color name="smiley_blush">#FA5252</color>
+
+    <!-- Status Colors -->
+    <color name="status_active">#10B981</color>
+    <color name="status_inactive">#EF4444</color>
+    <color name="status_warning">#F59E0B</color>
+</resources>

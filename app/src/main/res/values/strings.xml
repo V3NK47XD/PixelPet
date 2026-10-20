@@ -1,0 +1,51 @@
+<resources>
+    <string name="app_name">Pixel Pet</string>
+    <string name="app_tagline">Cute animated companion near your front camera</string>
+    
+    <!-- Permission strings -->
+    <string name="permission_required_title">Overlay Permission Required</string>
+    <string name="permission_required_desc">Dynamic Island needs permission to display over other apps so the floating animated smiley island can float smoothly near the top of your screen.</string>
+    <string name="grant_permission_btn">Grant Overlay Permission</string>
+    <string name="permission_granted">Permission Granted</string>
+    <string name="permission_missing">Permission Missing</string>
+    
+    <!-- Battery optimization strings -->
+    <string name="battery_title">Unrestricted Battery Usage</string>
+    <string name="battery_desc">To keep the dynamic island floating without Android closing or freezing it in the background, set battery usage to Unrestricted.</string>
+    <string name="grant_battery_btn">Allow Unrestricted Battery</string>
+    <string name="battery_unrestricted">Battery: Unrestricted</string>
+    <string name="battery_optimized">Battery: Optimized (May close)</string>
+    
+    <!-- Controls -->
+    <string name="island_active">Island is Floating</string>
+    <string name="island_inactive">Island is Stopped</string>
+    <string name="start_island">Start Dynamic Island</string>
+    <string name="stop_island">Stop Dynamic Island</string>
+    <string name="restart_island">Restart Overlay</string>
+    
+    <!-- Settings & Customization -->
+    <string name="customize_title">Island Customization</string>
+    <string name="vertical_offset_label">Vertical Position (Y Offset)</string>
+    <string name="island_size_label">Island Size</string>
+    <string name="smiley_mood_label">Smiley Face Mood</string>
+    <string name="mood_looping">Auto Loop (All Moods)</string>
+    <string name="mood_happy">Joyful Smile</string>
+    <string name="mood_wink">Playful Wink</string>
+    <string name="mood_excited">Super Excited</string>
+    <string name="mood_cool">Cool Shades</string>
+    <string name="mood_love">Heart Eyes</string>
+    <string name="mood_sad">Sad (Instagram)</string>
+    
+    <!-- Instagram Integration -->
+    <string name="instagram_detector_title">Instagram Sad Reaction</string>
+    <string name="instagram_detector_desc">The smiley animates sad with crying teardrops when Instagram mode is active and normal happy otherwise.</string>
+    <string name="launch_instagram_btn">Open Instagram (Sad Face)</string>
+    <string name="toggle_sad_btn">Toggle Sad Mood</string>
+    <!-- Overlay notification -->
+    <string name="notification_channel_name">Pixel Pet Service</string>
+    <string name="notification_channel_desc">Active floating character overlay service for Pixel Pet</string>
+    <string name="notification_title">Pixel Pet is Alive</string>
+    <string name="notification_text">Your companion is watching over your screen</string>
+    <string name="notification_action_stop">Stop</string>
+    <string name="notification_action_expand">Settings</string>
+</resources>

@@ -1,0 +1,1023 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Top Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Pixel Pet 🐣"
+                        android:textColor="@color/text_primary"
+                        android:textSize="22sp"
+                        android:fontFamily="sans-serif-black" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Animated companion near your front camera"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchPetMaster"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <!-- Status Badges Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvOverlayBadge"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_card_surface"
+                    android:gravity="center"
+                    android:paddingTop="5dp"
+                    android:paddingBottom="5dp"
+                    android:text="Overlay: Checking"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="10sp"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:id="@+id/tvBatteryBadge"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_card_surface"
+                    android:gravity="center"
+                    android:paddingTop="5dp"
+                    android:paddingBottom="5dp"
+                    android:text="Battery: Checking"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="10sp"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:id="@+id/tvUsageBadge"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_card_surface"
+                    android:gravity="center"
+                    android:paddingTop="5dp"
+                    android:paddingBottom="5dp"
+                    android:text="Usage: Checking"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="10sp"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+
+            <!-- Missing Overlay Permission Alert Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardPermission"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="#2A1B18"
+                app:cardCornerRadius="14dp"
+                app:strokeColor="#7F2315"
+                app:strokeWidth="1.5dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/permission_required_title"
+                        android:textColor="#FCA5A5"
+                        android:textSize="14sp"
+                        android:fontFamily="sans-serif-bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Display over other apps permission is required so your pixel pet can float near the camera."
+                        android:textColor="#E5E7EB"
+                        android:textSize="12sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnGrantPermission"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/grant_permission_btn"
+                        android:textColor="@color/background_dark"
+                        app:backgroundTint="@color/smiley_yellow"
+                        app:cornerRadius="8dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Missing Usage Access Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardUsageAccess"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="#1A2035"
+                app:cardCornerRadius="14dp"
+                app:strokeColor="#2E3E6E"
+                app:strokeWidth="1.5dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="App Usage Data Access Needed"
+                        android:textColor="#93C5FD"
+                        android:textSize="14sp"
+                        android:fontFamily="sans-serif-bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Required to detect Instagram (for Sad/Angry moods) and reading apps (for Nerd mode)."
+                        android:textColor="#E5E7EB"
+                        android:textSize="12sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnGrantUsageAccess"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Grant Access"
+                            android:textColor="@color/background_dark"
+                            app:backgroundTint="#60A5FA"
+                            app:cornerRadius="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnFixRestrictedSettings"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="Fix Restricted 🔓"
+                            android:textColor="@color/text_primary"
+                            app:backgroundTint="@color/surface_dark"
+                            app:cornerRadius="8dp"
+                            app:strokeColor="#60A5FA"
+                            app:strokeWidth="1dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 1. Live Pet Interactive Preview Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/surface_dark"
+                app:cardCornerRadius="20dp"
+                app:strokeColor="@color/surface_card_border"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Interactive Pet Preview"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:fontFamily="sans-serif-medium" />
+
+                    <!-- Live standalone transparent TetheredPetStageView (Anchor + Leash + Pet) -->
+                    <com.dynamicisland.app.view.TetheredPetStageView
+                        android:id="@+id/previewTetherStage"
+                        android:layout_width="160dp"
+                        android:layout_height="110dp"
+                        android:layout_marginTop="6dp" />
+                    <TextView
+                        android:id="@+id/tvPreviewMoodDesc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="Idle • Breathing and floating gently"
+                        android:textColor="#FDE047"
+                        android:textSize="12sp"
+                        android:fontFamily="sans-serif-bold" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tap pet to poke • "
+                            android:textColor="@color/text_muted"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/btnTestDrift"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Drift to Next Spot 🎲"
+                            android:textColor="@color/primary"
+                            android:textSize="11sp"
+                            android:fontFamily="sans-serif-bold" />
+                    </LinearLayout>
+                    <!-- Mood preview buttons row -->
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:scrollbars="none">
+
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/chipGroupMoods"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:singleSelection="true">
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chipMoodIdle"
+                                style="@style/Widget.Material3.Chip.Filter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:checked="true"
+                                android:text="😴 Idle" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chipMoodHappy"
+                                style="@style/Widget.Material3.Chip.Filter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="😄 Happy" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chipMoodSad"
+                                style="@style/Widget.Material3.Chip.Filter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🥺 Sad (Instagram)" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chipMoodAngry"
+                                style="@style/Widget.Material3.Chip.Filter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="😡 Angry (>5 min)" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chipMoodNerd"
+                                style="@style/Widget.Material3.Chip.Filter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🤓 Nerd (Learning)" />
+                        </com.google.android.material.chip.ChipGroup>
+                    </HorizontalScrollView>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 2. Position & Front Camera Alignment Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="@color/surface_card_border"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Front Camera &amp; Position Settings"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:fontFamily="sans-serif-bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Choose your phone's camera cutout position"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                    <!-- Preset Camera Alignment Buttons -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAlignLeft"
+                            android:layout_width="0dp"
+                            android:layout_height="38dp"
+                            android:layout_weight="1"
+                            android:text="◀ Top Left"
+                            android:textColor="@color/text_primary"
+                            android:textSize="11sp"
+                            app:backgroundTint="@color/surface_dark"
+                            app:cornerRadius="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAlignCenter"
+                            android:layout_width="0dp"
+                            android:layout_height="38dp"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:text="⏺ Top Center"
+                            android:textColor="@color/background_dark"
+                            android:textSize="11sp"
+                            app:backgroundTint="@color/smiley_yellow"
+                            app:cornerRadius="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAlignRight"
+                            android:layout_width="0dp"
+                            android:layout_height="38dp"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:text="Top Right ▶"
+                            android:textColor="@color/text_primary"
+                            android:textSize="11sp"
+                            app:backgroundTint="@color/surface_dark"
+                            app:cornerRadius="8dp" />
+                    </LinearLayout>
+
+                    <!-- Horizontal Offset X Slider -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Horizontal Position (X Offset)"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvOffsetXVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 dp"
+                            android:textColor="@color/smiley_yellow"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-bold" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/sliderOffsetX"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:value="0.0"
+                        android:valueFrom="-150.0"
+                        android:valueTo="150.0"
+                        android:stepSize="1.0"
+                        app:thumbColor="@color/smiley_yellow"
+                        app:trackColorActive="@color/smiley_yellow"
+                        app:trackColorInactive="@color/surface_dark" />
+
+                    <!-- Vertical Offset Y Slider -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Camera Y Position (from Top Edge)"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+                        <TextView
+                            android:id="@+id/tvOffsetYVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="22 dp"
+                            android:textColor="@color/smiley_yellow"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-bold" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/sliderOffsetY"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:value="22.0"
+                        android:valueFrom="0.0"
+                        android:valueTo="120.0"
+                        android:stepSize="1.0"
+                        app:thumbColor="@color/smiley_yellow"
+                        app:trackColorActive="@color/smiley_yellow"
+                        app:trackColorInactive="@color/surface_dark" />
+
+                    <!-- Leash Length Slider -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Leash / Thread Length"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvLeashLengthVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="36 dp"
+                            android:textColor="@color/smiley_yellow"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-bold" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/sliderLeashLength"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:value="36.0"
+                        android:valueFrom="18.0"
+                        android:valueTo="60.0"
+                        android:stepSize="2.0"
+                        app:thumbColor="@color/smiley_yellow"
+                        app:trackColorActive="@color/smiley_yellow"
+                        app:trackColorInactive="@color/surface_dark" />
+
+                    <!-- Leash Color Selector -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Leash Color"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnLeashRed"
+                            android:layout_width="0dp"
+                            android:layout_height="36dp"
+                            android:layout_weight="1"
+                            android:text="🎀 Red"
+                            android:textColor="@color/text_primary"
+                            android:textSize="11sp"
+                            app:backgroundTint="#F43F5E"
+                            app:cornerRadius="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnLeashGold"
+                            android:layout_width="0dp"
+                            android:layout_height="36dp"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:text="🎗️ Gold"
+                            android:textColor="@color/background_dark"
+                            android:textSize="11sp"
+                            app:backgroundTint="#F59E0B"
+                            app:cornerRadius="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnLeashSilver"
+                            android:layout_width="0dp"
+                            android:layout_height="36dp"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:text="🧵 Silver"
+                            android:textColor="@color/background_dark"
+                            android:textSize="11sp"
+                            app:backgroundTint="#E2E8F0"
+                            app:cornerRadius="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnLeashMint"
+                            android:layout_width="0dp"
+                            android:layout_height="36dp"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:text="🌿 Mint"
+                            android:textColor="@color/background_dark"
+                            android:textSize="11sp"
+                            app:backgroundTint="#34D399"
+                            app:cornerRadius="8dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 3. Size & Animation Settings Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="@color/surface_card_border"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Size &amp; Animation Settings"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:fontFamily="sans-serif-bold" />
+
+                    <!-- Character Size Slider -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Character Size"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvPetSizeVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="54 dp"
+                            android:textColor="@color/smiley_yellow"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-bold" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/sliderPetSize"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:value="54.0"
+                        android:valueFrom="32.0"
+                        android:valueTo="96.0"
+                        android:stepSize="2.0"
+                        app:thumbColor="@color/smiley_yellow"
+                        app:trackColorActive="@color/smiley_yellow"
+                        app:trackColorInactive="@color/surface_dark" />
+
+                    <!-- Animation Intensity Slider -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Animation Intensity &amp; Bobbing"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvIntensityVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="100%"
+                            android:textColor="@color/smiley_yellow"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-bold" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/sliderIntensity"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:value="1.0"
+                        android:valueFrom="0.5"
+                        android:valueTo="1.5"
+                        android:stepSize="0.1"
+                        app:thumbColor="@color/smiley_yellow"
+                        app:trackColorActive="@color/smiley_yellow"
+                        app:trackColorInactive="@color/surface_dark" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 4. Instagram Anger Timer Settings Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="@color/surface_card_border"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Instagram Anger Timer 😡"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:fontFamily="sans-serif-bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="How long Instagram can be open continuously before the pet turns red and vents steam."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:lineSpacingExtra="2dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Anger Threshold"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvAngerMinutesVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="5 minutes"
+                            android:textColor="#EF4444"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-bold" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/sliderAngerMinutes"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:value="5.0"
+                        android:valueFrom="1.0"
+                        android:valueTo="15.0"
+                        android:stepSize="1.0"
+                        app:thumbColor="#EF4444"
+                        app:trackColorActive="#EF4444"
+                        app:trackColorInactive="@color/surface_dark" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="* Leaving Instagram resets the timer. Returning starts a fresh session."
+                        android:textColor="@color/text_muted"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 5. Nerd Mode Learning Apps Customization Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="@color/surface_card_border"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Nerd Mode Trigger Apps 🤓"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:fontFamily="sans-serif-bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="When these reading/learning apps open, pet wears glasses and scans text:"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                    <!-- App toggles -->
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/cbChatGPT"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="ChatGPT (OpenAI)"
+                        android:textColor="@color/text_primary" />
+
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/cbGemini"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="Google Gemini / Bard"
+                        android:textColor="@color/text_primary" />
+
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/cbWPS"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="WPS Office / ONLYOFFICE"
+                        android:textColor="@color/text_primary" />
+
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/cbPDF"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="PDF Readers &amp; E-Books"
+                        android:textColor="@color/text_primary" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 6. Dynamic Camera World & Interaction Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="@color/surface_card_border"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Camera World &amp; Behavior 🐾"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:fontFamily="sans-serif-bold" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchDynamicMovement"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:checked="true"
+                        android:text="Dynamic Camera Movement (Walks left, right, under)"
+                        android:textColor="@color/text_primary" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchHideAndSeek"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:checked="true"
+                        android:text="Hide-and-Seek (Occasionally ducks &amp; peeks)"
+                        android:textColor="@color/text_primary" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchTouchReactions"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:checked="true"
+                        android:text="Touch Reactions (Tap to poke, wave, giggle)"
+                        android:textColor="@color/text_primary" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 7. Late-Night Sleepiness Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="@color/surface_card_border"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Late-Night Sleepiness 🌙"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:fontFamily="sans-serif-bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Gradually turns lavender, droops eyes, yawns, and floats Zzz."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchSleepiness"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:checked="true"
+                        android:text="Enable Late-Night Sleepiness"
+                        android:textColor="@color/text_primary" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Sleepiness Start Hour"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvSleepyHourVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="22:00 (10 PM)"
+                            android:textColor="#C4B5FD"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-bold" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/sliderSleepyHour"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:value="22.0"
+                        android:valueFrom="19.0"
+                        android:valueTo="25.0"
+                        android:stepSize="1.0"
+                        app:thumbColor="#C4B5FD"
+                        app:trackColorActive="#C4B5FD"
+                        app:trackColorInactive="@color/surface_dark" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 8. Google Apps & Phone Events Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="@color/surface_card_border"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="System &amp; Event Reactions ⚡"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:fontFamily="sans-serif-bold" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchGoogleNerd"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:checked="true"
+                        android:text="Google Apps activate Nerd Mode (Chrome, Gmail, Docs...)"
+                        android:textColor="@color/text_primary" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchPhoneEvents"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:checked="true"
+                        android:text="Phone Event Reactions (Wake on unlock, Mint on charge, Orange on low battery)"
+                        android:textColor="@color/text_primary" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <!-- 6. Debugger Shortcut Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnOpenDebug"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="24dp"
+                android:text="Open Foreground App Debug Console 🐞"
+                android:textColor="@color/primary"
+                app:backgroundTint="@color/surface_card"
+                app:cornerRadius="12dp"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="1dp" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
