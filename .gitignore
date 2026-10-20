@@ -1,7 +1,17 @@
 # Built application files
-*.apk
 *.aar
 *.aab
+
+# Whitelist built APK in build output folder for releases
+!/app/build/
+/app/build/*
+!/app/build/outputs/
+/app/build/outputs/*
+!/app/build/outputs/apk/
+/app/build/outputs/apk/*
+!/app/build/outputs/apk/debug/
+/app/build/outputs/apk/debug/*
+!/app/build/outputs/apk/debug/app-debug.apk
 
 # Files for the ART/Dalvik VM
 *.dex
@@ -13,8 +23,7 @@
 bin/
 gen/
 out/
-build/
-app/build/
+/build/
 
 # Gradle files
 .gradle/

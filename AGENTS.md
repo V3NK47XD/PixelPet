@@ -1,6 +1,6 @@
 # AGENTS.md — Pixel Pet Architecture & Guide for Autonomous Agents
 
-This document provides technical context, architecture specifications, and engineering guidelines for AI coding assistants and developers maintaining or extending **Pixel Pet**.
+This document provides comprehensive technical context, architecture specifications, and engineering guidelines for AI coding assistants and developers maintaining or extending **Pixel Pet**.
 
 ---
 
@@ -22,6 +22,7 @@ graph TD
     E --> F[TetheredPetStageView]
     F -->|Draws Curved Leash| G[Physics Spring Engine]
     F -->|Autonomous Drift 4-8s| H[Drift Engine]
+    F -->|Constrained Dragging| J[Leash Radius Clamping]
     F -->|Renders 28x28 Pixel Sprite| I[PixelPetView]
 ```
 
@@ -41,10 +42,16 @@ graph TD
      - `CRITICAL_BATTERY`: Pale red body (`#F87171`), dramatic fainting collapse ($55^\circ$ tilt) with `X X` eyes.
 
 2. **`com.dynamicisland.app.view.TetheredPetStageView`**:
-   - Transparent overlay container positioned over the front camera reference coordinate.
+   - Transparent overlay container positioned over the front camera reference coordinate $(cameraRefX, cameraRefY)$.
    - Draws a golden anchor ring over the camera lens.
    - Calculates a dynamic, sagging catenary curve (`Path.quadTo`) connecting the camera anchor to the pet's head sprout.
-   - Hosts the autonomous drift engine: every $4.5\text{s} - 8.5\text{s}$, the pet floats to a new organic spot (left, right, underneath pendant, leaning, close hover). Never sits still $> 10\text{s}$.
+   - **Autonomous Drift Engine**: Every $4.5\text{s} - 8.5\text{s}$, the pet floats to a new organic spot (left, right, underneath pendant, leaning, close hover). Never sits still $> 10\text{s}$.
+   - **Leash-Constrained Dragging**: Touch and drag allows user to move the pet, strictly clamped to the leash radius ($1.15 \times \text{leashLengthDp}$).
+   - **Elastic Snap-Back**: Upon drag release, pet springs back with `OvershootInterpolator(2.2f)` damped oscillation.
+   - **Tap Interactions**:
+     - *Sleep/Wake Toggle*: Tapping sleepy pet wakes it up; tapping again nods it off to sleep.
+     - *Rapid Multi-Tap Temper Tantrum*: $3+$ taps within $650\text{ms}$ triggers a $3.8\text{s}$ furious angry tantrum with steam puffs, followed by an embarrassed blush.
+     - *Single Tap*: Contextual reactions (happy wink, wave, giggle, or glasses adjust).
    - Non-draggable overlay: touch reactions can be toggled in settings; when disabled, the window applies `FLAG_NOT_TOUCHABLE` for $100\%$ click-through.
 
 3. **`com.dynamicisland.app.util.PetMoodManager`**:
@@ -63,14 +70,50 @@ graph TD
 4. **`com.dynamicisland.app.util.ForegroundAppDetector`**:
    - Polls `UsageStatsManager.queryEvents()` (`ACTIVITY_RESUMED` / `MOVE_TO_FOREGROUND`) every $500\text{ms}$.
    - Resolves package names to human-readable app titles.
-   - Buffers a live history log for the in-app debug terminal.
+   - Buffers a live history log for the in-app debug terminal (`DebugActivity.kt`).
 
 5. **`com.dynamicisland.app.util.PhoneEventManager`**:
    - Lifecycle-managed `BroadcastReceiver` listening to `ACTION_USER_PRESENT`, `ACTION_POWER_CONNECTED`, `ACTION_POWER_DISCONNECTED`, and `ACTION_BATTERY_CHANGED`.
 
 6. **`com.dynamicisland.app.DynamicIslandService`**:
    - Foreground service with `TYPE_APPLICATION_OVERLAY` and `PixelFormat.TRANSLUCENT`.
-   - Manages window attachment, camera offset coordinates, and touch pass-through.
+   - Hosts `TetheredPetStageView` anchored over the camera cutout.
+
+---
+
+## 📦 Releases & Versioning Architecture
+
+### Version Tracking
+- Primary version definition is located in `app/build.gradle.kts`:
+  ```kotlin
+  versionCode = 1
+  versionName = "1.0.0"
+  ```
+- Public version tag in `README.md`:
+  `**Current Version:** v1.0.0`
+- Prebuilt APK is whitelisted in `.gitignore` and committed directly to the repo at:
+  `app/build/outputs/apk/debug/app-debug.apk`
+
+### GitHub Actions Release Workflow (`.github/workflows/release.yml`)
+- **Triggers**:
+  - Push to `main`
+  - Push to tag matching `v*` (e.g. `v1.0.1`)
+  - Manual execution via `workflow_dispatch`
+- **Workflow Pipeline**:
+  1. Checks out repository.
+  2. Sets up JDK 17 (Temurin).
+  3. Extracts version from `app/build.gradle.kts` (or tag name).
+  4. Verifies/builds `app/build/outputs/apk/debug/app-debug.apk`.
+  5. Packages and copies `PixelPet-${VERSION}.apk`.
+  6. Publishes a GitHub Release with assets using `softprops/action-gh-release@v2`.
+
+### Steps for Agents Bumping Versions
+1. Update `versionCode` and `versionName` in `app/build.gradle.kts`.
+2. Update the version badges and text in `README.md`.
+3. Recompile the debug APK: `./gradlew assembleDebug`.
+4. Run tests: `./gradlew test`.
+5. Commit `.gitignore`, `README.md`, `app/build.gradle.kts`, and `app/build/outputs/apk/debug/app-debug.apk`.
+6. Push to `main` or tag with `git tag vX.Y.Z && git push origin vX.Y.Z`.
 
 ---
 

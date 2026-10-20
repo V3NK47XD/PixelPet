@@ -1,6 +1,13 @@
 # Pixel Pet 🐣
 
-> A cute, expressive pixel-art companion that lives near your phone's front camera and reacts to what you do!
+[![Latest Release](https://img.shields.io/github/v/release/V3NK47XD/PixelPet?color=F59E0B&label=Release)](https://github.com/V3NK47XD/PixelPet/releases/latest)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/V3NK47XD/PixelPet/release.yml?branch=main&label=Build%20%26%20Release)](https://github.com/V3NK47XD/PixelPet/actions)
+[![Download APK](https://img.shields.io/badge/Download-APK%20(v1.0.0)-60A5FA?logo=android)](https://github.com/V3NK47XD/PixelPet/releases/latest)
+
+> A cute, expressive pixel-art companion that lives near your phone's front camera, tethered by an organic physics leash, and reacts to your phone activity!
+
+**Current Version:** `v1.0.0`  
+**Direct Download:** [`PixelPet-v1.0.0.apk`](https://github.com/V3NK47XD/PixelPet/releases/latest/download/PixelPet-v1.0.0.apk) | [`app-debug.apk`](app/build/outputs/apk/debug/app-debug.apk)
 
 ---
 
@@ -9,7 +16,7 @@
 ### 📷 Tethered Front Camera World
 * **Front Camera as Anchor**: The $(X, Y)$ offset you set in the app anchors the pet directly over your front camera lens with a subtle golden ring.
 * **Curved Physics Leash**: A natural, sagging string (`Path.quadTo`) connects the camera anchor directly to the pet's head sprout.
-* **Custom Leash Styles**: Choose from 🎀 Red Ribbon, 🎗️ Golden Tether, 🧵 Soft Silver, or 🌿 Mint Green with adjustable length ($18\text{dp}$ to $60\text{dp}$).
+* **Custom Leash Styles**: Choose from 🎀 Red Ribbon (`#F43F5E`), 🎗️ Golden Tether (`#F59E0B`), 🧵 Soft Silver (`#E2E8F0`), or 🌿 Mint Green (`#34D399`) with adjustable length ($18\text{dp}$ to $60\text{dp}$).
 * **Pure Borderless Transparency**: No dynamic island pills, no capsules, no background panels, and no borders. Only the pet and its leash float over your screen.
 
 ---
@@ -26,6 +33,21 @@
 
 ---
 
+### 👆 Dragging & Touch Interactions
+* **Leash-Constrained Dragging**: You can touch and drag the pet around the screen with your finger! The pet's movement is strictly clamped to the leash radius—it can never escape its tether.
+* **Elastic Snap-Back**: While dragged, the leash stretches taut. When released, the pet springs back to a natural hover spot with an elastic overshoot bounce (`OvershootInterpolator(2.2f)`).
+* **Sleep / Wake Toggle on Tap**:
+  - Tap while **Sleepy 😴**: The pet immediately startles awake, opens its eyes wide, yawns, and switches into active/happy mode!
+  - Tap while **Awake (at Night) 🌙**: The pet performs a wide yawn, nods off, and goes back to sleep with floating **"Zzz"** particles.
+* **Rapid Multi-Tap Temper Tantrum 😡**:
+  - Tapping the pet rapidly ($3+$ times within $650\text{ms}$) makes it lose its patience and have a temper tantrum!
+  - Turns furious crimson red (`#EF5350`), angry V-eyebrows, puffed cheeks, rage vibration shake, and steam puffs.
+  - Automatically calms down after **$3.8$ seconds**, blushes embarrassedly, and returns to its previous mood.
+* **Single Tap Reactions**: Winks, waves its arm, giggles, or pushes up its glasses.
+* **$100\%$ Click-Through Mode**: Can be toggled in settings (`FLAG_NOT_TOUCHABLE`) so touches pass straight through to apps underneath.
+
+---
+
 ### 🎭 Contextual Character Moods
 
 | Mood | Trigger Condition | Visuals & Animation |
@@ -39,18 +61,6 @@
 | **🪫 Low Battery** | Battery $<15\%$ | Amber face (`#FB923C`), wide worried eyes glancing nervously toward the phone's battery indicator. |
 | **💀 Critical Battery**| Battery $<5\%$ | Pale red face (`#F87171`), dramatic fainting collapse ($55^\circ$ tilt) with `X X` eyes and exhausted sigh. |
 | **😄 Happy** | Phone unlocked / Pet app open | Joyful celebratory hops, closed crinkle eyes (`^ _ ^`), star sparkles. |
-
----
-
-### 👆 Touch Reactions *(Non-Draggable)*
-* **Never Draggable on Overlay**: The pet stays anchored to its camera coordinates and cannot be moved or dragged on screen.
-* **Contextual Poke Reactions**:
-  - Tap while **Sleepy**: Startles awake with wide eyes, shakes head, and yawns.
-  - Tap while **Sad**: Looks surprised, then gives a small comforted smile.
-  - Tap while **Angry**: Brief anger flare / steam puff, then calms down.
-  - Tap while **Nerd**: Pushes up its glasses with a glint shine.
-  - Tap while **Normal**: Winks, waves, or giggles.
-* **$100\%$ Click-Through Mode**: Can be toggled off in settings (`FLAG_NOT_TOUCHABLE`) so touches pass straight through to apps below.
 
 ---
 
@@ -71,13 +81,28 @@
 
 ---
 
+## 📦 Releases & Versioning
+
+| Version | Date | Key Highlights |
+| :--- | :--- | :--- |
+| **`v1.0.0`** | 2026-10-21 | Tethered camera anchor, physics leash, autonomous drift, leash-constrained dragging, sleep/wake tap toggle, multi-tap anger tantrum, contextual app moods. |
+
+* **Latest Release**: [PixelPet Releases Page](https://github.com/V3NK47XD/PixelPet/releases/latest)
+* **Direct APK Download**: [`PixelPet-v1.0.0.apk`](https://github.com/V3NK47XD/PixelPet/releases/latest/download/PixelPet-v1.0.0.apk)
+* **Tracked Build Output**: [`app/build/outputs/apk/debug/app-debug.apk`](app/build/outputs/apk/debug/app-debug.apk)
+
+### Automated CI/CD Release Workflow
+Whenever a new version tag (e.g. `v1.0.1`) or commit to `main` is pushed, the [GitHub Actions Release Workflow](.github/workflows/release.yml) automatically builds the application, packages `PixelPet-v${VERSION}.apk` and `app-debug.apk`, and publishes them directly to GitHub Releases.
+
+---
+
 ## 🚀 Building & Installing
 
 ### Prerequisites
 * JDK 17
-* Android SDK 34
+* Android SDK 34 (Build tools 34.0.0)
 
-### Build APK
+### Build APK Locally
 ```bash
 ./gradlew assembleDebug
 ```

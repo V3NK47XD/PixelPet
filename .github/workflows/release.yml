@@ -1,0 +1,93 @@
+name: Release APK
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Grant Execute Permission to Gradlew
+        run: chmod +x gradlew
+
+      - name: Determine Version
+        id: version_step
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME}"
+          else
+            # Extract versionName from app/build.gradle.kts
+            RAW_VERSION=$(grep -E 'versionName\s*=\s*' app/build.gradle.kts | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
+            VERSION="v${RAW_VERSION:-1.0.0}"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release Version: $VERSION"
+
+      - name: Build Debug APK if Not Present
+        run: |
+          if [ ! -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
+            echo "Building APK via Gradle..."
+            ./gradlew assembleDebug
+          else
+            echo "Using pre-built APK from build outputs."
+          fi
+
+      - name: Prepare Release Artifacts
+        run: |
+          VERSION="${{ steps.version_step.outputs.VERSION }}"
+          cp app/build/outputs/apk/debug/app-debug.apk "PixelPet-${VERSION}.apk"
+          ls -la "PixelPet-${VERSION}.apk"
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version_step.outputs.VERSION }}
+          name: "Pixel Pet ${{ steps.version_step.outputs.VERSION }} 🐣"
+          body: |
+            ### Pixel Pet ${{ steps.version_step.outputs.VERSION }} 🐣
+            
+            **Cute Animated Companion Tethered to Your Front Camera**
+            
+            #### What's in this release:
+            - **Leash-Constrained Dragging**: Drag the pet around within the camera leash radius with elastic spring-back bounce.
+            - **Camera World Anchor**: Leash anchors right at the front camera lens $(X, Y)$ offset with a golden ring.
+            - **Autonomous Floating Drift**: Bobs, tilts, and drifts every 4–8 seconds (left, right, underneath pendant, leaning). Never sits still $> 10$ seconds.
+            - **Contextual App Moods**:
+              - 🥺 **Sad mode on Instagram** (pale blue, trickling teardrops).
+              - 😡 **Angry mode on Instagram > 5 min** (crimson red, rage vibration, rising steam puffs).
+              - 🤓 **Nerd mode on Google Apps, ChatGPT, Gemini, WPS, PDF** (glasses drop & text reading scan).
+              - 🌙 **Late-Night Sleepiness** (soft lavender, drooping eyes, yawns, Zzz).
+              - 🔋 **Phone Events** (Wake-up glow, mint green charge sparkles, low battery worry, red faint).
+            - **Tap Interactions**:
+              - Tap sleepy pet $\to$ wakes up; tap awake pet $\to$ nods off to sleep!
+              - Rapid 3+ taps $\to$ temper tantrum (furious red steam for 3.8s, then calms down).
+              - Single taps $\to$ wink, wave, giggle, or adjust glasses.
+            
+            #### Download & Install:
+            Download **`PixelPet-${{ steps.version_step.outputs.VERSION }}.apk`** or **`app-debug.apk`** below and install on your Android device!
+          files: |
+            app/build/outputs/apk/debug/app-debug.apk
+            PixelPet-${{ steps.version_step.outputs.VERSION }}.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
