@@ -44,8 +44,8 @@
   - Turns furious crimson red (`#EF5350`), angry V-eyebrows, puffed cheeks, rage vibration shake, and steam puffs.
   - Automatically calms down after **$3.8$ seconds**, blushes embarrassedly, and returns to its previous mood.
 * **Single Tap Reactions**: Winks, waves its arm, giggles, or pushes up its glasses.
-* **$100\%$ Click-Through Mode**: Can be toggled in settings (`FLAG_NOT_TOUCHABLE`) so touches pass straight through to apps underneath.
-
+* **Shape-Matched Touch Detection**: Uses an internal window inset region (`TOUCHABLE_INSETS_REGION`) matching the pet's exact circular body. Only touches on the pet itself are captured for dragging and tapping—**100% of touches everywhere else (camera, status bar, screen edges, and apps underneath) pass straight through uninterrupted!**
+* **$100\%$ Click-Through Mode**: Can be toggled in settings (`FLAG_NOT_TOUCHABLE`) so touches pass straight through even when touching the pet.
 ---
 
 ### 🎭 Contextual Character Moods

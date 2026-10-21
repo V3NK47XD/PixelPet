@@ -64,4 +64,48 @@ class SmileyAnimationLogicTest {
         org.junit.Assert.assertFalse(com.dynamicisland.app.util.ForegroundAppDetector.isInstagram("com.google.android.youtube"))
         org.junit.Assert.assertFalse(com.dynamicisland.app.util.ForegroundAppDetector.isInstagram(null))
     }
+
+    @Test
+    fun testLeashRadiusConstraintMath() {
+        val maxRadius = 50f
+        var x = 30f
+        var y = 20f
+        var dist = kotlin.math.sqrt(x * x + y * y)
+        if (dist > maxRadius) {
+            val scale = maxRadius / dist
+            x *= scale
+            y *= scale
+        }
+        assertEquals(30f, x, 0.001f)
+        assertEquals(20f, y, 0.001f)
+
+        x = 60f
+        y = 80f
+        dist = kotlin.math.sqrt(x * x + y * y)
+        assertTrue(dist > maxRadius)
+        val scale = maxRadius / dist
+        x *= scale
+        y *= scale
+        val newDist = kotlin.math.sqrt(x * x + y * y)
+        assertEquals(50f, newDist, 0.001f)
+        assertEquals(30f, x, 0.001f)
+        assertEquals(40f, y, 0.001f)
+    }
+
+    @Test
+    fun testCircularHitTestMath() {
+        val petCenterX = 100f
+        val petCenterY = 50f
+        val hitRadius = 25f
+
+        val touch1X = 110f
+        val touch1Y = 55f
+        val dist1 = kotlin.math.sqrt((touch1X - petCenterX) * (touch1X - petCenterX) + (touch1Y - petCenterY) * (touch1Y - petCenterY))
+        assertTrue("Point on pet should hit", dist1 <= hitRadius)
+
+        val touch2X = 135f
+        val touch2Y = 50f
+        val dist2 = kotlin.math.sqrt((touch2X - petCenterX) * (touch2X - petCenterX) + (touch2Y - petCenterY) * (touch2Y - petCenterY))
+        assertTrue("Point outside pet should pass through", dist2 > hitRadius)
+    }
 }

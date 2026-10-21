@@ -52,9 +52,17 @@ graph TD
      - *Sleep/Wake Toggle*: Tapping sleepy pet wakes it up; tapping again nods it off to sleep.
      - *Rapid Multi-Tap Temper Tantrum*: $3+$ taps within $650\text{ms}$ triggers a $3.8\text{s}$ furious angry tantrum with steam puffs, followed by an embarrassed blush.
      - *Single Tap*: Contextual reactions (happy wink, wave, giggle, or glasses adjust).
-   - Non-draggable overlay: touch reactions can be toggled in settings; when disabled, the window applies `FLAG_NOT_TOUCHABLE` for $100\%$ click-through.
+   - **Shape-Matched Touch Detection (`TouchableRegionHelper.kt`)**:
+     - Registers an `OnComputeInternalInsetsListener` via dynamic proxy with `TOUCHABLE_INSETS_REGION`.
+     - Restricts the window's touchable region strictly to the pet's visible circular body shape.
+     - **100% Touch Pass-Through Outside Pet**: Punches a transparent touch hole across the entire remainder of the window so user taps on camera, status bar, and underlying apps pass through completely uninterrupted.
 
-3. **`com.dynamicisland.app.util.PetMoodManager`**:
+3. **`com.dynamicisland.app.util.TouchableRegionHelper`**:
+   - Dynamically hooks Android's internal `ViewTreeObserver.OnComputeInternalInsetsListener`.
+   - Supplies an `android.graphics.Region` generated from `Path.addCircle(petCenterX, petCenterY, radius)` matching the pet's exact coordinates.
+   - Synchronizes touchable region in real-time as the pet drifts or is dragged.
+
+4. **`com.dynamicisland.app.util.PetMoodManager`**:
    - Resolves pet emotional state according to a strict priority hierarchy:
      1. `CRITICAL_BATTERY` ($<5\%$)
      2. `CHARGING` (Power connected)

@@ -47,7 +47,7 @@ class TetheredPetStageView @JvmOverloads constructor(
     val petView: PixelPetView
     private val prefs = PreferencesHelper(context)
     private val handler = Handler(Looper.getMainLooper())
-
+    private val touchableRegionHelper = com.dynamicisland.app.util.TouchableRegionHelper(this)
     // Leash Paints
     private val leashPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
@@ -279,8 +279,27 @@ class TetheredPetStageView @JvmOverloads constructor(
 
         petView.layout(left, top, left + petSizePx, top + petSizePx)
         petView.rotation = tiltAngleDeg
+        touchableRegionHelper.requestUpdate()
     }
 
+    fun getPetTouchRegion(): android.graphics.Region {
+        val petSizePx = prefs.petSizeDp.dpToPx().toFloat()
+        val anchorXPx = width / 2f
+        val anchorYPx = 8.dpToPx().toFloat()
+        val petCenterXPx = anchorXPx + currentDriftXDp.dpToPx()
+        val petCenterYPx = anchorYPx + (currentDriftYDp + floatBobYDp).dpToPx()
+
+        // Non-rectangular circular shape matching the pet sprite
+        val radius = (petSizePx / 2f) + 3.dpToPx()
+        val path = Path().apply {
+            addCircle(petCenterXPx, petCenterYPx, radius, Path.Direction.CW)
+        }
+
+        val clipRegion = android.graphics.Region(0, 0, width.coerceAtLeast(1), height.coerceAtLeast(1))
+        val region = android.graphics.Region()
+        region.setPath(path, clipRegion)
+        return region
+    }
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
         updatePetViewLayout()
@@ -289,11 +308,13 @@ class TetheredPetStageView @JvmOverloads constructor(
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         startDriftEngine()
+        touchableRegionHelper.attach { getPetTouchRegion() }
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         stopDriftEngine()
+        touchableRegionHelper.detach()
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -354,11 +375,13 @@ class TetheredPetStageView @JvmOverloads constructor(
 
         when (ev.action) {
             MotionEvent.ACTION_DOWN -> {
-                val dx = abs(ev.x - petCenterXPx)
-                val dy = abs(ev.y - petCenterYPx)
+                val dx = ev.x - petCenterXPx
+                val dy = ev.y - petCenterYPx
+                val dist = sqrt((dx * dx) + (dy * dy))
+                val hitRadius = (petSizePx / 2f) + 6.dpToPx()
 
-                // Generous hit box around pet (85% of pet size radius)
-                if (dx <= petSizePx * 0.85f && dy <= petSizePx * 0.85f) {
+                // Hit detection matching the pet's visible circular shape
+                if (dist <= hitRadius) {
                     isDraggingPet = true
                     hasMoved = false
                     downTouchX = ev.x
