@@ -23,6 +23,8 @@ class PhoneEventManager(
         fun onPowerConnected()
         fun onPowerDisconnected()
         fun onBatteryLevelChanged(levelPercent: Int, isLow: Boolean, isCritical: Boolean)
+        fun onScreenTurnedOff()
+        fun onScreenTurnedOn()
     }
 
     private var isRegistered = false
@@ -38,6 +40,12 @@ class PhoneEventManager(
                 }
                 Intent.ACTION_POWER_DISCONNECTED -> {
                     listener.onPowerDisconnected()
+                }
+                Intent.ACTION_SCREEN_OFF -> {
+                    listener.onScreenTurnedOff()
+                }
+                Intent.ACTION_SCREEN_ON -> {
+                    listener.onScreenTurnedOn()
                 }
                 Intent.ACTION_BATTERY_CHANGED -> {
                     val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
@@ -65,8 +73,9 @@ class PhoneEventManager(
             addAction(Intent.ACTION_POWER_CONNECTED)
             addAction(Intent.ACTION_POWER_DISCONNECTED)
             addAction(Intent.ACTION_BATTERY_CHANGED)
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_SCREEN_ON)
         }
-        context.registerReceiver(receiver, filter)
         isRegistered = true
     }
 

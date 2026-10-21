@@ -122,6 +122,14 @@ class DynamicIslandService : Service() {
     private var tiltAngleDeg = 0f
     private var leashSlackFactor = 1.0f
 
+    // Cached Settings to avoid repeated SharedPreferences lookups in animation callbacks
+    private var cachedCameraRefX = 0
+    private var cachedCameraRefY = 22
+    private var cachedPetSizeDp = 54
+    private var cachedLeashLengthDp = 36
+    private var cachedIntensity = 1.0f
+    private var cachedTouchReaction = true
+
     private var driftAnimator: ValueAnimator? = null
     private var floatBobAnimator: ValueAnimator? = null
     private var snapBackAnimator: ValueAnimator? = null
@@ -168,6 +176,7 @@ class DynamicIslandService : Service() {
     override fun onCreate() {
         super.onCreate()
         prefs = PreferencesHelper(this)
+        refreshCachedSettings()
         touchSlop = ViewConfiguration.get(this).scaledTouchSlop.toFloat()
 
         moodManager = com.dynamicisland.app.util.PetMoodManager(this)
@@ -197,6 +206,23 @@ class DynamicIslandService : Service() {
                 if (!prefs.isPhoneEventsEnabled) return
                 moodManager.onBatteryLevelChanged(levelPercent, isLow, isCritical)
             }
+
+            override fun onScreenTurnedOff() {
+                petView?.pauseAnimations()
+                floatBobAnimator?.pause()
+                driftAnimator?.pause()
+                handler.removeCallbacks(driftRunnable)
+                com.dynamicisland.app.util.ForegroundAppDetector.pauseMonitoring()
+            }
+
+            override fun onScreenTurnedOn() {
+                com.dynamicisland.app.util.ForegroundAppDetector.resumeMonitoring()
+                petView?.resumeAnimations()
+                floatBobAnimator?.resume()
+                driftAnimator?.resume()
+                scheduleNextDrift()
+                moodManager.recalculateMood()
+            }
         })
         phoneEventManager?.start()
 
@@ -209,6 +235,7 @@ class DynamicIslandService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_STOP -> {
+                com.dynamicisland.app.util.ForegroundAppDetector.stopMonitoring()
                 removeOverlay()
                 try {
                     stopForeground(STOP_FOREGROUND_REMOVE)
@@ -300,14 +327,13 @@ class DynamicIslandService : Service() {
             addUpdateListener { anim ->
                 if (!isDragging) {
                     val p = anim.animatedValue as Float
-                    val intensity = prefs.animationIntensity
-
-                    floatBobYDp = (sin(p) * 2.6f * intensity)
+                    floatBobYDp = (sin(p) * 2.6f * cachedIntensity)
                     val baseTilt = (currentDriftXDp * 0.28f).coerceIn(-12f, 12f)
-                    tiltAngleDeg = baseTilt + (sin(p) * 2.0f * intensity)
+                    tiltAngleDeg = baseTilt + (sin(p) * 2.0f * cachedIntensity)
 
                     petView?.rotation = tiltAngleDeg
-                    updatePetWindowLayout()
+                    // Per-frame WindowManager.updateViewLayout IPC removed!
+                    // Vertical float is smoothly drawn inside PixelPetView canvas
                     updateLeashAttachment(slackFactor = 1.0f)
                 }
             }
@@ -647,16 +673,27 @@ class DynamicIslandService : Service() {
         handler.postDelayed(angryResetRunnable, 3800L)
     }
 
+    private fun refreshCachedSettings() {
+        cachedCameraRefX = prefs.cameraRefX
+        cachedCameraRefY = prefs.cameraRefY
+        cachedPetSizeDp = prefs.petSizeDp
+        cachedLeashLengthDp = prefs.leashLengthDp
+        cachedIntensity = prefs.animationIntensity
+        cachedTouchReaction = prefs.isTouchReactionEnabled
+    }
+
     private fun updatePetWindowLayout() {
         petParams?.let { params ->
-            val petX = (prefs.cameraRefX + currentDriftXDp).toInt().dpToPx()
-            val petY = (prefs.cameraRefY + currentDriftYDp + floatBobYDp - (prefs.petSizeDp / 2f)).toInt().dpToPx()
+            val petX = (cachedCameraRefX + currentDriftXDp).toInt().dpToPx()
+            val petY = (cachedCameraRefY + currentDriftYDp - (cachedPetSizeDp / 2f)).toInt().dpToPx()
 
-            params.x = petX
-            params.y = petY
+            if (params.x != petX || params.y != petY) {
+                params.x = petX
+                params.y = petY
 
-            if (petContainer?.isAttachedToWindow == true) {
-                windowManager?.updateViewLayout(petContainer, params)
+                if (petContainer?.isAttachedToWindow == true) {
+                    windowManager?.updateViewLayout(petContainer, params)
+                }
             }
         }
     }
@@ -670,22 +707,23 @@ class DynamicIslandService : Service() {
         val leashAnchorY = 8.dpToPx().toFloat()
 
         val petTopXInLeash = leashAnchorX + currentDriftXDp.dpToPx()
-        val petTopYInLeash = leashAnchorY + (currentDriftYDp + floatBobYDp - (prefs.petSizeDp * 0.42f)).dpToPx()
+        val petTopYInLeash = leashAnchorY + (currentDriftYDp - (cachedPetSizeDp * 0.42f)).dpToPx()
 
         leash.updatePetAttachment(petTopXInLeash, petTopYInLeash, slackFactor)
     }
 
     private fun applyUpdatedSettings() {
-        val petSize = prefs.petSizeDp.dpToPx()
-        val stageWidth = (prefs.leashLengthDp * 2 + prefs.petSizeDp + 36).dpToPx()
-        val stageHeight = (prefs.leashLengthDp + prefs.petSizeDp + 24).dpToPx()
+        refreshCachedSettings()
+        val petSize = cachedPetSizeDp.dpToPx()
+        val stageWidth = (cachedLeashLengthDp * 2 + cachedPetSizeDp + 36).dpToPx()
+        val stageHeight = (cachedLeashLengthDp + cachedPetSizeDp + 24).dpToPx()
 
         // 1. Update Leash Window
         leashParams?.let { params ->
             params.width = stageWidth
             params.height = stageHeight
-            params.x = prefs.cameraRefX.dpToPx()
-            params.y = (prefs.cameraRefY - 8).dpToPx()
+            params.x = cachedCameraRefX.dpToPx()
+            params.y = (cachedCameraRefY - 8).dpToPx()
             leashView?.updateLeashColor()
             leashView?.invalidate()
             if (leashView?.isAttachedToWindow == true) {
@@ -697,13 +735,13 @@ class DynamicIslandService : Service() {
         petParams?.let { params ->
             params.width = petSize
             params.height = petSize
-            val touchFlag = if (prefs.isTouchReactionEnabled) 0 else WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            val touchFlag = if (cachedTouchReaction) 0 else WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
             params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
                     touchFlag
 
-            petView?.setAnimationIntensity(prefs.animationIntensity)
+            petView?.setAnimationIntensity(cachedIntensity)
             petView?.invalidate()
             updatePetWindowLayout()
         }
@@ -742,6 +780,7 @@ class DynamicIslandService : Service() {
     override fun onDestroy() {
         phoneEventManager?.stop()
         com.dynamicisland.app.util.ForegroundAppDetector.removeListener(appChangeListener)
+        com.dynamicisland.app.util.ForegroundAppDetector.stopMonitoring()
         removeOverlay()
         super.onDestroy()
     }

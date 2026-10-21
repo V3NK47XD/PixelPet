@@ -46,6 +46,44 @@ class PixelPetView @JvmOverloads constructor(
         TEXTING
     }
 
+    companion object {
+        // Pre-computed flat span array: startCol, endCol, row (17 rows * 3 = 51 ints)
+        // Eliminates 17 Triple instances, 1 array, and 51 boxed Integers per frame
+        private val BODY_SPANS = intArrayOf(
+            11, 16, 6,
+            9, 18, 7,
+            8, 19, 8,
+            7, 20, 9,
+            6, 21, 10,
+            6, 21, 11,
+            5, 22, 12,
+            5, 22, 13,
+            5, 22, 14,
+            5, 22, 15,
+            5, 22, 16,
+            5, 22, 17,
+            6, 21, 18,
+            6, 21, 19,
+            7, 20, 20,
+            8, 19, 21,
+            10, 17, 22
+        )
+
+        // Pre-parsed color constants avoiding runtime string parsing in onDraw()
+        private val COLOR_SPROUT_GREEN = Color.parseColor("#4ADE80")
+        private val COLOR_SPROUT_DARK = Color.parseColor("#15803D")
+        private val COLOR_FEET = Color.parseColor("#F59E0B")
+        private val COLOR_BLUSH_SAD = Color.parseColor("#93C5FD")
+        private val COLOR_BLUSH_EMBARRASSED = Color.parseColor("#FF2D55")
+        private val COLOR_DARK_YAWN_INSIDE = Color.parseColor("#4A0E17")
+        private val COLOR_TONGUE_RED = Color.parseColor("#FF5252")
+        private val COLOR_BUBBLE_OUTLINE = Color.parseColor("#0F172A")
+        private val COLOR_BUBBLE_DOT = Color.parseColor("#64748B")
+        private val COLOR_BUBBLE_DOT_ACTIVE = Color.parseColor("#0EA5E9")
+        private val COLOR_SPARKLE_CHARGING = Color.parseColor("#34D399")
+        private val COLOR_LIGHTBULB_BASE = Color.parseColor("#94A3B8")
+    }
+
     enum class IdleActivity {
         NONE,
         WAVING,
@@ -532,6 +570,35 @@ class PixelPetView @JvmOverloads constructor(
             }
         }.start()
     }
+    fun pauseAnimations() {
+        bobAnimator?.pause()
+        blinkAnimator?.pause()
+        tearAnimator?.pause()
+        rageAnimator?.pause()
+        glassesAnimator?.pause()
+        readingAnimator?.pause()
+        happyAnimator?.pause()
+        walkAnimator?.pause()
+        sleepyAnimator?.pause()
+        typingAnimator?.pause()
+        activityAnimator?.pause()
+        colorTransitionAnimator?.pause()
+    }
+
+    fun resumeAnimations() {
+        bobAnimator?.resume()
+        blinkAnimator?.resume()
+        when (currentMood) {
+            PetMood.SAD -> tearAnimator?.resume()
+            PetMood.ANGRY -> rageAnimator?.resume()
+            PetMood.NERD -> readingAnimator?.resume()
+            PetMood.HAPPY -> happyAnimator?.resume()
+            PetMood.SLEEPY -> sleepyAnimator?.resume()
+            PetMood.TEXTING -> typingAnimator?.resume()
+            else -> {}
+        }
+        if (isWalking) walkAnimator?.resume()
+    }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
@@ -686,55 +753,34 @@ class PixelPetView @JvmOverloads constructor(
         canvas.save()
         canvas.rotate(sproutAngle, pivotX, 6f * pixelSize)
 
-        val sproutGreen = Color.parseColor("#4ADE80")
-        val sproutDark = Color.parseColor("#15803D")
-
         // Stem
-        drawPixel(canvas, 13, 5, sproutDark, pixelSize)
-        drawPixel(canvas, 14, 5, sproutGreen, pixelSize)
-        drawPixel(canvas, 13, 4, sproutDark, pixelSize)
-        drawPixel(canvas, 14, 4, sproutGreen, pixelSize)
+        drawPixel(canvas, 13, 5, COLOR_SPROUT_DARK, pixelSize)
+        drawPixel(canvas, 14, 5, COLOR_SPROUT_GREEN, pixelSize)
+        drawPixel(canvas, 13, 4, COLOR_SPROUT_DARK, pixelSize)
+        drawPixel(canvas, 14, 4, COLOR_SPROUT_GREEN, pixelSize)
 
         // Left leaf
-        drawPixel(canvas, 11, 3, sproutDark, pixelSize)
-        drawPixel(canvas, 12, 3, sproutGreen, pixelSize)
-        drawPixel(canvas, 10, 2, sproutDark, pixelSize)
-        drawPixel(canvas, 11, 2, sproutGreen, pixelSize)
+        drawPixel(canvas, 11, 3, COLOR_SPROUT_DARK, pixelSize)
+        drawPixel(canvas, 12, 3, COLOR_SPROUT_GREEN, pixelSize)
+        drawPixel(canvas, 10, 2, COLOR_SPROUT_DARK, pixelSize)
+        drawPixel(canvas, 11, 2, COLOR_SPROUT_GREEN, pixelSize)
 
         // Right leaf
-        drawPixel(canvas, 15, 3, sproutGreen, pixelSize)
-        drawPixel(canvas, 16, 3, sproutDark, pixelSize)
-        drawPixel(canvas, 16, 2, sproutGreen, pixelSize)
-        drawPixel(canvas, 17, 2, sproutDark, pixelSize)
+        drawPixel(canvas, 15, 3, COLOR_SPROUT_GREEN, pixelSize)
+        drawPixel(canvas, 16, 3, COLOR_SPROUT_DARK, pixelSize)
+        drawPixel(canvas, 16, 2, COLOR_SPROUT_GREEN, pixelSize)
+        drawPixel(canvas, 17, 2, COLOR_SPROUT_DARK, pixelSize)
 
         canvas.restore()
     }
 
     private fun drawBody(canvas: Canvas, pixelSize: Float) {
-        val bodyMap = arrayOf(
-            Triple(11, 16, 6),
-            Triple(9, 18, 7),
-            Triple(8, 19, 8),
-            Triple(7, 20, 9),
-            Triple(6, 21, 10),
-            Triple(6, 21, 11),
-            Triple(5, 22, 12),
-            Triple(5, 22, 13),
-            Triple(5, 22, 14),
-            Triple(5, 22, 15),
-            Triple(5, 22, 16),
-            Triple(5, 22, 17),
-            Triple(6, 21, 18),
-            Triple(6, 21, 19),
-            Triple(7, 20, 20),
-            Triple(8, 19, 21),
-            Triple(10, 17, 22)
-        )
-
-        for (span in bodyMap) {
-            val start = span.first
-            val end = span.second
-            val row = span.third
+        var idx = 0
+        while (idx < BODY_SPANS.size) {
+            val start = BODY_SPANS[idx]
+            val end = BODY_SPANS[idx + 1]
+            val row = BODY_SPANS[idx + 2]
+            idx += 3
 
             drawPixel(canvas, start, row, colorOutline, pixelSize)
             drawPixel(canvas, end, row, colorOutline, pixelSize)
@@ -756,33 +802,34 @@ class PixelPetView @JvmOverloads constructor(
         drawPixelSpan(canvas, 10, 17, 23, colorOutline, pixelSize)
 
         // Feet with stepping animation during walking
-        val feetColor = Color.parseColor("#F59E0B")
         var leftFootRow = 23
         var rightFootRow = 23
 
         if (isWalking) {
             if (walkStepPhase < 0.5f) {
-                leftFootRow = 22 // Left foot lifts
+                leftFootRow = 22
             } else {
-                rightFootRow = 22 // Right foot lifts
+                rightFootRow = 22
             }
         }
 
-        drawPixelSpan(canvas, 9, 11, leftFootRow, feetColor, pixelSize)
-        drawPixelSpan(canvas, 16, 18, rightFootRow, feetColor, pixelSize)
+        drawPixelSpan(canvas, 9, 11, leftFootRow, COLOR_FEET, pixelSize)
+        drawPixelSpan(canvas, 16, 18, rightFootRow, COLOR_FEET, pixelSize)
         drawPixelSpan(canvas, 9, 11, leftFootRow + 1, colorOutline, pixelSize)
         drawPixelSpan(canvas, 16, 18, rightFootRow + 1, colorOutline, pixelSize)
     }
 
     private fun drawCheeks(canvas: Canvas, pixelSize: Float) {
         val blush = when {
-            currentMood == PetMood.SAD -> Color.parseColor("#93C5FD")
-            currentActivity == IdleActivity.BLUSHING -> Color.parseColor("#FF2D55") // Deep embarrassed blush
+            currentMood == PetMood.SAD -> COLOR_BLUSH_SAD
+            currentActivity == IdleActivity.BLUSHING -> COLOR_BLUSH_EMBARRASSED
             else -> colorBlush
         }
         drawPixelSpan(canvas, 7, 8, 15, blush, pixelSize)
         drawPixelSpan(canvas, 19, 20, 15, blush, pixelSize)
     }
+
+
 
     private fun drawEyesAndBrows(canvas: Canvas, pixelSize: Float) {
         val gazePixelX = (eyeGazeX * 1.2f).toInt()
@@ -901,8 +948,8 @@ class PixelPetView @JvmOverloads constructor(
                 drawPixel(canvas, 16, 15, colorOutline, pixelSize)
                 drawPixel(canvas, 16, 16, colorOutline, pixelSize)
                 // Dark yawn inside
-                drawPixelSpan(canvas, 12, 15, 15, Color.parseColor("#4A0E17"), pixelSize)
-                drawPixelSpan(canvas, 12, 15, 16, Color.parseColor("#4A0E17"), pixelSize)
+                drawPixelSpan(canvas, 12, 15, 15, COLOR_DARK_YAWN_INSIDE, pixelSize)
+                drawPixelSpan(canvas, 12, 15, 16, COLOR_DARK_YAWN_INSIDE, pixelSize)
             }
             currentMood == PetMood.SAD -> {
                 drawPixelSpan(canvas, 13, 14, 15, colorOutline, pixelSize)
@@ -919,7 +966,7 @@ class PixelPetView @JvmOverloads constructor(
                 drawPixel(canvas, 11, 15, colorOutline, pixelSize)
                 drawPixel(canvas, 16, 15, colorOutline, pixelSize)
                 drawPixelSpan(canvas, 12, 15, 16, colorOutline, pixelSize)
-                drawPixelSpan(canvas, 12, 15, 15, Color.parseColor("#FF5252"), pixelSize)
+                drawPixelSpan(canvas, 12, 15, 15, COLOR_TONGUE_RED, pixelSize)
             }
             currentMood == PetMood.LOW_BATTERY || currentMood == PetMood.CRITICAL_BATTERY -> {
                 // Worried nervous wavy line
@@ -966,44 +1013,38 @@ class PixelPetView @JvmOverloads constructor(
     }
 
     private fun drawSpeechBubble(canvas: Canvas, pixelSize: Float) {
-        val bubbleOutline = Color.parseColor("#0F172A")
-        val bubbleBg = Color.WHITE
-        val dotColor = Color.parseColor("#64748B")
-        val activeDotColor = Color.parseColor("#0EA5E9")
-
+        // Using pre-computed color constants COLOR_BUBBLE_OUTLINE, COLOR_BUBBLE_DOT, COLOR_BUBBLE_DOT_ACTIVE
         // Speech bubble at cols 19-27, rows 1-6
-        drawPixelSpan(canvas, 21, 26, 1, bubbleOutline, pixelSize)
-        drawPixel(canvas, 20, 2, bubbleOutline, pixelSize)
-        drawPixel(canvas, 27, 2, bubbleOutline, pixelSize)
-        drawPixelSpan(canvas, 21, 26, 2, bubbleBg, pixelSize)
+        drawPixelSpan(canvas, 21, 26, 1, COLOR_BUBBLE_OUTLINE, pixelSize)
+        drawPixel(canvas, 20, 2, COLOR_BUBBLE_OUTLINE, pixelSize)
+        drawPixel(canvas, 27, 2, COLOR_BUBBLE_OUTLINE, pixelSize)
+        drawPixelSpan(canvas, 21, 26, 2, Color.WHITE, pixelSize)
 
-        drawPixel(canvas, 19, 3, bubbleOutline, pixelSize)
-        drawPixel(canvas, 27, 3, bubbleOutline, pixelSize)
-        drawPixelSpan(canvas, 20, 26, 3, bubbleBg, pixelSize)
+        drawPixel(canvas, 19, 3, COLOR_BUBBLE_OUTLINE, pixelSize)
+        drawPixel(canvas, 27, 3, COLOR_BUBBLE_OUTLINE, pixelSize)
+        drawPixelSpan(canvas, 20, 26, 3, Color.WHITE, pixelSize)
+        drawPixel(canvas, 19, 4, COLOR_BUBBLE_OUTLINE, pixelSize)
+        drawPixel(canvas, 27, 4, COLOR_BUBBLE_OUTLINE, pixelSize)
+        drawPixelSpan(canvas, 20, 26, 4, Color.WHITE, pixelSize)
+        drawPixel(canvas, 20, 5, COLOR_BUBBLE_OUTLINE, pixelSize)
+        drawPixel(canvas, 26, 5, COLOR_BUBBLE_OUTLINE, pixelSize)
+        drawPixelSpan(canvas, 21, 25, 5, Color.WHITE, pixelSize)
 
-        drawPixel(canvas, 19, 4, bubbleOutline, pixelSize)
-        drawPixel(canvas, 27, 4, bubbleOutline, pixelSize)
-        drawPixelSpan(canvas, 20, 26, 4, bubbleBg, pixelSize)
-
-        drawPixel(canvas, 20, 5, bubbleOutline, pixelSize)
-        drawPixel(canvas, 26, 5, bubbleOutline, pixelSize)
-        drawPixelSpan(canvas, 21, 25, 5, bubbleBg, pixelSize)
-
-        drawPixelSpan(canvas, 21, 25, 6, bubbleOutline, pixelSize)
+        drawPixelSpan(canvas, 21, 25, 6, COLOR_BUBBLE_OUTLINE, pixelSize)
 
         // Tail pointing down to mouth
-        drawPixel(canvas, 19, 6, bubbleOutline, pixelSize)
-        drawPixel(canvas, 18, 7, bubbleOutline, pixelSize)
-        drawPixel(canvas, 19, 7, bubbleOutline, pixelSize)
+        drawPixel(canvas, 19, 6, COLOR_BUBBLE_OUTLINE, pixelSize)
+        drawPixel(canvas, 18, 7, COLOR_BUBBLE_OUTLINE, pixelSize)
+        drawPixel(canvas, 19, 7, COLOR_BUBBLE_OUTLINE, pixelSize)
 
         // 3 Typing Dots cycling in animation
         val dot1Y = if (typingDotCycle == 0) 3 else 4
         val dot2Y = if (typingDotCycle == 1) 3 else 4
         val dot3Y = if (typingDotCycle == 2) 3 else 4
 
-        drawPixel(canvas, 21, dot1Y, if (typingDotCycle == 0) activeDotColor else dotColor, pixelSize)
-        drawPixel(canvas, 23, dot2Y, if (typingDotCycle == 1) activeDotColor else dotColor, pixelSize)
-        drawPixel(canvas, 25, dot3Y, if (typingDotCycle == 2) activeDotColor else dotColor, pixelSize)
+        drawPixel(canvas, 21, dot1Y, if (typingDotCycle == 0) COLOR_BUBBLE_DOT_ACTIVE else COLOR_BUBBLE_DOT, pixelSize)
+        drawPixel(canvas, 23, dot2Y, if (typingDotCycle == 1) COLOR_BUBBLE_DOT_ACTIVE else COLOR_BUBBLE_DOT, pixelSize)
+        drawPixel(canvas, 25, dot3Y, if (typingDotCycle == 2) COLOR_BUBBLE_DOT_ACTIVE else COLOR_BUBBLE_DOT, pixelSize)
     }
 
     private fun drawGlasses(canvas: Canvas, pixelSize: Float) {
@@ -1075,7 +1116,7 @@ class PixelPetView @JvmOverloads constructor(
     }
 
     private fun drawSparkles(canvas: Canvas, pixelSize: Float) {
-        val sparkleColor = if (currentMood == PetMood.CHARGING) Color.parseColor("#34D399") else colorSparkle
+        val sparkleColor = if (currentMood == PetMood.CHARGING) COLOR_SPARKLE_CHARGING else colorSparkle
         val sparkleY = (6 - (sparkleProgress * 3f)).toInt()
 
         drawPixel(canvas, 5, sparkleY, sparkleColor, pixelSize)
@@ -1116,6 +1157,6 @@ class PixelPetView @JvmOverloads constructor(
         drawPixelSpan(canvas, 13, 15, 0, colorLightbulb, pixelSize)
         drawPixelSpan(canvas, 12, 16, 1, colorLightbulb, pixelSize)
         drawPixelSpan(canvas, 13, 15, 2, colorLightbulb, pixelSize)
-        drawPixelSpan(canvas, 13, 15, 3, Color.parseColor("#94A3B8"), pixelSize) // base
+        drawPixelSpan(canvas, 13, 15, 3, COLOR_LIGHTBULB_BASE, pixelSize) // base
     }
 }

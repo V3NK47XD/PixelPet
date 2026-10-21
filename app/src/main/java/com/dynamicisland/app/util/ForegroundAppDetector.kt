@@ -56,10 +56,12 @@ object ForegroundAppDetector {
     @Volatile
     var isInstagramActive: Boolean = false
         private set
-
     private var isMonitoring = false
+    private var isPaused = false
+    private var appContext: Context? = null
     private val handler by lazy { Handler(Looper.getMainLooper()) }
     private val pollIntervalMs = 500L
+    private val reusableUsageEvent by lazy { UsageEvents.Event() }
 
     fun isInstagram(packageName: String?): Boolean {
         if (packageName.isNullOrBlank()) return false
@@ -166,8 +168,11 @@ object ForegroundAppDetector {
     }
 
     fun startMonitoring(context: Context) {
-        if (isMonitoring) return
+        appContext = context.applicationContext
+        if (isMonitoring && !isPaused) return
         isMonitoring = true
+        isPaused = false
+        handler.removeCallbacksAndMessages(null)
         addLog(
             AppLogEntry(
                 timestamp = System.currentTimeMillis(),
@@ -177,18 +182,33 @@ object ForegroundAppDetector {
                 note = "Foreground monitoring started (500ms polling)"
             )
         )
-        handler.post(createPollingRunnable(context.applicationContext))
+        handler.post(createPollingRunnable(appContext!!))
+    }
+
+    fun pauseMonitoring() {
+        if (!isMonitoring || isPaused) return
+        isPaused = true
+        handler.removeCallbacksAndMessages(null)
+    }
+
+    fun resumeMonitoring() {
+        if (!isMonitoring || !isPaused) return
+        isPaused = false
+        val ctx = appContext ?: return
+        handler.removeCallbacksAndMessages(null)
+        handler.post(createPollingRunnable(ctx))
     }
 
     fun stopMonitoring() {
         isMonitoring = false
+        isPaused = false
         handler.removeCallbacksAndMessages(null)
     }
 
     private fun createPollingRunnable(appContext: Context): Runnable {
         return object : Runnable {
             override fun run() {
-                if (!isMonitoring) return
+                if (!isMonitoring || isPaused) return
                 checkForegroundApp(appContext)
                 handler.postDelayed(this, pollIntervalMs)
             }
@@ -277,8 +297,7 @@ object ForegroundAppDetector {
 
         val events = usageStatsManager.queryEvents(startTime, now) ?: return null
         var lastResumedPackage: String? = null
-        val event = UsageEvents.Event()
-
+        val event = reusableUsageEvent
         while (events.hasNextEvent()) {
             events.getNextEvent(event)
             val isResumed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

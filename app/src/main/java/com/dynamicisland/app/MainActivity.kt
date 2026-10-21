@@ -21,7 +21,18 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var prefs: PreferencesHelper
+    private val prefWriteHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val pendingWrites = mutableMapOf<String, Runnable>()
 
+    private fun debouncePrefWrite(key: String, delayMs: Long = 250L, writeAction: () -> Unit) {
+        pendingWrites[key]?.let { prefWriteHandler.removeCallbacks(it) }
+        val runnable = Runnable {
+            writeAction()
+            pendingWrites.remove(key)
+        }
+        pendingWrites[key] = runnable
+        prefWriteHandler.postDelayed(runnable, delayMs)
+    }
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {
@@ -171,53 +182,65 @@ class MainActivity : AppCompatActivity() {
         binding.sliderOffsetX.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
                 val offset = value.toInt()
-                prefs.cameraRefX = offset
                 binding.tvOffsetXVal.text = "$offset dp"
-                notifySettingsChanged()
+                debouncePrefWrite("cameraRefX") {
+                    prefs.cameraRefX = offset
+                    notifySettingsChanged()
+                }
             }
         }
 
         binding.sliderOffsetY.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
                 val offset = value.toInt()
-                prefs.cameraRefY = offset
                 binding.tvOffsetYVal.text = "$offset dp"
-                notifySettingsChanged()
+                debouncePrefWrite("cameraRefY") {
+                    prefs.cameraRefY = offset
+                    notifySettingsChanged()
+                }
             }
         }
 
         binding.sliderPetSize.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
                 val size = value.toInt()
-                prefs.petSizeDp = size
                 binding.tvPetSizeVal.text = "$size dp"
-                notifySettingsChanged()
+                debouncePrefWrite("petSizeDp") {
+                    prefs.petSizeDp = size
+                    notifySettingsChanged()
+                }
             }
         }
 
         binding.sliderIntensity.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
-                prefs.animationIntensity = value
                 binding.tvIntensityVal.text = "${(value * 100).toInt()}%"
                 binding.previewTetherStage.petView.setAnimationIntensity(value)
-                notifySettingsChanged()
+                debouncePrefWrite("animationIntensity") {
+                    prefs.animationIntensity = value
+                    notifySettingsChanged()
+                }
             }
         }
 
         binding.sliderAngerMinutes.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
                 val mins = value.toInt()
-                prefs.instagramAngerMinutes = mins
                 binding.tvAngerMinutesVal.text = "$mins minutes"
+                debouncePrefWrite("angerMinutes") {
+                    prefs.instagramAngerMinutes = mins
+                }
             }
         }
 
         binding.sliderLeashLength.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
                 val len = value.toInt()
-                prefs.leashLengthDp = len
                 binding.tvLeashLengthVal.text = "$len dp"
-                notifySettingsChanged()
+                debouncePrefWrite("leashLengthDp") {
+                    prefs.leashLengthDp = len
+                    notifySettingsChanged()
+                }
             }
         }
 
@@ -462,5 +485,10 @@ class MainActivity : AppCompatActivity() {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
+    }
+
+    override fun onDestroy() {
+        prefWriteHandler.removeCallbacksAndMessages(null)
+        super.onDestroy()
     }
 }

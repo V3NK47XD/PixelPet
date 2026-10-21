@@ -88,6 +88,9 @@ class LeashCanvasView @JvmOverloads constructor(
     }
 
     fun updatePetAttachment(petTopX: Float, petTopY: Float, slackFactor: Float = 1.0f) {
+        if (this.petTopXPx == petTopX && this.petTopYPx == petTopY && this.leashSlackFactor == slackFactor) {
+            return
+        }
         this.petTopXPx = petTopX
         this.petTopYPx = petTopY
         this.leashSlackFactor = slackFactor
