@@ -1,16 +1,20 @@
 package com.dynamicisland.app
 
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
+import android.os.SystemClock
 import android.view.Gravity
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import com.dynamicisland.app.util.OverlayPermissionHelper
 import com.dynamicisland.app.util.PreferencesHelper
 
@@ -33,9 +37,13 @@ class DynamicIslandService : Service() {
                 action = ACTION_START
             }
             try {
-                context.startService(intent)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
             } catch (e: Exception) {
-                e.printStackTrace()
+                try { context.startService(intent) } catch (ex: Exception) {}
             }
         }
 
@@ -180,7 +188,16 @@ class DynamicIslandService : Service() {
                 .addAction(R.drawable.ic_stop, getString(R.string.notification_action_stop), stopPendingIntent)
                 .build()
 
-            startForeground(NOTIFICATION_ID, notification)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                ServiceCompat.startForeground(
+                    this,
+                    NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
         } catch (e: Exception) {
             // Safe fallback: Service continues running as standard service if foreground not allowed
             e.printStackTrace()
@@ -280,6 +297,31 @@ class DynamicIslandService : Service() {
         com.dynamicisland.app.util.ForegroundAppDetector.removeListener(appChangeListener)
         removeOverlay()
         super.onDestroy()
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        if (prefs.isIslandEnabled && OverlayPermissionHelper.hasOverlayPermission(this)) {
+            try {
+                val restartIntent = Intent(applicationContext, DynamicIslandService::class.java).apply {
+                    action = ACTION_START
+                }
+                val restartPendingIntent = PendingIntent.getService(
+                    applicationContext,
+                    101,
+                    restartIntent,
+                    PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+                )
+                val alarmManager = getSystemService(Context.ALARM_SERVICE) as? AlarmManager
+                alarmManager?.set(
+                    AlarmManager.ELAPSED_REALTIME,
+                    SystemClock.elapsedRealtime() + 800L,
+                    restartPendingIntent
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

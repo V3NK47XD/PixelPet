@@ -54,6 +54,7 @@ class SmileyAnimationLogicTest {
         assertTrue(petMoods.contains("SAD"))
         assertTrue(petMoods.contains("ANGRY"))
         assertTrue(petMoods.contains("NERD"))
+        assertTrue(petMoods.contains("TEXTING"))
     }
 
     @Test

@@ -101,6 +101,9 @@ class PetMoodManager(private val context: Context) {
             isInstagram(currentPackageName) -> {
                 evaluateInstagramDuration()
             }
+            isTextingApp(currentPackageName) -> {
+                updateMood(PixelPetView.PetMood.TEXTING, "Texting App ($currentPackageName) • Typing •••")
+            }
             isNerdApp(currentPackageName) || isGoogleNerdApp(currentPackageName) -> {
                 updateMood(PixelPetView.PetMood.NERD, "Learning / Google App ($currentPackageName)")
             }
@@ -147,6 +150,26 @@ class PetMoodManager(private val context: Context) {
                 lower == "com.instagram.lite" ||
                 lower == "com.instagram.barcelona" ||
                 lower.contains("instagram")
+    }
+
+    fun isTextingApp(packageName: String?): Boolean {
+        if (packageName.isNullOrBlank()) return false
+        val lower = packageName.lowercase()
+        return lower == "com.whatsapp" ||
+                lower == "com.whatsapp.w4b" ||
+                lower == "com.discord" ||
+                lower == "com.linkedin.android" ||
+                lower == "org.telegram.messenger" ||
+                lower == "org.thoughtcrime.securesms" ||
+                lower == "com.facebook.orca" ||
+                lower == "com.slack" ||
+                lower.contains("messaging") ||
+                lower.contains("message") ||
+                lower.contains("mms") ||
+                lower.contains("discord") ||
+                lower.contains("whatsapp") ||
+                lower.contains("telegram") ||
+                lower.contains("linkedin")
     }
 
     fun isNerdApp(packageName: String?): Boolean {

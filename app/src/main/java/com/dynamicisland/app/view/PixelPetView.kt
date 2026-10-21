@@ -41,7 +41,8 @@ class PixelPetView @JvmOverloads constructor(
         SLEEPY,
         CHARGING,
         LOW_BATTERY,
-        CRITICAL_BATTERY
+        CRITICAL_BATTERY,
+        TEXTING
     }
 
     enum class IdleActivity {
@@ -85,6 +86,8 @@ class PixelPetView @JvmOverloads constructor(
     private val colorCriticalBatteryBody = Color.parseColor("#F87171")
     private val colorCriticalBatteryShadow = Color.parseColor("#DC2626")
 
+    private val colorTextingBody = Color.parseColor("#2DD4BF") // Energetic cheerful teal
+    private val colorTextingShadow = Color.parseColor("#0D9488")
     private val colorOutline = Color.parseColor("#261C14")
     private val colorEye = Color.parseColor("#1E1A16")
     private val colorEyeShine = Color.WHITE
@@ -145,6 +148,8 @@ class PixelPetView @JvmOverloads constructor(
     private var sleepZProgress = 0f
     private var activityProgress = 0f
     private var faintTiltAngle = 0f
+    private var typingDotCycle = 0
+    private var typingHandPhase = 0f
 
     // Animators
     private var bobAnimator: ValueAnimator? = null
@@ -156,6 +161,7 @@ class PixelPetView @JvmOverloads constructor(
     private var happyAnimator: ValueAnimator? = null
     private var walkAnimator: ValueAnimator? = null
     private var sleepyAnimator: ValueAnimator? = null
+    private var typingAnimator: ValueAnimator? = null
     private var activityAnimator: ValueAnimator? = null
     private var colorTransitionAnimator: ValueAnimator? = null
 
@@ -290,6 +296,23 @@ class PixelPetView @JvmOverloads constructor(
                 }
             }
         }
+
+        // 10. Texting / Chatting mode: animated typing dots in speech bubble & tapping hands
+        typingAnimator = ValueAnimator.ofFloat(0f, 3f).apply {
+            duration = 850
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = LinearInterpolator()
+            addUpdateListener { anim ->
+                if (currentMood == PetMood.TEXTING) {
+                    val f = anim.animatedFraction
+                    typingDotCycle = (f * 3).toInt() % 3
+                    typingHandPhase = sin(f * Math.PI.toFloat() * 8)
+                    eyeGazeX = sin(f * Math.PI.toFloat() * 2) * 0.4f
+                    eyeGazeY = 0.55f // Looking down at conversation
+                    invalidate()
+                }
+            }
+        }
     }
 
     fun setMood(mood: PetMood) {
@@ -306,6 +329,7 @@ class PixelPetView @JvmOverloads constructor(
             PetMood.CHARGING -> colorChargingBody to colorChargingShadow
             PetMood.LOW_BATTERY -> colorLowBatteryBody to colorLowBatteryShadow
             PetMood.CRITICAL_BATTERY -> colorCriticalBatteryBody to colorCriticalBatteryShadow
+            PetMood.TEXTING -> colorTextingBody to colorTextingShadow
         }
 
         colorTransitionAnimator?.cancel()
@@ -329,6 +353,7 @@ class PixelPetView @JvmOverloads constructor(
         happyAnimator?.cancel()
         readingAnimator?.cancel()
         sleepyAnimator?.cancel()
+        typingAnimator?.cancel()
         faintTiltAngle = 0f
 
         when (mood) {
@@ -344,6 +369,7 @@ class PixelPetView @JvmOverloads constructor(
             PetMood.HAPPY -> happyAnimator?.start()
             PetMood.SLEEPY -> sleepyAnimator?.start()
             PetMood.CHARGING -> happyAnimator?.start() // Gentle energy bob
+            PetMood.TEXTING -> typingAnimator?.start()
             PetMood.CRITICAL_BATTERY -> {
                 // Dramatic faint tilt
                 faintTiltAngle = 55f
@@ -513,6 +539,7 @@ class PixelPetView @JvmOverloads constructor(
         happyAnimator?.cancel()
         walkAnimator?.cancel()
         sleepyAnimator?.cancel()
+        typingAnimator?.cancel()
         activityAnimator?.cancel()
         colorTransitionAnimator?.cancel()
     }
@@ -578,6 +605,7 @@ class PixelPetView @JvmOverloads constructor(
             currentMood == PetMood.ANGRY -> drawSteamPuffs(canvas, pixelSize)
             currentMood == PetMood.HAPPY || currentMood == PetMood.CHARGING -> drawSparkles(canvas, pixelSize)
             currentMood == PetMood.SLEEPY -> drawZzz(canvas, pixelSize)
+            currentMood == PetMood.TEXTING -> drawSpeechBubble(canvas, pixelSize)
         }
 
         if (currentActivity == IdleActivity.LIGHTBULB) {
@@ -812,6 +840,13 @@ class PixelPetView @JvmOverloads constructor(
 
     private fun drawMouth(canvas: Canvas, pixelSize: Float) {
         when {
+            currentMood == PetMood.TEXTING -> {
+                // Cheerful open chatting mouth :3
+                drawPixelSpan(canvas, 12, 15, 15, colorOutline, pixelSize)
+                drawPixel(canvas, 11, 15, colorOutline, pixelSize)
+                drawPixel(canvas, 16, 15, colorOutline, pixelSize)
+                drawPixelSpan(canvas, 13, 14, 16, colorOutline, pixelSize)
+            }
             currentActivity == IdleActivity.YAWNING -> {
                 // Wide open yawn 'O'
                 drawPixelSpan(canvas, 12, 15, 14, colorOutline, pixelSize)
@@ -872,7 +907,58 @@ class PixelPetView @JvmOverloads constructor(
             drawPixel(canvas, 3 + waveWave, 11, armColor, pixelSize)
             drawPixel(canvas, 3 + waveWave, 10, colorOutline, pixelSize)
             drawPixel(canvas, 2 + waveWave, 10, armColor, pixelSize)
+        } else if (currentMood == PetMood.TEXTING) {
+            // Rapid tiny typing hands tapping at front
+            val leftHandY = if (typingDotCycle == 0) 16 else 17
+            val rightHandY = if (typingDotCycle == 1) 16 else 17
+            val handColor = activeBodyColor
+
+            drawPixelSpan(canvas, 10, 11, leftHandY, handColor, pixelSize)
+            drawPixelSpan(canvas, 10, 11, leftHandY + 1, colorOutline, pixelSize)
+            drawPixelSpan(canvas, 16, 17, rightHandY, handColor, pixelSize)
+            drawPixelSpan(canvas, 16, 17, rightHandY + 1, colorOutline, pixelSize)
         }
+    }
+
+    private fun drawSpeechBubble(canvas: Canvas, pixelSize: Float) {
+        val bubbleOutline = Color.parseColor("#0F172A")
+        val bubbleBg = Color.WHITE
+        val dotColor = Color.parseColor("#64748B")
+        val activeDotColor = Color.parseColor("#0EA5E9")
+
+        // Speech bubble at cols 19-27, rows 1-6
+        drawPixelSpan(canvas, 21, 26, 1, bubbleOutline, pixelSize)
+        drawPixel(canvas, 20, 2, bubbleOutline, pixelSize)
+        drawPixel(canvas, 27, 2, bubbleOutline, pixelSize)
+        drawPixelSpan(canvas, 21, 26, 2, bubbleBg, pixelSize)
+
+        drawPixel(canvas, 19, 3, bubbleOutline, pixelSize)
+        drawPixel(canvas, 27, 3, bubbleOutline, pixelSize)
+        drawPixelSpan(canvas, 20, 26, 3, bubbleBg, pixelSize)
+
+        drawPixel(canvas, 19, 4, bubbleOutline, pixelSize)
+        drawPixel(canvas, 27, 4, bubbleOutline, pixelSize)
+        drawPixelSpan(canvas, 20, 26, 4, bubbleBg, pixelSize)
+
+        drawPixel(canvas, 20, 5, bubbleOutline, pixelSize)
+        drawPixel(canvas, 26, 5, bubbleOutline, pixelSize)
+        drawPixelSpan(canvas, 21, 25, 5, bubbleBg, pixelSize)
+
+        drawPixelSpan(canvas, 21, 25, 6, bubbleOutline, pixelSize)
+
+        // Tail pointing down to mouth
+        drawPixel(canvas, 19, 6, bubbleOutline, pixelSize)
+        drawPixel(canvas, 18, 7, bubbleOutline, pixelSize)
+        drawPixel(canvas, 19, 7, bubbleOutline, pixelSize)
+
+        // 3 Typing Dots cycling in animation
+        val dot1Y = if (typingDotCycle == 0) 3 else 4
+        val dot2Y = if (typingDotCycle == 1) 3 else 4
+        val dot3Y = if (typingDotCycle == 2) 3 else 4
+
+        drawPixel(canvas, 21, dot1Y, if (typingDotCycle == 0) activeDotColor else dotColor, pixelSize)
+        drawPixel(canvas, 23, dot2Y, if (typingDotCycle == 1) activeDotColor else dotColor, pixelSize)
+        drawPixel(canvas, 25, dot3Y, if (typingDotCycle == 2) activeDotColor else dotColor, pixelSize)
     }
 
     private fun drawGlasses(canvas: Canvas, pixelSize: Float) {

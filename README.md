@@ -55,6 +55,7 @@
 | **😴 Idle** | Default / Home screen | Warm sunny yellow body, gentle breathing squash & stretch, natural blinking, looking around, sprout sway. |
 | **🥺 Sad** | Instagram opened | Face turns pale blue (`#90CAF9`), droopy posture, tiny quivering frown, animated cyan teardrop trickles down cheek. |
 | **😡 Angry** | Instagram open $> 5\text{ min}$ *(configurable)* | Turns furious crimson (`#EF5350`), angry V-eyebrows, puffed cheeks, high-frequency rage vibration, steam puffs rise from head. *(Timer resets on exit).* |
+| **💬 Texting** | WhatsApp, Discord, Messages, LinkedIn, Telegram | Cheerful teal face (`#2DD4BF`), floating speech bubble with cycling typing dots (`• • •`), rapid finger typing animation! |
 | **🤓 Nerd** | Google Apps, ChatGPT, Gemini, WPS, PDF | Cute glasses drop down from above and bounce onto face, eyes scan left-to-right reading text, occasional thinking lightbulb (`💡`). |
 | **🌙 Sleepy** | Late night (local time $\ge 22:00$) | Muted lavender body (`#B39DDB`), droopy eye slits, slow nodding, wide yawns, floating animated **"Zzz"** particles. |
 | **⚡ Charging** | Power connected | Soft mint green face (`#A7F3D0`) with floating energy sparkles and relaxed expression. |

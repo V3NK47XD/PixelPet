@@ -327,6 +327,13 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="🤓 Nerd (Learning)" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chipMoodTexting"
+                                style="@style/Widget.Material3.Chip.Filter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="💬 Texting (WhatsApp/Discord)" />
                         </com.google.android.material.chip.ChipGroup>
                     </HorizontalScrollView>
                 </LinearLayout>

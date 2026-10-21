@@ -40,7 +40,7 @@ graph TD
      - `CHARGING`: Soft mint green (`#A7F3D0`), gentle energy sparkles, peaceful expression.
      - `LOW_BATTERY`: Amber body (`#FB923C`), wide worried eyes glancing at battery indicator.
      - `CRITICAL_BATTERY`: Pale red body (`#F87171`), dramatic fainting collapse ($55^\circ$ tilt) with `X X` eyes.
-
+     - `TEXTING`: Cheerful teal body (`#2DD4BF`), animated speech bubble (`💬`) with cycling typing dots (`• • •`), rapid typing hands tapping in front of body.
 2. **`com.dynamicisland.app.view.TetheredPetStageView`**:
    - Transparent overlay container positioned over the front camera reference coordinate $(cameraRefX, cameraRefY)$.
    - Draws a golden anchor ring over the camera lens.
@@ -69,10 +69,11 @@ graph TD
      3. `LOW_BATTERY` ($<15\%$)
      4. `ANGRY` (Instagram open continuously $\ge 5\text{ min}$)
      5. `SAD` (Instagram in foreground)
-     6. `NERD` (Learning apps: ChatGPT, Gemini, WPS, ONLYOFFICE, PDF readers, Google apps)
-     7. `SLEEPY` (Local time curve $\ge 22:00$ / $10\text{ PM}$)
-     8. `HAPPY` (Pet app open or tap interaction)
-     9. `IDLE` (Default)
+     6. `TEXTING` (Messaging apps: WhatsApp, Discord, Messages, LinkedIn, Telegram, Signal, Slack)
+     7. `NERD` (Learning apps: ChatGPT, Gemini, WPS, ONLYOFFICE, PDF readers, Google apps)
+     8. `SLEEPY` (Local time curve $\ge 22:00$ / $10\text{ PM}$)
+     9. `HAPPY` (Pet app open or tap interaction)
+     10. `IDLE` (Default)
    - Tracks continuous session time for Instagram and resets to zero the instant the user exits.
 
 4. **`com.dynamicisland.app.util.ForegroundAppDetector`**:
@@ -84,8 +85,9 @@ graph TD
    - Lifecycle-managed `BroadcastReceiver` listening to `ACTION_USER_PRESENT`, `ACTION_POWER_CONNECTED`, `ACTION_POWER_DISCONNECTED`, and `ACTION_BATTERY_CHANGED`.
 
 6. **`com.dynamicisland.app.DynamicIslandService`**:
-   - Foreground service with `TYPE_APPLICATION_OVERLAY` and `PixelFormat.TRANSLUCENT`.
-   - Hosts `TetheredPetStageView` anchored over the camera cutout.
+   - Persistent Foreground Service running with `TYPE_APPLICATION_OVERLAY` and `specialUse` foreground service type.
+   - Configured with `android:stopWithTask="false"` and `onTaskRemoved` auto-restart alarm so the overlay never dies when swiped from recent apps.
+   - Hosts `TetheredPetStageView` anchored over the camera cutout $(cameraRefX, cameraRefY)$.
 
 ---
 

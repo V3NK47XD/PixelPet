@@ -50,12 +50,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupUI() {
         // 1. Sliders initialization
-        binding.sliderOffsetX.value = prefs.petOffsetX.toFloat().coerceIn(-150f, 150f)
-        binding.tvOffsetXVal.text = "${prefs.petOffsetX} dp"
+        binding.sliderOffsetX.value = prefs.cameraRefX.toFloat().coerceIn(-150f, 150f)
+        binding.tvOffsetXVal.text = "${prefs.cameraRefX} dp"
 
-        binding.sliderOffsetY.value = prefs.petOffsetY.toFloat().coerceIn(0f, 120f)
-        binding.tvOffsetYVal.text = "${prefs.petOffsetY} dp"
-
+        binding.sliderOffsetY.value = prefs.cameraRefY.toFloat().coerceIn(0f, 120f)
+        binding.tvOffsetYVal.text = "${prefs.cameraRefY} dp"
         binding.sliderPetSize.value = prefs.petSizeDp.toFloat().coerceIn(32f, 96f)
         binding.tvPetSizeVal.text = "${prefs.petSizeDp} dp"
 
@@ -159,6 +158,9 @@ class MainActivity : AppCompatActivity() {
         binding.chipMoodNerd.setOnClickListener {
             setPreviewMood(PixelPetView.PetMood.NERD, "Nerd (Learning) • Glasses drop down and eyes scan reading text")
         }
+        binding.chipMoodTexting.setOnClickListener {
+            setPreviewMood(PixelPetView.PetMood.TEXTING, "Texting (WhatsApp/Discord) • Typing ••• speech bubble & rapid hands")
+        }
 
         // Camera Alignment Presets
         binding.btnAlignLeft.setOnClickListener { setCameraAlignment("LEFT") }
@@ -169,7 +171,7 @@ class MainActivity : AppCompatActivity() {
         binding.sliderOffsetX.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
                 val offset = value.toInt()
-                prefs.petOffsetX = offset
+                prefs.cameraRefX = offset
                 binding.tvOffsetXVal.text = "$offset dp"
                 notifySettingsChanged()
             }
@@ -178,7 +180,7 @@ class MainActivity : AppCompatActivity() {
         binding.sliderOffsetY.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
                 val offset = value.toInt()
-                prefs.petOffsetY = offset
+                prefs.cameraRefY = offset
                 binding.tvOffsetYVal.text = "$offset dp"
                 notifySettingsChanged()
             }
@@ -304,6 +306,25 @@ class MainActivity : AppCompatActivity() {
 
     private fun setCameraAlignment(alignment: String) {
         prefs.cameraAlignment = alignment
+        when (alignment) {
+            "LEFT" -> {
+                prefs.cameraRefX = -110
+                prefs.cameraRefY = 24
+            }
+            "RIGHT" -> {
+                prefs.cameraRefX = 110
+                prefs.cameraRefY = 24
+            }
+            else -> {
+                prefs.cameraRefX = 0
+                prefs.cameraRefY = 22
+            }
+        }
+        binding.sliderOffsetX.value = prefs.cameraRefX.toFloat()
+        binding.tvOffsetXVal.text = "${prefs.cameraRefX} dp"
+        binding.sliderOffsetY.value = prefs.cameraRefY.toFloat()
+        binding.tvOffsetYVal.text = "${prefs.cameraRefY} dp"
+
         updateAlignmentButtonsUI(alignment)
         notifySettingsChanged()
     }
