@@ -106,8 +106,7 @@ graph TD
 
 ### GitHub Actions Release Workflow (`.github/workflows/release.yml`)
 - **Triggers**:
-  - Push to `main`
-  - Push to tag matching `v*` (e.g. `v1.0.1`)
+  - Push to `main` exclusively (pushes to other branches like `optimization` do not run releases)
   - Manual execution via `workflow_dispatch`
 - **Workflow Pipeline**:
   1. Checks out repository.
@@ -123,7 +122,7 @@ graph TD
 3. Recompile the debug APK: `./gradlew assembleDebug`.
 4. Run tests: `./gradlew test`.
 5. Commit `.gitignore`, `README.md`, `app/build.gradle.kts`, and `app/build/outputs/apk/debug/app-debug.apk`.
-6. Push to `main` or tag with `git tag vX.Y.Z && git push origin vX.Y.Z`.
+6. Merge or push to `main` (which automatically triggers the release workflow).
 
 ---
 

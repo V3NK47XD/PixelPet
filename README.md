@@ -93,8 +93,7 @@
 * **Tracked Build Output**: [`app/build/outputs/apk/debug/app-debug.apk`](app/build/outputs/apk/debug/app-debug.apk)
 
 ### Automated CI/CD Release Workflow
-Whenever a new version tag (e.g. `v1.0.1`) or commit to `main` is pushed, the [GitHub Actions Release Workflow](.github/workflows/release.yml) automatically builds the application, packages `PixelPet-v${VERSION}.apk` and `app-debug.apk`, and publishes them directly to GitHub Releases.
-
+Whenever a new commit to `main` is pushed, the [GitHub Actions Release Workflow](.github/workflows/release.yml) automatically builds the application, packages `PixelPet-v${VERSION}.apk` and `app-debug.apk`, and publishes them directly to GitHub Releases. Pushes to other branches (such as `optimization`) do not trigger releases.
 ---
 
 ## 🚀 Building & Installing
