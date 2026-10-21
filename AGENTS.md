@@ -94,13 +94,11 @@ graph TD
 ## 📦 Releases & Versioning Architecture
 
 ### Version Tracking
-- Primary version definition is located in `app/build.gradle.kts`:
-  ```kotlin
-  versionCode = 1
-  versionName = "1.0.0"
+  versionCode = 2
+  versionName = "1.0.1"
   ```
 - Public version tag in `README.md`:
-  `**Current Version:** v1.0.0`
+  `**Current Version:** v1.0.1`
 - Prebuilt APK is whitelisted in `.gitignore` and committed directly to the repo at:
   `app/build/outputs/apk/debug/app-debug.apk`
 
