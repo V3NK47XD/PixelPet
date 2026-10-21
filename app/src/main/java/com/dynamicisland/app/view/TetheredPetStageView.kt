@@ -8,6 +8,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.RectF
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
@@ -323,6 +324,17 @@ class TetheredPetStageView @JvmOverloads constructor(
         val w = width.toFloat()
         if (w <= 0f) return
 
+        // Render Pass-Through Area in Touch Debug Mode
+        if (prefs.isTouchDebugEnabled) {
+            val debugPassThroughPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                strokeWidth = 2.0f
+                color = Color.parseColor("#06B6D4")
+                pathEffect = android.graphics.DashPathEffect(floatArrayOf(12f, 8f), 0f)
+            }
+            val r = RectF(2f, 2f, w - 2f, height.toFloat() - 2f)
+            canvas.drawRoundRect(r, 8f, 8f, debugPassThroughPaint)
+        }
         val anchorX = w / 2f
         val anchorY = 8.dpToPx().toFloat()
 

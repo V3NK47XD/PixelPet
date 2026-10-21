@@ -80,7 +80,7 @@ class MainActivity : AppCompatActivity() {
         binding.switchDynamicMovement.isChecked = prefs.isDynamicMovementEnabled
         binding.switchHideAndSeek.isChecked = prefs.isHideAndSeekEnabled
         binding.switchTouchReactions.isChecked = prefs.isTouchReactionEnabled
-
+        binding.switchTouchDebug.isChecked = prefs.isTouchDebugEnabled
         // 5. Sleepiness & System Settings
         binding.switchSleepiness.isChecked = prefs.isSleepinessEnabled
         binding.sliderSleepyHour.value = prefs.sleepyStartHour.toFloat().coerceIn(19f, 25f)
@@ -259,6 +259,12 @@ class MainActivity : AppCompatActivity() {
 
         binding.switchTouchReactions.setOnCheckedChangeListener { _, isChecked ->
             prefs.isTouchReactionEnabled = isChecked
+            notifySettingsChanged()
+        }
+
+        binding.switchTouchDebug.setOnCheckedChangeListener { _, isChecked ->
+            prefs.isTouchDebugEnabled = isChecked
+            binding.previewTetherStage.invalidate()
             notifySettingsChanged()
         }
 

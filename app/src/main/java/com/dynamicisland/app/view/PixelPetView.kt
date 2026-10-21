@@ -17,6 +17,7 @@ import android.view.animation.LinearInterpolator
 import android.view.animation.OvershootInterpolator
 import kotlin.math.sin
 import kotlin.random.Random
+import com.dynamicisland.app.util.PreferencesHelper
 
 /**
  * PixelPetView: Standalone, borderless, transparent animated pixel-art character.
@@ -60,7 +61,25 @@ class PixelPetView @JvmOverloads constructor(
     private var currentMood: PetMood = PetMood.IDLE
     private var currentActivity: IdleActivity = IdleActivity.NONE
     private var animationIntensity: Float = 1.0f
+    private val prefs = PreferencesHelper(context)
 
+    // Touch Debug Paints
+    private val debugWindowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 2.0f
+        color = Color.parseColor("#10B981") // Green for interactive window bounds
+    }
+
+    private val debugHitboxPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 2.5f
+        color = Color.parseColor("#EC4899") // Magenta for pet hitbox
+    }
+
+    private val debugHitboxFill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = Color.parseColor("#25EC4899") // Translucent pink
+    }
     // Color definitions
     private val colorIdleBody = Color.parseColor("#FFD54F")
     private val colorIdleShadow = Color.parseColor("#FFA000")
@@ -613,6 +632,32 @@ class PixelPetView @JvmOverloads constructor(
         }
 
         canvas.restore()
+
+        // 8. Touch Debug Visualization
+        if (prefs.isTouchDebugEnabled) {
+            drawTouchDebugOutlines(canvas, w, h)
+        }
+    }
+
+    private fun drawTouchDebugOutlines(canvas: Canvas, w: Float, h: Float) {
+        // Overlay/window bounds (green outline)
+        canvas.drawRect(1f, 1f, w - 1f, h - 1f, debugWindowPaint)
+
+        // Pet hitbox (magenta circle matching exact hit-test region)
+        val cx = w / 2f
+        val cy = h / 2f
+        val radius = (minOf(w, h) / 2f) * 0.90f
+        canvas.drawCircle(cx, cy, radius, debugHitboxFill)
+        canvas.drawCircle(cx, cy, radius, debugHitboxPaint)
+    }
+
+    fun isTouchInsideHitbox(touchX: Float, touchY: Float): Boolean {
+        val cx = width / 2f
+        val cy = height / 2f
+        val radius = (minOf(width, height) / 2f) * 0.90f
+        val dx = touchX - cx
+        val dy = touchY - cy
+        return (dx * dx + dy * dy) <= (radius * radius)
     }
 
     private fun drawPixel(canvas: Canvas, col: Int, row: Int, color: Int, pixelSize: Float) {

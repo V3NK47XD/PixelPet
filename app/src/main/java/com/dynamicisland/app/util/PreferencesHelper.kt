@@ -37,6 +37,8 @@ class PreferencesHelper(context: Context) {
         private const val KEY_PHONE_EVENTS_ENABLED = "phone_events_enabled"
         private const val KEY_LEASH_LENGTH_DP = "leash_length_dp"
         private const val KEY_LEASH_COLOR = "leash_color"
+        private const val KEY_TOUCH_DEBUG_ENABLED = "touch_debug_enabled"
+
         val DEFAULT_NERD_PACKAGES = setOf(
             "com.openai.chatgpt",
             "com.google.android.apps.bard",
@@ -126,6 +128,10 @@ class PreferencesHelper(context: Context) {
     var leashColor: String
         get() = prefs.getString(KEY_LEASH_COLOR, "#F43F5E") ?: "#F43F5E"
         set(value) = prefs.edit().putString(KEY_LEASH_COLOR, value).apply()
+
+    var isTouchDebugEnabled: Boolean
+        get() = prefs.getBoolean(KEY_TOUCH_DEBUG_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(KEY_TOUCH_DEBUG_ENABLED, value).apply()
     var isIslandEnabled: Boolean
         get() = prefs.getBoolean(KEY_ISLAND_ENABLED, false)
         set(value) = prefs.edit().putBoolean(KEY_ISLAND_ENABLED, value).apply()

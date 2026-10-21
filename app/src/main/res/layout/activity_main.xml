@@ -885,6 +885,15 @@
                         android:checked="true"
                         android:text="Touch Reactions (Tap to poke, wave, giggle)"
                         android:textColor="@color/text_primary" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchTouchDebug"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:checked="false"
+                        android:text="Touch Debug Mode (Outlines Hitbox &amp; Pass-Through)"
+                        android:textColor="@color/text_primary" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
