@@ -436,9 +436,9 @@ class DynamicIslandService : Service() {
         val startY = currentDriftYDp
 
         val leashLength = prefs.leashLengthDp.toFloat()
-        val targetX = if (startX < -8f) -(leashLength * 0.65f) else if (startX > 8f) (leashLength * 0.65f) else 0f
-        val targetY = if (targetX == 0f) leashLength * 0.85f else leashLength * 0.55f
-
+        // Gravity-pulled equilibrium position: forget user's drag state!
+        val targetX = 0f
+        val targetY = leashLength + (prefs.petSizeDp * 0.42f)
         snapBackAnimator?.cancel()
         snapBackAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
             duration = 650
@@ -476,9 +476,8 @@ class DynamicIslandService : Service() {
         }
 
         val petSize = prefs.petSizeDp.dpToPx()
-        val stageWidth = (prefs.leashLengthDp * 2.5f + prefs.petSizeDp + 48).toInt().dpToPx()
-        val stageHeight = (prefs.leashLengthDp * 1.6f + prefs.petSizeDp + 36).toInt().dpToPx()
-        // WINDOW A: Leash & Anchor Window (FLAG_NOT_TOUCHABLE)
+        val stageWidth = (prefs.leashLengthDp * 2.5f + prefs.petSizeDp + 60).toInt().dpToPx()
+        val stageHeight = (prefs.leashLengthDp * 1.8f + prefs.petSizeDp + 60).toInt().dpToPx()
         // Passes 100% of touches outside the pet straight to underlying app!
         // -------------------------------------------------------------
         val leashWindowFlags = WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
@@ -495,9 +494,8 @@ class DynamicIslandService : Service() {
         ).apply {
             gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
             x = prefs.cameraRefX.dpToPx()
-            y = (prefs.cameraRefY - 8).dpToPx()
+            y = (prefs.cameraRefY - 16).dpToPx()
         }
-
         val leash = LeashCanvasView(this)
         leashView = leash
 
@@ -544,7 +542,7 @@ class DynamicIslandService : Service() {
             if (prefs.isGyroPhysicsEnabled) {
                 // Mode 2: Keychain Gravity Mode (Zero random drift)
                 currentDriftXDp = 0f
-                currentDriftYDp = prefs.leashLengthDp * 0.75f
+                currentDriftYDp = prefs.leashLengthDp + (prefs.petSizeDp * 0.42f)
                 if (floatBobAnimator?.isStarted != true) {
                     floatBobAnimator?.start()
                 }
@@ -742,8 +740,7 @@ class DynamicIslandService : Service() {
         val density = resources.displayMetrics.density
         val leashWidth = leashParams.width.toFloat()
         val leashAnchorX = leashWidth / 2f
-        val leashAnchorY = 8.dpToPx().toFloat()
-
+        val leashAnchorY = 16.dpToPx().toFloat()
         val petTopXInLeash = leashAnchorX + ((currentDriftXDp + physicsOffsetXDp) * density)
         val petTopYInLeash = leashAnchorY + ((currentDriftYDp + physicsOffsetYDp - (cachedPetSizeDp * 0.42f)) * density)
 
@@ -753,16 +750,14 @@ class DynamicIslandService : Service() {
     private fun applyUpdatedSettings() {
         refreshCachedSettings()
         val petSize = cachedPetSizeDp.dpToPx()
-        val stageWidth = (cachedLeashLengthDp * 2.5f + cachedPetSizeDp + 48).toInt().dpToPx()
-        val stageHeight = (cachedLeashLengthDp * 1.6f + cachedPetSizeDp + 36).toInt().dpToPx()
-
+        val stageWidth = (cachedLeashLengthDp * 2.5f + cachedPetSizeDp + 60).toInt().dpToPx()
+        val stageHeight = (cachedLeashLengthDp * 1.8f + cachedPetSizeDp + 60).toInt().dpToPx()
         // 1. Update Leash Window
         leashParams?.let { params ->
             params.width = stageWidth
             params.height = stageHeight
             params.x = cachedCameraRefX.dpToPx()
-            params.y = (cachedCameraRefY - 8).dpToPx()
-            leashView?.updateLeashColor()
+            params.y = (cachedCameraRefY - 16).dpToPx()
             leashView?.invalidate()
             if (leashView?.isAttachedToWindow == true) {
                 windowManager?.updateViewLayout(leashView, params)
@@ -790,11 +785,10 @@ class DynamicIslandService : Service() {
             driftAnimator?.cancel()
             isDriftEngineRunning = false
             currentDriftXDp = 0f
-            currentDriftYDp = cachedLeashLengthDp * 0.75f
+            currentDriftYDp = cachedLeashLengthDp + (cachedPetSizeDp * 0.42f)
             if (floatBobAnimator?.isStarted != true) {
                 floatBobAnimator?.start()
             }
-            physicsEngine?.onSettingsChanged()
             physicsEngine?.start()
         } else {
             // Mode 1: Autonomous Random Drift Mode

@@ -269,11 +269,10 @@ class TetheredPetStageView @JvmOverloads constructor(
         val startX = currentDriftXDp
         val startY = currentDriftYDp
 
-        // Snap back to nearest comfortable hover spot
+        // Gravity-pulled equilibrium position: forget user's drag state!
         val leashLength = prefs.leashLengthDp.toFloat()
-        val targetX = if (startX < -8f) -(leashLength * 0.65f) else if (startX > 8f) (leashLength * 0.65f) else 0f
-        val targetY = if (targetX == 0f) leashLength * 0.85f else leashLength * 0.55f
-
+        val targetX = 0f
+        val targetY = leashLength + (prefs.petSizeDp * 0.42f)
         snapBackAnimator?.cancel()
         snapBackAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
             duration = 650
@@ -290,7 +289,9 @@ class TetheredPetStageView @JvmOverloads constructor(
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     leashSlackFactor = 1.0f
-                    scheduleNextDrift()
+                    if (!prefs.isGyroPhysicsEnabled) {
+                        scheduleNextDrift()
+                    }
                 }
             })
         }
@@ -299,9 +300,8 @@ class TetheredPetStageView @JvmOverloads constructor(
 
     private fun updatePetViewLayout() {
         val petSizePx = prefs.petSizeDp.dpToPx()
-        val anchorXPx = width / 2f
-        val anchorYPx = 8.dpToPx().toFloat()
-
+        val anchorXPx = (width / 2f) + prefs.cameraRefX.dpToPx()
+        val anchorYPx = prefs.cameraRefY.dpToPx().toFloat()
         val density = context.resources.displayMetrics.density
         val petCenterXPx = anchorXPx + ((currentDriftXDp + physicsOffsetXDp) * density)
         val petCenterYPx = anchorYPx + ((currentDriftYDp + floatBobYDp + physicsOffsetYDp) * density)
@@ -315,11 +315,10 @@ class TetheredPetStageView @JvmOverloads constructor(
 
     fun getPetTouchRegion(): android.graphics.Region {
         val petSizePx = prefs.petSizeDp.dpToPx().toFloat()
-        val anchorXPx = width / 2f
-        val anchorYPx = 8.dpToPx().toFloat()
-        val petCenterXPx = anchorXPx + currentDriftXDp.dpToPx()
+        val anchorXPx = (width / 2f) + prefs.cameraRefX.dpToPx()
+        val anchorYPx = prefs.cameraRefY.dpToPx().toFloat()
+        val petCenterXPx = anchorXPx + (currentDriftXDp + physicsOffsetXDp).dpToPx()
         val petCenterYPx = anchorYPx + (currentDriftYDp + floatBobYDp).dpToPx()
-
         // Non-rectangular circular shape matching the pet sprite
         val radius = (petSizePx / 2f) + 3.dpToPx()
         val path = Path().apply {
@@ -342,7 +341,7 @@ class TetheredPetStageView @JvmOverloads constructor(
         if (prefs.isGyroPhysicsEnabled) {
             // Mode 2: Keychain Gravity Mode (Zero random drift)
             currentDriftXDp = 0f
-            currentDriftYDp = prefs.leashLengthDp * 0.75f
+            currentDriftYDp = prefs.leashLengthDp + (prefs.petSizeDp * 0.42f)
             if (continuousFloatAnimator?.isStarted != true) {
                 continuousFloatAnimator?.start()
             }
@@ -373,12 +372,11 @@ class TetheredPetStageView @JvmOverloads constructor(
             // Mode 2: Gravity Mode - cancel random drift and center pet beneath camera
             stopDriftEngine()
             currentDriftXDp = 0f
-            currentDriftYDp = prefs.leashLengthDp * 0.75f
+            currentDriftYDp = prefs.leashLengthDp + (prefs.petSizeDp * 0.42f)
             if (physicsEngine == null) {
                 physicsEngine = com.dynamicisland.app.util.PetPhysicsEngine(context) { offsetXDp, offsetYDp, tiltDeg, velocityX, shiverAmp, shiverPhase, isTension ->
                     if (!isDraggingPet) {
                         physicsOffsetXDp = offsetXDp
-                        physicsOffsetYDp = offsetYDp
                         physicsTiltDeg = tiltDeg
                         physicsVelocityXDp = velocityX
                         shiverAmplitudeDp = shiverAmp
@@ -434,11 +432,10 @@ class TetheredPetStageView @JvmOverloads constructor(
             val r = RectF(2f, 2f, w - 2f, height.toFloat() - 2f)
             canvas.drawRoundRect(r, 8f, 8f, debugPassThroughPaint)
         }
-        val anchorX = w / 2f
-        val anchorY = 8.dpToPx().toFloat()
+        val anchorX = (w / 2f) + prefs.cameraRefX.dpToPx()
+        val anchorY = prefs.cameraRefY.dpToPx().toFloat()
 
-        // 1. Draw Anchor Ring / Knot at Camera Lens Center
-        // 1. Draw Anchor Ring / Knot at Camera Lens Center (Chunky & Tactile)
+        // 1. Draw Anchor Ring at Camera Lens Center (Chunky & Tactile)
         val ringRadius = 5.5.dpToPx().toFloat()
         canvas.drawCircle(anchorX, anchorY, ringRadius, anchorRingPaint)
         canvas.drawCircle(anchorX, anchorY, ringRadius * 0.45f, anchorCenterPaint)
@@ -518,13 +515,11 @@ class TetheredPetStageView @JvmOverloads constructor(
         if (!prefs.isTouchReactionEnabled) {
             return false // 100% click-through when touch reactions disabled
         }
-
-        val anchorX = width / 2f
-        val anchorY = 8.dpToPx().toFloat()
+        val anchorX = (width / 2f) + prefs.cameraRefX.dpToPx()
+        val anchorY = prefs.cameraRefY.dpToPx().toFloat()
         val petSizePx = prefs.petSizeDp.dpToPx().toFloat()
-        val petCenterXPx = anchorX + currentDriftXDp.dpToPx()
+        val petCenterXPx = anchorX + (currentDriftXDp + physicsOffsetXDp).dpToPx()
         val petCenterYPx = anchorY + (currentDriftYDp + floatBobYDp).dpToPx()
-
         when (ev.action) {
             MotionEvent.ACTION_DOWN -> {
                 val dx = ev.x - petCenterXPx

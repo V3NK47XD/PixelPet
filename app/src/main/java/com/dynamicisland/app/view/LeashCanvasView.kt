@@ -141,8 +141,7 @@ class LeashCanvasView @JvmOverloads constructor(
         if (w <= 0f || h <= 0f) return
 
         val anchorX = w / 2f
-        val anchorY = 8.dpToPx().toFloat()
-
+        val anchorY = 16.dpToPx().toFloat()
         // 1. Touch Debug Mode: Render Pass-Through Area Boundary
         if (prefs.isTouchDebugEnabled) {
             debugRect.set(1.dpToPx().toFloat(), 1.dpToPx().toFloat(), w - 1.dpToPx(), h - 1.dpToPx())
