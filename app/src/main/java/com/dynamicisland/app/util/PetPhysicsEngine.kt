@@ -225,18 +225,22 @@ class PetPhysicsEngine(
                 val deltaY = ay - neutralAccelY
                 val deltaZ = az - neutralAccelZ
 
-                // Lateral pendulum swing: tilting left increases ax (deltaX > 0), swings left (negative X)
-                val swingScale = 6.2f
-                val rawTargetX = (-deltaX * swingScale).coerceIn(-28f, 28f)
+                // Normalized lateral tilt: -deltaX / 9.8f
+                val normalizedTiltX = (-deltaX / 9.8f).coerceIn(-0.85f, 0.85f)
+                val swingAngleRad = kotlin.math.asin(normalizedTiltX.toDouble()).toFloat()
 
-                // Forward pitch sag & pendulum arc lift
-                val sagScale = 1.6f
-                val rawTargetY = (abs(rawTargetX) * 0.22f + (deltaY * sagScale)).coerceIn(-10f, 22f)
+                // Circular pendulum arc of radius R = leashLengthDp centered at camera anchor:
+                val leashR = prefs.leashLengthDp.toFloat().coerceAtLeast(20f)
+                // Lateral displacement: R * sin(theta)
+                val rawTargetX = (leashR * kotlin.math.sin(swingAngleRad.toDouble()).toFloat()).coerceIn(-35f, 35f)
+                // Vertical displacement: circular arc lift (-R * (1 - cos(theta))) + forward pitch sag
+                val arcLiftDp = -leashR * (1f - kotlin.math.cos(swingAngleRad.toDouble()).toFloat()) * 0.65f
+                val pitchSagDp = (deltaY * 1.5f).coerceIn(-12f, 22f)
+                val rawTargetY = (arcLiftDp + pitchSagDp).coerceIn(-14f, 24f)
 
                 // Responsive low-pass filter
-                targetTiltXDp = (targetTiltXDp * 0.65f) + (rawTargetX * 0.35f)
-                targetTiltYDp = (targetTiltYDp * 0.65f) + (rawTargetY * 0.35f)
-
+                targetTiltXDp = (targetTiltXDp * 0.60f) + (rawTargetX * 0.40f)
+                targetTiltYDp = (targetTiltYDp * 0.60f) + (rawTargetY * 0.40f)
                 // High-pass filter for dynamic linear acceleration (inertia lag when waving phone)
                 smoothGravityX = (smoothGravityX * 0.85f) + (ax * 0.15f)
                 smoothGravityY = (smoothGravityY * 0.85f) + (ay * 0.15f)
@@ -329,10 +333,9 @@ class PetPhysicsEngine(
             currentOffsetYDp *= scale
         }
 
-        // Tilt angle corresponds to lateral swing & velocity
-        val dynamicTilt = (currentOffsetXDp * 0.70f + velocityX * 1.35f).coerceIn(-28f, 28f)
-        currentTiltDeg = dynamicTilt
-
+        // Dynamic tilt angle: exact tangent to circular pendulum swing arc + rotational momentum
+        val swingTangentDeg = Math.toDegrees(kotlin.math.atan2(currentOffsetXDp.toDouble(), (prefs.leashLengthDp.toFloat()).toDouble())).toFloat()
+        currentTiltDeg = (swingTangentDeg + velocityX * 1.25f).coerceIn(-30f, 30f)
         // High-frequency wire shiver vibration wave
         if (shiverAmplitudeDp > 0.05f) {
             shiverPhase += 0.95f

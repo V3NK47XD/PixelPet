@@ -351,14 +351,14 @@ class DynamicIslandService : Service() {
             addUpdateListener { anim ->
                 if (!isDragging) {
                     val p = anim.animatedValue as Float
-                    floatBobYDp = (sin(p) * 2.6f * cachedIntensity)
+                    floatBobYDp = (sin(p) * 2.8f * cachedIntensity)
                     val baseTilt = (currentDriftXDp * 0.28f).coerceIn(-12f, 12f)
                     tiltAngleDeg = baseTilt + (sin(p) * 2.0f * cachedIntensity)
 
-                    petView?.rotation = tiltAngleDeg
-                    // Per-frame WindowManager.updateViewLayout IPC removed!
-                    // Vertical float is smoothly drawn inside PixelPetView canvas
-                    updateLeashAttachment(slackFactor = 1.0f)
+                    petView?.rotation = tiltAngleDeg + physicsTiltDeg
+                    val dynamicSlack = 1.0f + (sin(p) * 0.18f * cachedIntensity)
+                    updateLeashAttachment(slackFactor = dynamicSlack)
+                    updatePetWindowLayout()
                 }
             }
         }
@@ -526,8 +526,9 @@ class DynamicIslandService : Service() {
         val pet = PixelPetView(this).apply {
             setAnimationIntensity(prefs.animationIntensity)
             setMood(moodManager.currentMood)
+            pivotX = petSize / 2f
+            pivotY = petSize * 0.18f // Sprout knot pivot
         }
-        petView = pet
 
         val container = FrameLayout(this).apply {
             addView(pet)
@@ -715,8 +716,7 @@ class DynamicIslandService : Service() {
         petParams?.let { params ->
             val density = resources.displayMetrics.density
             val petX = ((cachedCameraRefX + currentDriftXDp + physicsOffsetXDp) * density).toInt()
-            val petY = ((cachedCameraRefY + currentDriftYDp + physicsOffsetYDp - (cachedPetSizeDp / 2f)) * density).toInt()
-
+            val petY = ((cachedCameraRefY + currentDriftYDp + floatBobYDp + physicsOffsetYDp - (cachedPetSizeDp / 2f)) * density).toInt()
             if (params.x != petX || params.y != petY) {
                 params.x = petX
                 params.y = petY
@@ -742,8 +742,7 @@ class DynamicIslandService : Service() {
         val leashAnchorX = leashWidth / 2f
         val leashAnchorY = 16.dpToPx().toFloat()
         val petTopXInLeash = leashAnchorX + ((currentDriftXDp + physicsOffsetXDp) * density)
-        val petTopYInLeash = leashAnchorY + ((currentDriftYDp + physicsOffsetYDp - (cachedPetSizeDp * 0.42f)) * density)
-
+        val petTopYInLeash = leashAnchorY + ((currentDriftYDp + floatBobYDp + physicsOffsetYDp - (cachedPetSizeDp * 0.42f)) * density)
         leash.updateKeychainWire(petTopXInLeash, petTopYInLeash, slackFactor, velocityXDp, shiverAmplitudeDp, shiverPhase)
     }
 
@@ -773,8 +772,9 @@ class DynamicIslandService : Service() {
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
                     touchFlag
-
             petView?.setAnimationIntensity(cachedIntensity)
+            petView?.pivotX = petSize / 2f
+            petView?.pivotY = petSize * 0.18f
             petView?.invalidate()
             updatePetWindowLayout()
         }

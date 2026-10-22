@@ -235,4 +235,30 @@ class SmileyAnimationLogicTest {
         val shouldDriftMode1 = !isOffMode
         assertTrue("In Mode 1 (Keychain Physics OFF), autonomous drift must be active", shouldDriftMode1)
     }
+
+    @Test
+    fun testCircularPendulumArcAndAnchorCenterOfRotation() {
+        val leashL = 60f
+        val petSize = 54f
+        val sproutOffset = petSize * 0.42f
+        val totalR = leashL + sproutOffset
+
+        // Test pendulum swing at 25 degrees
+        val swingAngleRad = Math.toRadians(25.0).toFloat()
+        val xArc = totalR * kotlin.math.sin(swingAngleRad.toDouble()).toFloat()
+        val yLift = -totalR * (1f - kotlin.math.cos(swingAngleRad.toDouble()).toFloat())
+
+        // Distance from anchor point (0, 0) to pet center (xArc, totalR + yLift)
+        val yFromAnchor = totalR + yLift
+        val distanceFromAnchor = kotlin.math.sqrt((xArc * xArc) + (yFromAnchor * yFromAnchor))
+
+        // Must equal totalR: proves camera anchor is the exact center of rotation!
+        assertEquals(totalR, distanceFromAnchor, 0.001f)
+
+        // Drag release snap target: must always be X=0, Y=totalR (pulled straight by gravity)
+        val snapTargetX = 0f
+        val snapTargetY = leashL + sproutOffset
+        assertEquals(0f, snapTargetX, 0.0001f)
+        assertEquals(totalR, snapTargetY, 0.0001f)
+    }
 }

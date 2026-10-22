@@ -458,8 +458,8 @@ class TetheredPetStageView @JvmOverloads constructor(
             val nx = -dy / length
             val ny = dx / length
 
-            val baseSagPx = length * 0.15f * leashSlackFactor
-            val bendPx = (-physicsVelocityXDp * 1.15f) * density
+            val baseSagPx = length * 0.22f * leashSlackFactor
+            val bendPx = (-physicsVelocityXDp * 1.8f) * density
             val shiverPx = shiverAmplitudeDp * density
             val segments = 18
             leashPath.reset()
@@ -472,8 +472,7 @@ class TetheredPetStageView @JvmOverloads constructor(
                 val sagY = envelope * baseSagPx
 
                 val arcBend = kotlin.math.sin(u * Math.PI.toFloat()) * bendPx
-                val sBend = kotlin.math.sin(u * 2f * Math.PI.toFloat()) * (bendPx * 0.35f)
-
+                val sBend = kotlin.math.sin(u * 2f * Math.PI.toFloat()) * (bendPx * 0.40f)
                 val wave = kotlin.math.sin(shiverPhase + u * 2.5f * Math.PI.toFloat()) +
                         0.35f * kotlin.math.sin(shiverPhase * 2f + u * 5f * Math.PI.toFloat())
                 val shiver = envelope * shiverPx * wave

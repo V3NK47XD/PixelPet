@@ -166,11 +166,11 @@ class LeashCanvasView @JvmOverloads constructor(
                 val nx = -dy / length
                 val ny = dx / length
 
-                // Catenary sag droop
-                val baseSagPx = length * 0.15f * leashSlackFactor
+                // Catenary sag droop (flexible & rich)
+                val baseSagPx = length * 0.22f * leashSlackFactor
                 // Swing inertia flex (middle of wire flexes opposing velocity)
                 val density = context.resources.displayMetrics.density
-                val bendPx = (-velocityXDp * 1.15f) * density
+                val bendPx = (-velocityXDp * 1.8f) * density
                 // Rapid shake shiver vibration
                 val shiverPx = (shiverAmplitudeDp * density)
 
@@ -188,8 +188,7 @@ class LeashCanvasView @JvmOverloads constructor(
 
                     // Inertia flex & secondary S-curve counter-wave
                     val arcBend = kotlin.math.sin(u * Math.PI.toFloat()) * bendPx
-                    val sBend = kotlin.math.sin(u * 2f * Math.PI.toFloat()) * (bendPx * 0.35f)
-
+                    val sBend = kotlin.math.sin(u * 2f * Math.PI.toFloat()) * (bendPx * 0.40f)
                     // Standing wave harmonic shiver (shivers and ripples when phone is shaken)
                     val wave = kotlin.math.sin(shiverPhase + u * 2.5f * Math.PI.toFloat()) +
                             0.35f * kotlin.math.sin(shiverPhase * 2f + u * 5f * Math.PI.toFloat())
