@@ -1,8 +1,9 @@
 # Built application files
 *.aar
 *.aab
+*.apk
 
-# Whitelist built APK in build output folder for releases
+# Explicitly track built debug APK via negation (!)
 !/app/build/
 /app/build/*
 !/app/build/outputs/

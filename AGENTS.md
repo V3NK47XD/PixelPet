@@ -104,35 +104,40 @@ graph TD
 
 ## 📦 Releases & Versioning Architecture
 
-### Version Tracking
-  versionCode = 2
-  versionName = "1.0.1"
+### Critical Rule for APK Tracking in `.gitignore`
+- **ALWAYS allow `app/build/outputs/apk/debug/app-debug.apk` to be tracked via `!` negation rules in `.gitignore`**:
+  ```gitignore
+  !/app/build/
+  /app/build/*
+  !/app/build/outputs/
+  /app/build/outputs/*
+  !/app/build/outputs/apk/
+  /app/build/outputs/apk/*
+  !/app/build/outputs/apk/debug/
+  /app/build/outputs/apk/debug/*
+  !/app/build/outputs/apk/debug/app-debug.apk
   ```
-- Public version tag in `README.md`:
-  `**Current Version:** v1.0.1`
-- Prebuilt APK is whitelisted in `.gitignore` and committed directly to the repo at:
-  `app/build/outputs/apk/debug/app-debug.apk`
+- **WHY**: Git cannot re-include a file if its parent directory is excluded. Therefore, all parent directories up to `app-debug.apk` MUST be negated with `!`, while ignoring other subfolders using `/*`. Future agents MUST NEVER add a blanket `app/build/` rule that blocks tracking this APK!
 
-### GitHub Actions Release Workflow (`.github/workflows/release.yml`)
-- **Triggers**:
-  - Push to `main` exclusively (pushes to other branches like `optimization` do not run releases)
-  - Manual execution via `workflow_dispatch`
-- **Workflow Pipeline**:
-  1. Checks out repository.
-  2. Sets up JDK 17 (Temurin).
-  3. Extracts version from `app/build.gradle.kts` (or tag name).
-  4. Verifies/builds `app/build/outputs/apk/debug/app-debug.apk`.
-  5. Packages and copies `PixelPet-${VERSION}.apk`.
-  6. Publishes a GitHub Release with assets using `softprops/action-gh-release@v2`.
+### Automated Release Workflow & APK Renaming (`.github/workflows/release.yml`)
+- **Triggers**: Push to `main` exclusively (or manual `workflow_dispatch`). Pushes to other branches (such as `optimization`) do NOT trigger releases.
+- **Version Tracking & Renaming Pipeline**:
+  1. The workflow parses `versionName` directly from `app/build.gradle.kts`:
+     ```bash
+     RAW_VERSION=$(grep -E 'versionName\s*=\s*' app/build.gradle.kts | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
+     VERSION="v${RAW_VERSION:-1.0.1}"
+     ```
+  2. Checks for the tracked pre-built APK at `app/build/outputs/apk/debug/app-debug.apk` (or compiles it via Gradle if absent).
+  3. Copies and renames the APK to **`PixelPet-${VERSION}.apk`** (e.g. `PixelPet-v1.0.1.apk`).
+  4. Publishes a GitHub Release tagged with `${VERSION}` and attaches both `PixelPet-${VERSION}.apk` and `app-debug.apk`.
 
-### Steps for Agents Bumping Versions
-1. Update `versionCode` and `versionName` in `app/build.gradle.kts`.
-2. Update the version badges and text in `README.md`.
-3. Recompile the debug APK: `./gradlew assembleDebug`.
-4. Run tests: `./gradlew test`.
-5. Commit `.gitignore`, `README.md`, `app/build.gradle.kts`, and `app/build/outputs/apk/debug/app-debug.apk`.
-6. Merge or push to `main` (which automatically triggers the release workflow).
-
+### Step-by-Step Instructions for Future Agents Bumping Versions
+1. **Update Version**: Edit `versionCode` and `versionName` in `app/build.gradle.kts`.
+2. **Update Documentation**: Update version badges and release notes in `README.md` and `AGENTS.md`.
+3. **Recompile Debug APK**: Run `./gradlew assembleDebug` so `app/build/outputs/apk/debug/app-debug.apk` is refreshed.
+4. **Run Unit Tests**: Run `./gradlew test` and ensure all tests pass.
+5. **Verify Git Tracking**: Run `git status` — confirm `app/build/outputs/apk/debug/app-debug.apk` appears as tracked/modified (NOT ignored).
+6. **Commit & Push to `main`**: Push to `main` to trigger `.github/workflows/release.yml`, which renames and publishes the release assets.
 ---
 
 ## 🔒 Security & Google Play Protect Policies
