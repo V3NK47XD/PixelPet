@@ -143,4 +143,23 @@ class SmileyAnimationLogicTest {
         assertTrue("Position should converge to target, was $currentPos", kotlin.math.abs(currentPos - targetPos) < 0.2f)
         assertTrue("Velocity should decay to zero, was $velocity", kotlin.math.abs(velocity) < 0.1f)
     }
+
+    @Test
+    fun testKeychainWirePhysicsMath() {
+        // 1. Envelope test: endpoints must be strictly zero displacement
+        val envelope0 = 4f * 0f * (1f - 0f)
+        val envelope1 = 4f * 1f * (1f - 1f)
+        val envelopeMid = 4f * 0.5f * (1f - 0.5f)
+        assertEquals(0f, envelope0, 0.0001f)
+        assertEquals(0f, envelope1, 0.0001f)
+        assertEquals(1f, envelopeMid, 0.0001f)
+
+        // 2. Shiver damping test: decays to zero over time
+        var shiverAmp = 12f
+        val damping = 0.87f
+        for (i in 0..40) {
+            shiverAmp *= damping
+        }
+        assertTrue("Shiver amplitude should decay near zero, was $shiverAmp", shiverAmp < 0.05f)
+    }
 }

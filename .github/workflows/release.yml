@@ -68,7 +68,8 @@ jobs:
             *Signed with original developer certificate from local build.*
             
             #### Highlights & Features in this release:
-            - **Original Developer Signing Key**: Built locally and released without CI signing mismatches.
+            - **Single Verified APK Release**: Exclusively releases the locally-built, signed APK directly from the codebase (`PixelPet-${{ steps.version_step.outputs.TAG_NAME }}.apk`).
+            - **Keychain Physics & Wire Shiver Ripples**: Flexible wire simulation with pendulum inertia, S-curve flex, and rapid shake shivering waves (Duolingo 2.5D style).
             - **Fluid Gyroscope & Physical Inertia**: Phone tilts swing the pet along its leash with realistic momentum; shaking injects playful rotational orbits! Settles back stably when still.
             - **Zero-Scroll All-in-One UI with Rotary Speaker Knobs**: 100% compact screen with retro rotary dials (`CAM X`, `CAM Y`, `SIZE`, `LEASH`) with tactile haptic ticks.
             - **Cute Peach & Soft Orange Theme**: Warm peach (`#FF9F68`) & creamsicle palette with separated Developer Tools sheet (⚙️).
@@ -86,12 +87,10 @@ jobs:
               - Rapid 3+ taps $\to$ temper tantrum (furious red steam for 3.8s, then calms down).
               - Single taps $\to$ wink, wave, giggle, or adjust glasses.
             
-            #### Direct APK Downloads:
+            #### Direct APK Download:
             - **[`PixelPet-${{ steps.version_step.outputs.TAG_NAME }}.apk`](https://github.com/V3NK47XD/PixelPet/releases/download/${{ steps.version_step.outputs.TAG_NAME }}/PixelPet-${{ steps.version_step.outputs.TAG_NAME }}.apk)**
-            - **[`app-debug.apk`](https://github.com/V3NK47XD/PixelPet/releases/download/${{ steps.version_step.outputs.TAG_NAME }}/app-debug.apk)**
           files: |
             PixelPet-${{ steps.version_step.outputs.TAG_NAME }}.apk
-            app/build/outputs/apk/debug/app-debug.apk
           draft: false
           prerelease: false
         env:

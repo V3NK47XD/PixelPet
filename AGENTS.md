@@ -43,8 +43,11 @@ graph TD
      - `TEXTING`: Cheerful teal body (`#2DD4BF`), animated speech bubble (`💬`) with cycling typing dots (`• • •`), rapid typing hands tapping in front of body.
 2. **`com.dynamicisland.app.view.TetheredPetStageView`**:
    - Transparent overlay container positioned over the front camera reference coordinate $(cameraRefX, cameraRefY)$.
-   - Draws a golden anchor ring over the camera lens.
-   - Calculates a dynamic, sagging catenary curve (`Path.quadTo`) connecting the camera anchor to the pet's head sprout.
+   - **Duolingo-Style Virtual Keychain Physics**:
+     - Renders a multi-segment (18-point) flexible wire with normal-vector deflection, catenary gravity sag ($4u(1-u) \cdot \text{sag}$), and swing velocity inertia flex.
+     - **Shake Shiver Harmonics**: When the phone is shaken rapidly, high-frequency standing wave ripples ($\sin(\text{phase} + 2.5\pi u)$) propagate through the wire and naturally damp out with friction.
+     - **Keychain Hardware Details**: Features a 2-tone depth wire (shadow under core), a rotatable metallic jump-ring connector hinge at the camera anchor, and a clasp bead at the sprout knot.
+     - **Character Secondary Motion**: Pet sprout bends in counter-phase to swing velocity; energetic shaking triggers playful Duolingo-style squash & stretch.
    - **Autonomous Drift Engine**: Every $4.5\text{s} - 8.5\text{s}$, the pet floats to a new organic spot (left, right, underneath pendant, leaning, close hover). Never sits still $> 10\text{s}$.
    - **Leash-Constrained Dragging**: Touch and drag allows user to move the pet, strictly clamped to the leash radius ($1.15 \times \text{leashLengthDp}$).
    - **Elastic Snap-Back**: Upon drag release, pet springs back with `OvershootInterpolator(2.2f)` damped oscillation.
@@ -59,7 +62,7 @@ graph TD
 
 3. **`com.dynamicisland.app.util.PetPhysicsEngine`**:
    - Low-overhead sensor listener (`Sensor.TYPE_GRAVITY` / `Sensor.TYPE_ACCELEROMETER` and `Sensor.TYPE_GYROSCOPE`).
-   - Simulates physical inertia: tilting the phone swings the pet on its leash; shaking injects rotational momentum.
+   - Simulates physical inertia: tilting the phone swings the pet on its leash; shaking injects rotational momentum and high-frequency wire shiver waves.
    - Settles smoothly back to equilibrium when held still via damped harmonic spring physics.
    - **100% Battery-Safe**: Completely unregisters sensor listeners whenever disabled in settings OR when the screen turns off (`ACTION_SCREEN_OFF`).
 
@@ -125,6 +128,7 @@ graph TD
   - The workflow **DOES NOT** run `./gradlew assembleDebug` in GitHub Actions.
   - **WHY**: Building on an Ubuntu GitHub Actions runner generates an arbitrary ephemeral debug keystore with a different certificate fingerprint than the developer's laptop. When users download an update from GitHub Releases, Android rejects the install with `INSTALL_FAILED_UPDATE_INCOMPATIBLE` (signature mismatch).
   - **HOW IT WORKS**: The APK **MUST ALWAYS** be compiled locally on the developer's laptop (`./gradlew assembleDebug`). Because `app/build/outputs/apk/debug/app-debug.apk` is whitelisted with `!` in `.gitignore`, the locally-signed APK is committed and pushed directly to the repository. The release workflow takes this pre-built APK, renames it to `PixelPet-${TAG_NAME}.apk`, and uploads it to GitHub Releases.
+  - **SINGLE APK RELEASE POLICY**: Releases publish strictly **ONE APK** (`PixelPet-${TAG_NAME}.apk`), copied and renamed directly from `app/build/outputs/apk/debug/app-debug.apk`. NEVER attach redundant `app-debug.apk` files to GitHub Releases.
   - **Dynamic Tagging**: If `v${BASE_VER}` already exists on GitHub, the workflow automatically tags subsequent commits as `v${BASE_VER}.${{ github.run_number }}` so that every single push to `main` creates a brand-new release card with the updated APK.
 
 ### Step-by-Step Instructions for Future Agents Bumping Versions & Releasing
@@ -132,7 +136,7 @@ graph TD
 2. **Run Unit Tests**: Run `./gradlew test` and ensure all tests pass.
 3. **Verify Git Tracking**: Run `git status` — confirm `app/build/outputs/apk/debug/app-debug.apk` appears as tracked/modified (NOT ignored).
 4. **Update Version**: When cutting a major/minor version, edit `versionCode` and `versionName` in `app/build.gradle.kts` and update `README.md`.
-5. **Commit & Push to `main`**: Push to `main` to trigger `.github/workflows/release.yml`, which immediately packages and publishes the locally-signed APK to GitHub Releases in ~5 seconds.
+5. **Commit & Push to `main`**: Push to `main` to trigger `.github/workflows/release.yml`, which immediately packages and publishes strictly the single renamed APK (`PixelPet-${TAG_NAME}.apk`) to GitHub Releases in ~5 seconds.
 ---
 
 ## 🔒 Security & Google Play Protect Policies

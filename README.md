@@ -63,15 +63,11 @@
 | **💀 Critical Battery**| Battery $<5\%$ | Pale red face (`#F87171`), dramatic fainting collapse ($55^\circ$ tilt) with `X X` eyes and exhausted sigh. |
 | **😄 Happy** | Phone unlocked / Pet app open | Joyful celebratory hops, closed crinkle eyes (`^ _ ^`), star sparkles. |
 
----
-
-### 📱 Fluid Gyroscope & Physical Inertia
-* **Natural Tilt & Shake Reactions**: When you tilt your phone, the pet swings and drifts in the tilt direction. When you shake the phone, the pet swings around in an energetic orbit on its leash!
-* **Spring-Damper Stabilization**: When the phone is held still, the pet settles smoothly back into its natural alignment without jitter.
-* **100% Battery-Safe**: If disabled in settings, or when the screen turns off, sensor listeners are completely unregistered.
-
----
-
+### 🔑 Virtual Keychain Physics & Shiver Ripples (Duolingo 2.5D Style)
+* **Natural Wire Bending & Inertia**: When you tilt and swing your phone, the wire bends, sags, and loops with natural pendulum inertia like a real keychain dangling from your camera cutout.
+* **Rapid Shake Shiver Ripples**: When you shake the phone rapidly, dynamic high-frequency standing waves ripple and shiver through the wire, naturally damping out as it settles!
+* **Duolingo-Style 2.5D Hardware**: Dual-tone depth wire styling (darker shadow under core), a rotating metallic jump-ring hinge at the camera anchor, and a golden clasp bead at the sprout knot.
+* **Expressive Secondary Motion**: The pet's head sprout flexes in counter-phase to swing velocity, with playful squishy bounce when shaken!
 ### 🎛️ Zero-Scroll All-in-One UI & Rotary Speaker Knobs
 * **No Scrolling Needed**: All core controls, live preview, presets, and dials fit neatly on a single non-scrolling screen.
 * **Retro Rotary Knobs**: Replaced vertical sliders with compact 270° rotary volume dials (`CAM X`, `CAM Y`, `SIZE`, `LEASH`) with tactile haptic feedback.
@@ -83,16 +79,15 @@
 
 | Version | Date | Key Highlights |
 | :--- | :--- | :--- |
-| **`v1.0.2`** | 2026-10-22 | Fluid gyroscope tilt & shake inertia physics, zero-scroll all-in-one UI with retro rotary speaker dials, cute peach theme, and dev tools bottom sheet. |
+| **`v1.0.2`** | 2026-10-22 | Virtual keychain physics (swing inertia, rapid shake wire shivering & ripples), Duolingo 2.5D wire styling, single APK release pipeline, retro rotary dials & peach theme. |
 | **`v1.0.1`** | 2026-10-21 | Battery efficiency optimization: screen on/off pausing, zero IPC idle hovering, static bodyMap, debounced writes, texting app mood (WhatsApp/Discord/Messages/LinkedIn). |
 | **`v1.0.0`** | 2026-10-21 | Tethered camera anchor, physics leash, autonomous drift, leash-constrained dragging, sleep/wake tap toggle, multi-tap anger tantrum, contextual app moods. |
 
 * **Latest Release**: [PixelPet Releases Page](https://github.com/V3NK47XD/PixelPet/releases/latest)
-* **Direct APK Download**: [`PixelPet-v1.0.2.apk`](https://github.com/V3NK47XD/PixelPet/releases/latest/download/PixelPet-v1.0.2.apk)
-* **Tracked Build Output**: [`app/build/outputs/apk/debug/app-debug.apk`](app/build/outputs/apk/debug/app-debug.apk)
+* **Direct Single APK Download**: [`PixelPet-v1.0.2.apk`](https://github.com/V3NK47XD/PixelPet/releases/latest/download/PixelPet-v1.0.2.apk)
 
 ### Automated CI/CD Release Workflow
-Whenever a new commit to `main` is pushed, the [GitHub Actions Release Workflow](.github/workflows/release.yml) automatically builds the application, packages `PixelPet-v${VERSION}.apk` and `app-debug.apk`, and publishes them directly to GitHub Releases. Pushes to other branches (such as `optimization`) do not trigger releases.
+Whenever a new commit to `main` is pushed, the [GitHub Actions Release Workflow](.github/workflows/release.yml) packages strictly the single locally-signed APK `PixelPet-${TAG_NAME}.apk` and publishes it directly to GitHub Releases. Pushes to other branches (such as `optimization`) do not trigger releases.
 ---
 
 ## 🚀 Building & Installing

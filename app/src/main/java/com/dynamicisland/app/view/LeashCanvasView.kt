@@ -29,22 +29,34 @@ class LeashCanvasView @JvmOverloads constructor(
 
     private val prefs = PreferencesHelper(context)
 
-    // Leash Paint
+    // Keychain Wire Paints: 2-tone Duolingo 2.5D styling
+    private val leashShadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 3.8f
+        strokeCap = Paint.Cap.ROUND
+    }
+
     private val leashPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 2.5f
+        strokeWidth = 2.4f
         strokeCap = Paint.Cap.ROUND
     }
 
     private val anchorRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 2.0f
+        strokeWidth = 2.2f
         color = Color.parseColor("#F59E0B")
     }
 
     private val anchorCenterPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
         color = Color.parseColor("#D97706")
+    }
+
+    private val keychainLinkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 1.8f
+        color = Color.parseColor("#FCD34D") // Metallic gold sheen for keychain connector link
     }
 
     // Touch Debug Visualization Paints
@@ -69,32 +81,56 @@ class LeashCanvasView @JvmOverloads constructor(
     private val leashPath = Path()
     private val debugRect = RectF()
 
-    // Leash connection coordinates (relative to this view)
+    // Leash connection coordinates & Keychain Physics State
     private var petTopXPx: Float = 0f
     private var petTopYPx: Float = 0f
     private var leashSlackFactor: Float = 1.0f
+    private var velocityXDp: Float = 0f
+    private var shiverAmplitudeDp: Float = 0f
+    private var shiverPhase: Float = 0f
 
     init {
         updateLeashColor()
     }
 
     fun updateLeashColor() {
-        try {
-            leashPaint.color = Color.parseColor(prefs.leashColor)
+        val baseColor = try {
+            Color.parseColor(prefs.leashColor)
         } catch (e: Exception) {
-            leashPaint.color = Color.parseColor("#F43F5E")
+            Color.parseColor("#F43F5E")
         }
+        leashPaint.color = baseColor
+        leashShadowPaint.color = getShadowColor(baseColor)
+        invalidate()
+    }
+
+    private fun getShadowColor(color: Int): Int {
+        val a = Color.alpha(color)
+        val r = (Color.red(color) * 0.58f).toInt()
+        val g = (Color.green(color) * 0.58f).toInt()
+        val b = (Color.blue(color) * 0.58f).toInt()
+        return Color.argb(a, r, g, b)
+    }
+
+    fun updateKeychainWire(
+        petTopX: Float,
+        petTopY: Float,
+        slackFactor: Float = 1.0f,
+        velocityXDp: Float = 0f,
+        shiverAmplitudeDp: Float = 0f,
+        shiverPhase: Float = 0f
+    ) {
+        this.petTopXPx = petTopX
+        this.petTopYPx = petTopY
+        this.leashSlackFactor = slackFactor
+        this.velocityXDp = velocityXDp
+        this.shiverAmplitudeDp = shiverAmplitudeDp
+        this.shiverPhase = shiverPhase
         invalidate()
     }
 
     fun updatePetAttachment(petTopX: Float, petTopY: Float, slackFactor: Float = 1.0f) {
-        if (this.petTopXPx == petTopX && this.petTopYPx == petTopY && this.leashSlackFactor == slackFactor) {
-            return
-        }
-        this.petTopXPx = petTopX
-        this.petTopYPx = petTopY
-        this.leashSlackFactor = slackFactor
-        invalidate()
+        updateKeychainWire(petTopX, petTopY, slackFactor, this.velocityXDp, this.shiverAmplitudeDp, this.shiverPhase)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -115,31 +151,81 @@ class LeashCanvasView @JvmOverloads constructor(
             canvas.drawText("PASS-THROUGH AREA (Touches drop to app)", 8.dpToPx().toFloat(), h - 6.dpToPx(), debugTextPaint)
         }
 
-        // 2. Camera Anchor Ring
+        // 2. Camera Anchor Keyring & Keychain Hardware
         val ringRadius = 4.5.dpToPx().toFloat()
         canvas.drawCircle(anchorX, anchorY, ringRadius, anchorRingPaint)
         canvas.drawCircle(anchorX, anchorY, ringRadius * 0.45f, anchorCenterPaint)
 
-        // 3. Curved Physics Leash
+        // 3. Multi-Segment Keychain Wire with Fluid Inertia & Shiver Ripples
         if (petTopXPx > 0f && petTopYPx > 0f) {
-            leashPath.reset()
-            leashPath.moveTo(anchorX, anchorY + ringRadius)
+            val startX = anchorX
+            val startY = anchorY + ringRadius
+            val dx = petTopXPx - startX
+            val dy = petTopYPx - startY
+            val length = sqrt((dx * dx) + (dy * dy))
 
-            val midX = (anchorX + petTopXPx) / 2f
-            val midY = (anchorY + petTopYPx) / 2f
-            val dist = sqrt(((petTopXPx - anchorX) * (petTopXPx - anchorX)) + ((petTopYPx - anchorY) * (petTopYPx - anchorY)))
+            if (length > 2f) {
+                val nx = -dy / length
+                val ny = dx / length
 
-            // Dynamic gravity sag
-            val sagY = (dist * 0.18f * leashSlackFactor)
-            val driftOffsetXPx = petTopXPx - anchorX
-            val controlX = midX + (driftOffsetXPx * 0.12f)
-            val controlY = midY + sagY
+                // Catenary sag droop
+                val baseSagPx = length * 0.15f * leashSlackFactor
+                // Swing inertia flex (middle of wire flexes opposing velocity)
+                val density = context.resources.displayMetrics.density
+                val bendPx = (-velocityXDp * 1.15f) * density
+                // Rapid shake shiver vibration
+                val shiverPx = (shiverAmplitudeDp * density)
 
-            leashPath.quadTo(controlX, controlY, petTopXPx, petTopYPx)
-            canvas.drawPath(leashPath, leashPaint)
+                val segments = 18
+                leashPath.reset()
 
-            // Knot where leash meets pet sprout
-            canvas.drawCircle(petTopXPx, petTopYPx, 2.dpToPx().toFloat(), anchorRingPaint)
+                for (i in 0..segments) {
+                    val u = i.toFloat() / segments.toFloat()
+                    val bx = startX + (u * dx)
+                    val by = startY + (u * dy)
+
+                    // Parabolic envelope: 0 at anchor (u=0) and sprout (u=1), 1 at middle (u=0.5)
+                    val envelope = 4f * u * (1f - u)
+                    val sagY = envelope * baseSagPx
+
+                    // Inertia flex & secondary S-curve counter-wave
+                    val arcBend = kotlin.math.sin(u * Math.PI.toFloat()) * bendPx
+                    val sBend = kotlin.math.sin(u * 2f * Math.PI.toFloat()) * (bendPx * 0.35f)
+
+                    // Standing wave harmonic shiver (shivers and ripples when phone is shaken)
+                    val wave = kotlin.math.sin(shiverPhase + u * 2.5f * Math.PI.toFloat()) +
+                            0.35f * kotlin.math.sin(shiverPhase * 2f + u * 5f * Math.PI.toFloat())
+                    val shiver = envelope * shiverPx * wave
+
+                    val lateralDeflection = arcBend + sBend + shiver
+                    val ptX = bx + (lateralDeflection * nx)
+                    val ptY = by + sagY + (lateralDeflection * ny)
+
+                    if (i == 0) {
+                        leashPath.moveTo(ptX, ptY)
+                    } else {
+                        leashPath.lineTo(ptX, ptY)
+                    }
+                }
+
+                // Draw 2-Tone Duolingo-style wire: darker shadow path underneath + bright core
+                canvas.drawPath(leashPath, leashShadowPaint)
+                canvas.drawPath(leashPath, leashPaint)
+
+                // Keychain Jump-Ring Hinge (swivels with wire departure angle)
+                val linkAngleRad = kotlin.math.atan2(dy.toDouble(), dx.toDouble())
+                val linkAngleDeg = Math.toDegrees(linkAngleRad).toFloat()
+                canvas.save()
+                canvas.translate(startX, startY)
+                canvas.rotate(linkAngleDeg - 90f)
+                val linkOval = RectF(-1.8.dpToPx().toFloat(), -0.8.dpToPx().toFloat(), 1.8.dpToPx().toFloat(), 3.2.dpToPx().toFloat())
+                canvas.drawOval(linkOval, keychainLinkPaint)
+                canvas.restore()
+
+                // Clasp bead where keychain wire connects to pet sprout
+                canvas.drawCircle(petTopXPx, petTopYPx, 2.5.dpToPx().toFloat(), anchorRingPaint)
+                canvas.drawCircle(petTopXPx, petTopYPx, 1.2.dpToPx().toFloat(), keychainLinkPaint)
+            }
         }
     }
 

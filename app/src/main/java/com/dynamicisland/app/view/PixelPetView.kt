@@ -570,6 +570,28 @@ class PixelPetView @JvmOverloads constructor(
             }
         }.start()
     }
+
+    /**
+     * Applies dynamic keychain secondary motion:
+     * - Sprout flexes in counter-phase to swing velocity & tilt.
+     * - Duolingo-style squash & stretch when shaken or swung energetically.
+     */
+    fun setPhysicsInertia(tiltDeg: Float, velocityXDp: Float, shiverAmplitude: Float) {
+        // Sprout counter-phase drag sway: opposite to swing direction
+        val dynamicSprout = (-tiltDeg * 0.75f) + (velocityXDp * 0.45f)
+        this.sproutAngle = dynamicSprout.coerceIn(-35f, 35f)
+
+        // Duolingo-style squishy character vibration when shaken
+        if (shiverAmplitude > 2.5f) {
+            val squish = (shiverAmplitude * 0.012f).coerceIn(0f, 0.12f)
+            scaleSquashX = 1f + squish
+            scaleSquashY = 1f - squish
+        } else if (scaleSquashX != 1.0f && !isWalking) {
+            scaleSquashX = 1.0f
+            scaleSquashY = 1.0f
+        }
+        invalidate()
+    }
     fun pauseAnimations() {
         bobAnimator?.pause()
         blinkAnimator?.pause()

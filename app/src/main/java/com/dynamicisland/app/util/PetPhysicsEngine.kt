@@ -26,7 +26,15 @@ import kotlin.math.sqrt
  */
 class PetPhysicsEngine(
     private val context: Context,
-    private val onPhysicsUpdate: (offsetXDp: Float, offsetYDp: Float, tiltAngleDeg: Float, isTensionHigh: Boolean) -> Unit
+    private val onPhysicsUpdate: (
+        offsetXDp: Float,
+        offsetYDp: Float,
+        tiltAngleDeg: Float,
+        velocityXDp: Float,
+        shiverAmplitudeDp: Float,
+        shiverPhase: Float,
+        isTensionHigh: Boolean
+    ) -> Unit
 ) : SensorEventListener {
 
     private val prefs = PreferencesHelper(context)
@@ -47,12 +55,19 @@ class PetPhysicsEngine(
     var currentTiltDeg = 0f
         private set
 
-    // Velocity & Spring Damping
-    private var velocityX = 0f
-    private var velocityY = 0f
-    private var springK = 0.12f // Spring restorative stiffness
-    private var damping = 0.82f // Velocity friction damping
+    // Keychain Wire Shiver Vibration (High-frequency harmonic ripples when shaken)
+    var shiverAmplitudeDp = 0f
+        private set
+    var shiverPhase = 0f
+        private set
 
+    // Velocity & Spring Damping
+    var velocityX = 0f
+        private set
+    var velocityY = 0f
+        private set
+    private var springK = 0.14f // Spring restorative stiffness
+    private var damping = 0.84f // Velocity friction damping
     // Low-pass filtered tilt targets from sensors
     private var targetTiltXDp = 0f
     private var targetTiltYDp = 0f
@@ -70,10 +85,11 @@ class PetPhysicsEngine(
 
             stepPhysics()
 
-            val hasSignificantMovement = abs(velocityX) > 0.1f || abs(velocityY) > 0.1f ||
-                    abs(currentOffsetXDp - targetTiltXDp) > 0.2f
+            val hasSignificantMovement = abs(velocityX) > 0.08f || abs(velocityY) > 0.08f ||
+                    shiverAmplitudeDp > 0.05f ||
+                    abs(currentOffsetXDp - targetTiltXDp) > 0.15f
 
-            val nextDelay = if (hasSignificantMovement) 28L else 45L
+            val nextDelay = if (hasSignificantMovement) 25L else 45L
             handler.postDelayed(this, nextDelay)
         }
     }
@@ -148,7 +164,9 @@ class PetPhysicsEngine(
         currentOffsetXDp = 0f
         currentOffsetYDp = 0f
         currentTiltDeg = 0f
-        onPhysicsUpdate(0f, 0f, 0f, false)
+        shiverAmplitudeDp = 0f
+        shiverPhase = 0f
+        onPhysicsUpdate(0f, 0f, 0f, 0f, 0f, 0f, false)
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -167,37 +185,42 @@ class PetPhysicsEngine(
                 // Smooth low-pass filter
                 targetTiltXDp = (targetTiltXDp * 0.75f) + (rawTiltXDp * 0.25f)
                 targetTiltYDp = (targetTiltYDp * 0.75f) + (rawTiltYDp * 0.25f)
-
-                // Shake detection for rapid phone shake
+                // Shake detection for rapid phone shake & wire shiver
                 val deltaAccel = abs(ax - lastAccelX) + abs(ay - lastAccelY) + abs(az - lastAccelZ)
                 lastAccelX = ax
                 lastAccelY = ay
                 lastAccelZ = az
 
+                // Rapid phone movement or shaking injects high-frequency wire shiver waves
+                if (deltaAccel > 5.2f) {
+                    val addedShiver = ((deltaAccel - 5.2f) * 0.75f).coerceIn(0f, 16f)
+                    shiverAmplitudeDp = maxOf(shiverAmplitudeDp, addedShiver)
+                }
+
                 val now = SystemClock.elapsedRealtime()
-                if (deltaAccel > 14f && (now - lastShakeTime) > 600L) {
+                if (deltaAccel > 13f && (now - lastShakeTime) > 550L) {
                     lastShakeTime = now
                     triggerShakeImpulse(ax)
                 }
             }
 
             Sensor.TYPE_GYROSCOPE -> {
-                // Angular twist velocity around Z axis adds rotational swing
+                // Angular twist velocity around Z axis adds rotational swing and wire flex
                 val angularZ = event.values[2] // rad/s
-                if (abs(angularZ) > 1.2f) {
-                    velocityX += (-angularZ * 4f)
+                if (abs(angularZ) > 1.0f) {
+                    velocityX += (-angularZ * 4.2f)
+                    val gyroShiver = (abs(angularZ) * 2.2f).coerceIn(0f, 12f)
+                    shiverAmplitudeDp = maxOf(shiverAmplitudeDp, gyroShiver)
                 }
             }
         }
     }
-
     private fun triggerShakeImpulse(directionX: Float) {
         // Shaking causes energetic pendulum swing impulse!
         val impulseDirection = if (directionX != 0f) -Math.signum(directionX) else 1f
         velocityX += impulseDirection * 18f
         velocityY += -8f
     }
-
     private fun stepPhysics() {
         // Damped harmonic spring toward sensor target
         val forceX = (targetTiltXDp - currentOffsetXDp) * springK
@@ -219,12 +242,31 @@ class PetPhysicsEngine(
         }
 
         // Tilt angle corresponds to lateral swing & velocity
-        val dynamicTilt = (currentOffsetXDp * 0.6f + velocityX * 1.2f).coerceIn(-24f, 24f)
+        val dynamicTilt = (currentOffsetXDp * 0.65f + velocityX * 1.35f).coerceIn(-26f, 26f)
         currentTiltDeg = dynamicTilt
+
+        // High-frequency wire shiver vibration wave
+        if (shiverAmplitudeDp > 0.05f) {
+            shiverPhase += 0.95f // advances wave phase (~22-26 Hz)
+            shiverAmplitudeDp *= 0.87f // exponential friction damping
+            if (shiverAmplitudeDp < 0.05f) {
+                shiverAmplitudeDp = 0f
+            }
+        } else {
+            shiverAmplitudeDp = 0f
+        }
 
         val isHighTension = dist > 18f
 
-        onPhysicsUpdate(currentOffsetXDp, currentOffsetYDp, currentTiltDeg, isHighTension)
+        onPhysicsUpdate(
+            currentOffsetXDp,
+            currentOffsetYDp,
+            currentTiltDeg,
+            velocityX,
+            shiverAmplitudeDp,
+            shiverPhase,
+            isHighTension
+        )
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {

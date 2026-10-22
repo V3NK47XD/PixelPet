@@ -231,17 +231,22 @@ class DynamicIslandService : Service() {
         })
         phoneEventManager?.start()
 
-        physicsEngine = com.dynamicisland.app.util.PetPhysicsEngine(this) { offsetXDp, offsetYDp, tiltDeg, isTension ->
+        physicsEngine = com.dynamicisland.app.util.PetPhysicsEngine(this) { offsetXDp, offsetYDp, tiltDeg, velocityX, shiverAmp, shiverPhase, isTension ->
             if (!isDragging) {
                 physicsOffsetXDp = offsetXDp
                 physicsOffsetYDp = offsetYDp
                 physicsTiltDeg = tiltDeg
                 petView?.rotation = tiltAngleDeg + physicsTiltDeg
+                petView?.setPhysicsInertia(physicsTiltDeg, velocityX, shiverAmp)
                 updatePetWindowLayout()
-                updateLeashAttachment(slackFactor = if (isTension) 0.35f else 1.0f)
+                updateLeashAttachment(
+                    slackFactor = if (isTension) 0.35f else 1.0f,
+                    velocityXDp = velocityX,
+                    shiverAmplitudeDp = shiverAmp,
+                    shiverPhase = shiverPhase
+                )
             }
         }
-        physicsEngine?.start()
 
         com.dynamicisland.app.util.ForegroundAppDetector.addListener(appChangeListener)
         com.dynamicisland.app.util.ForegroundAppDetector.startMonitoring(this)
@@ -715,7 +720,12 @@ class DynamicIslandService : Service() {
         }
     }
 
-    private fun updateLeashAttachment(slackFactor: Float) {
+    private fun updateLeashAttachment(
+        slackFactor: Float = 1.0f,
+        velocityXDp: Float = 0f,
+        shiverAmplitudeDp: Float = 0f,
+        shiverPhase: Float = 0f
+    ) {
         val leash = leashView ?: return
         val leashParams = leashParams ?: return
 
@@ -726,7 +736,7 @@ class DynamicIslandService : Service() {
         val petTopXInLeash = leashAnchorX + (currentDriftXDp + physicsOffsetXDp).dpToPx()
         val petTopYInLeash = leashAnchorY + (currentDriftYDp + physicsOffsetYDp - (cachedPetSizeDp * 0.42f)).dpToPx()
 
-        leash.updatePetAttachment(petTopXInLeash, petTopYInLeash, slackFactor)
+        leash.updateKeychainWire(petTopXInLeash, petTopYInLeash, slackFactor, velocityXDp, shiverAmplitudeDp, shiverPhase)
     }
 
     private fun applyUpdatedSettings() {

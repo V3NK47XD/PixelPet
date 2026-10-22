@@ -49,16 +49,22 @@ class TetheredPetStageView @JvmOverloads constructor(
     private val prefs = PreferencesHelper(context)
     private val handler = Handler(Looper.getMainLooper())
     private val touchableRegionHelper = com.dynamicisland.app.util.TouchableRegionHelper(this)
-    // Leash Paints
+    // Keychain Wire Paints: 2-tone Duolingo 2.5D styling
+    private val leashShadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 3.8f
+        strokeCap = Paint.Cap.ROUND
+    }
+
     private val leashPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 2.5f
+        strokeWidth = 2.4f
         strokeCap = Paint.Cap.ROUND
     }
 
     private val anchorRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 2.0f
+        strokeWidth = 2.2f
         color = Color.parseColor("#F59E0B")
     }
 
@@ -67,6 +73,11 @@ class TetheredPetStageView @JvmOverloads constructor(
         color = Color.parseColor("#D97706")
     }
 
+    private val keychainLinkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 1.8f
+        color = Color.parseColor("#FCD34D") // Metallic gold sheen for keychain connector link
+    }
     private val leashPath = Path()
 
     // Physics & Drift State (in DP)
@@ -78,9 +89,11 @@ class TetheredPetStageView @JvmOverloads constructor(
     private var physicsOffsetXDp = 0f
     private var physicsOffsetYDp = 0f
     private var physicsTiltDeg = 0f
+    private var physicsVelocityXDp = 0f
+    private var shiverAmplitudeDp = 0f
+    private var shiverPhase = 0f
     private var leashSlackFactor = 1.0f
     private var physicsEngine: com.dynamicisland.app.util.PetPhysicsEngine? = null
-
     private var driftAnimator: ValueAnimator? = null
     private var continuousFloatAnimator: ValueAnimator? = null
     private var snapBackAnimator: ValueAnimator? = null
@@ -133,12 +146,22 @@ class TetheredPetStageView @JvmOverloads constructor(
     }
 
     fun updateLeashColor() {
-        try {
-            leashPaint.color = Color.parseColor(prefs.leashColor)
+        val baseColor = try {
+            Color.parseColor(prefs.leashColor)
         } catch (e: Exception) {
-            leashPaint.color = Color.parseColor("#F43F5E") // Default cute red ribbon
+            Color.parseColor("#F43F5E") // Default cute red ribbon
         }
+        leashPaint.color = baseColor
+        leashShadowPaint.color = getShadowColor(baseColor)
         invalidate()
+    }
+
+    private fun getShadowColor(color: Int): Int {
+        val a = Color.alpha(color)
+        val r = (Color.red(color) * 0.58f).toInt()
+        val g = (Color.green(color) * 0.58f).toInt()
+        val b = (Color.blue(color) * 0.58f).toInt()
+        return Color.argb(a, r, g, b)
     }
 
     private fun setupFloatAnimators() {
@@ -315,11 +338,16 @@ class TetheredPetStageView @JvmOverloads constructor(
         touchableRegionHelper.attach { getPetTouchRegion() }
 
         if (prefs.isGyroPhysicsEnabled) {
-            physicsEngine = com.dynamicisland.app.util.PetPhysicsEngine(context) { offsetXDp, offsetYDp, tiltDeg, _ ->
+            physicsEngine = com.dynamicisland.app.util.PetPhysicsEngine(context) { offsetXDp, offsetYDp, tiltDeg, velocityX, shiverAmp, shiverPhase, isTension ->
                 if (!isDraggingPet) {
                     physicsOffsetXDp = offsetXDp
                     physicsOffsetYDp = offsetYDp
                     physicsTiltDeg = tiltDeg
+                    physicsVelocityXDp = velocityX
+                    shiverAmplitudeDp = shiverAmp
+                    this.shiverPhase = shiverPhase
+                    leashSlackFactor = if (isTension) 0.35f else 1.0f
+                    petView.setPhysicsInertia(physicsTiltDeg, velocityX, shiverAmp)
                     updatePetViewLayout()
                     invalidate()
                 }
@@ -368,24 +396,69 @@ class TetheredPetStageView @JvmOverloads constructor(
         val petTopX = petCenterXPx
         val petTopY = petCenterYPx - (petSizePx * 0.42f)
 
-        // 3. Draw Curved Physics String / Leash
-        leashPath.reset()
-        leashPath.moveTo(anchorX, anchorY + ringRadius)
+        // 3. Multi-Segment Keychain Wire with Fluid Inertia & Shiver Ripples
+        val startX = anchorX
+        val startY = anchorY + ringRadius
+        val dx = petTopX - startX
+        val dy = petTopY - startY
+        val length = sqrt((dx * dx) + (dy * dy))
 
-        val midX = (anchorX + petTopX) / 2f
-        val midY = (anchorY + petTopY) / 2f
-        val dist = sqrt(((petTopX - anchorX) * (petTopX - anchorX)) + ((petTopY - anchorY) * (petTopY - anchorY)))
+        if (length > 2f) {
+            val nx = -dy / length
+            val ny = dx / length
 
-        // When dragging to max distance, leash is taut; when slack, sags with gravity
-        val sagY = (dist * 0.18f * leashSlackFactor)
-        val controlX = midX + (currentDriftXDp.dpToPx() * 0.12f)
-        val controlY = midY + sagY
+            val baseSagPx = length * 0.15f * leashSlackFactor
+            val density = context.resources.displayMetrics.density
+            val bendPx = (-physicsVelocityXDp * 1.15f) * density
+            val shiverPx = shiverAmplitudeDp * density
 
-        leashPath.quadTo(controlX, controlY, petTopX, petTopY)
-        canvas.drawPath(leashPath, leashPaint)
+            val segments = 18
+            leashPath.reset()
 
-        // Tiny knot where leash ties to the sprout
-        canvas.drawCircle(petTopX, petTopY, 2.dpToPx().toFloat(), anchorRingPaint)
+            for (i in 0..segments) {
+                val u = i.toFloat() / segments.toFloat()
+                val bx = startX + (u * dx)
+                val by = startY + (u * dy)
+
+                val envelope = 4f * u * (1f - u)
+                val sagY = envelope * baseSagPx
+
+                val arcBend = kotlin.math.sin(u * Math.PI.toFloat()) * bendPx
+                val sBend = kotlin.math.sin(u * 2f * Math.PI.toFloat()) * (bendPx * 0.35f)
+
+                val wave = kotlin.math.sin(shiverPhase + u * 2.5f * Math.PI.toFloat()) +
+                        0.35f * kotlin.math.sin(shiverPhase * 2f + u * 5f * Math.PI.toFloat())
+                val shiver = envelope * shiverPx * wave
+
+                val lateralDeflection = arcBend + sBend + shiver
+                val ptX = bx + (lateralDeflection * nx)
+                val ptY = by + sagY + (lateralDeflection * ny)
+
+                if (i == 0) {
+                    leashPath.moveTo(ptX, ptY)
+                } else {
+                    leashPath.lineTo(ptX, ptY)
+                }
+            }
+
+            // Draw 2-Tone Duolingo-style wire: darker shadow path underneath + bright core
+            canvas.drawPath(leashPath, leashShadowPaint)
+            canvas.drawPath(leashPath, leashPaint)
+
+            // Keychain Jump-Ring Hinge (swivels with wire departure angle)
+            val linkAngleRad = kotlin.math.atan2(dy.toDouble(), dx.toDouble())
+            val linkAngleDeg = Math.toDegrees(linkAngleRad).toFloat()
+            canvas.save()
+            canvas.translate(startX, startY)
+            canvas.rotate(linkAngleDeg - 90f)
+            val linkOval = RectF(-1.8.dpToPx().toFloat(), -0.8.dpToPx().toFloat(), 1.8.dpToPx().toFloat(), 3.2.dpToPx().toFloat())
+            canvas.drawOval(linkOval, keychainLinkPaint)
+            canvas.restore()
+
+            // Clasp bead where keychain wire connects to pet sprout
+            canvas.drawCircle(petTopX, petTopY, 2.5.dpToPx().toFloat(), anchorRingPaint)
+            canvas.drawCircle(petTopX, petTopY, 1.2.dpToPx().toFloat(), keychainLinkPaint)
+        }
     }
 
     /**
