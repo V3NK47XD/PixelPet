@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   release:
-    name: Build & Publish Release
+    name: Publish Release from Local Build
     runs-on: ubuntu-latest
 
     steps:
@@ -19,16 +19,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
-
-      - name: Grant Execute Permission to Gradlew
-        run: chmod +x gradlew
 
       - name: Determine Dynamic Release Tag
         id: version_step
@@ -48,16 +38,21 @@ jobs:
           echo "BASE_VER=$BASE_VER" >> $GITHUB_OUTPUT
           echo "Calculated Release Tag: $TAG_NAME"
 
-      - name: Build Fresh Debug APK
+      - name: Verify Prebuilt APK from Laptop
         run: |
-          echo "Compiling APK via Gradle..."
-          ./gradlew assembleDebug
+          if [ ! -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
+            echo "ERROR: Local prebuilt APK not found at app/build/outputs/apk/debug/app-debug.apk!"
+            echo "Please run ./gradlew assembleDebug on your laptop, commit the APK, and push."
+            exit 1
+          fi
+          echo "Verified pre-built APK from laptop is present in repository."
+          ls -la app/build/outputs/apk/debug/app-debug.apk
 
       - name: Package Release APK
         run: |
           TAG_NAME="${{ steps.version_step.outputs.TAG_NAME }}"
           cp app/build/outputs/apk/debug/app-debug.apk "PixelPet-${TAG_NAME}.apk"
-          echo "Created PixelPet-${TAG_NAME}.apk"
+          echo "Created PixelPet-${TAG_NAME}.apk from locally signed build."
           ls -la "PixelPet-${TAG_NAME}.apk"
 
       - name: Publish GitHub Release
@@ -70,8 +65,10 @@ jobs:
             
             **Cute Animated Pixel-Art Companion Tethered to Your Front Camera**
             
-            #### Automated Release for commit: ${{ github.sha }}
+            *Signed with original developer certificate from local build.*
             
+            #### Highlights & Features in this release:
+            - **Original Developer Signing Key**: Built locally and released without CI signing mismatches.
             - **Fluid Gyroscope & Physical Inertia**: Phone tilts swing the pet along its leash with realistic momentum; shaking injects playful rotational orbits! Settles back stably when still.
             - **Zero-Scroll All-in-One UI with Rotary Speaker Knobs**: 100% compact screen with retro rotary dials (`CAM X`, `CAM Y`, `SIZE`, `LEASH`) with tactile haptic ticks.
             - **Cute Peach & Soft Orange Theme**: Warm peach (`#FF9F68`) & creamsicle palette with separated Developer Tools sheet (⚙️).

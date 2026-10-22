@@ -121,22 +121,18 @@ graph TD
 
 ### Automated Release Workflow & APK Renaming (`.github/workflows/release.yml`)
 - **Triggers**: Push to `main` exclusively (or manual `workflow_dispatch`). Pushes to other branches (such as `optimization`) do NOT trigger releases.
-- **Guaranteed Release on Every Push to `main`**:
-  1. The workflow parses `versionName` from `app/build.gradle.kts` (`BASE_VER="v${RAW_VERSION}"`).
-  2. **Dynamic Tag Creation**: The workflow checks if `v${BASE_VER}` already exists on GitHub:
-     - If it does NOT exist: creates release tagged `v${BASE_VER}`.
-     - If it ALREADY exists (e.g. subsequent push without bumping version): tags as `v${BASE_VER}.${{ github.run_number }}`.
-     - **This guarantees a brand-new release card is ALWAYS published on GitHub on EVERY push to `main`**, regardless of whether an agent or developer remembered to bump `versionName`!
-  3. **Guaranteed Fresh Compilation**: The workflow always executes `./gradlew assembleDebug` in CI. Even if a developer or agent pushes from another machine without compiling locally, the release asset is 100% freshly built from the latest commit code.
-  4. **Release Asset Renaming**: The workflow copies the APK to **`PixelPet-${TAG_NAME}.apk`** (e.g. `PixelPet-v1.0.2.apk`), and attaches both `PixelPet-${TAG_NAME}.apk` and `app-debug.apk` to the release.
+- **CRITICAL SIGNING KEY RULE — NEVER COMPILE IN GITHUB ACTIONS**:
+  - The workflow **DOES NOT** run `./gradlew assembleDebug` in GitHub Actions.
+  - **WHY**: Building on an Ubuntu GitHub Actions runner generates an arbitrary ephemeral debug keystore with a different certificate fingerprint than the developer's laptop. When users download an update from GitHub Releases, Android rejects the install with `INSTALL_FAILED_UPDATE_INCOMPATIBLE` (signature mismatch).
+  - **HOW IT WORKS**: The APK **MUST ALWAYS** be compiled locally on the developer's laptop (`./gradlew assembleDebug`). Because `app/build/outputs/apk/debug/app-debug.apk` is whitelisted with `!` in `.gitignore`, the locally-signed APK is committed and pushed directly to the repository. The release workflow takes this pre-built APK, renames it to `PixelPet-${TAG_NAME}.apk`, and uploads it to GitHub Releases.
+  - **Dynamic Tagging**: If `v${BASE_VER}` already exists on GitHub, the workflow automatically tags subsequent commits as `v${BASE_VER}.${{ github.run_number }}` so that every single push to `main` creates a brand-new release card with the updated APK.
 
-### Step-by-Step Instructions for Future Agents Bumping Versions
-1. **Update Version**: Edit `versionCode` and `versionName` in `app/build.gradle.kts` (e.g. `1.0.2` -> `1.0.3`).
-2. **Update Documentation**: Update version badges and release notes in `README.md` and `AGENTS.md`.
-3. **Recompile Debug APK**: Run `./gradlew assembleDebug` so `app/build/outputs/apk/debug/app-debug.apk` is refreshed locally.
-4. **Run Unit Tests**: Run `./gradlew test` and ensure all tests pass.
-5. **Verify Git Tracking**: Run `git status` — confirm `app/build/outputs/apk/debug/app-debug.apk` appears as tracked/modified (NOT ignored).
-6. **Commit & Push to `main`**: Push to `main` to trigger `.github/workflows/release.yml`, which compiles, renames, and publishes the release assets automatically.
+### Step-by-Step Instructions for Future Agents Bumping Versions & Releasing
+1. **Compile Locally**: Always run `./gradlew assembleDebug` on the local laptop so `app/build/outputs/apk/debug/app-debug.apk` is freshly compiled with the developer's local key.
+2. **Run Unit Tests**: Run `./gradlew test` and ensure all tests pass.
+3. **Verify Git Tracking**: Run `git status` — confirm `app/build/outputs/apk/debug/app-debug.apk` appears as tracked/modified (NOT ignored).
+4. **Update Version**: When cutting a major/minor version, edit `versionCode` and `versionName` in `app/build.gradle.kts` and update `README.md`.
+5. **Commit & Push to `main`**: Push to `main` to trigger `.github/workflows/release.yml`, which immediately packages and publishes the locally-signed APK to GitHub Releases in ~5 seconds.
 ---
 
 ## 🔒 Security & Google Play Protect Policies
