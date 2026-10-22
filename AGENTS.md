@@ -121,23 +121,22 @@ graph TD
 
 ### Automated Release Workflow & APK Renaming (`.github/workflows/release.yml`)
 - **Triggers**: Push to `main` exclusively (or manual `workflow_dispatch`). Pushes to other branches (such as `optimization`) do NOT trigger releases.
-- **Version Tracking & Renaming Pipeline**:
-  1. The workflow parses `versionName` directly from `app/build.gradle.kts`:
-     ```bash
-     RAW_VERSION=$(grep -E 'versionName\s*=\s*' app/build.gradle.kts | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
-     VERSION="v${RAW_VERSION:-1.0.1}"
-     ```
-  2. Checks for the tracked pre-built APK at `app/build/outputs/apk/debug/app-debug.apk` (or compiles it via Gradle if absent).
-  3. Copies and renames the APK to **`PixelPet-${VERSION}.apk`** (e.g. `PixelPet-v1.0.1.apk`).
-  4. Publishes a GitHub Release tagged with `${VERSION}` and attaches both `PixelPet-${VERSION}.apk` and `app-debug.apk`.
+- **Guaranteed Release on Every Push to `main`**:
+  1. The workflow parses `versionName` from `app/build.gradle.kts` (`BASE_VER="v${RAW_VERSION}"`).
+  2. **Dynamic Tag Creation**: The workflow checks if `v${BASE_VER}` already exists on GitHub:
+     - If it does NOT exist: creates release tagged `v${BASE_VER}`.
+     - If it ALREADY exists (e.g. subsequent push without bumping version): tags as `v${BASE_VER}.${{ github.run_number }}`.
+     - **This guarantees a brand-new release card is ALWAYS published on GitHub on EVERY push to `main`**, regardless of whether an agent or developer remembered to bump `versionName`!
+  3. **Guaranteed Fresh Compilation**: The workflow always executes `./gradlew assembleDebug` in CI. Even if a developer or agent pushes from another machine without compiling locally, the release asset is 100% freshly built from the latest commit code.
+  4. **Release Asset Renaming**: The workflow copies the APK to **`PixelPet-${TAG_NAME}.apk`** (e.g. `PixelPet-v1.0.2.apk`), and attaches both `PixelPet-${TAG_NAME}.apk` and `app-debug.apk` to the release.
 
 ### Step-by-Step Instructions for Future Agents Bumping Versions
-1. **Update Version**: Edit `versionCode` and `versionName` in `app/build.gradle.kts`.
+1. **Update Version**: Edit `versionCode` and `versionName` in `app/build.gradle.kts` (e.g. `1.0.2` -> `1.0.3`).
 2. **Update Documentation**: Update version badges and release notes in `README.md` and `AGENTS.md`.
-3. **Recompile Debug APK**: Run `./gradlew assembleDebug` so `app/build/outputs/apk/debug/app-debug.apk` is refreshed.
+3. **Recompile Debug APK**: Run `./gradlew assembleDebug` so `app/build/outputs/apk/debug/app-debug.apk` is refreshed locally.
 4. **Run Unit Tests**: Run `./gradlew test` and ensure all tests pass.
 5. **Verify Git Tracking**: Run `git status` — confirm `app/build/outputs/apk/debug/app-debug.apk` appears as tracked/modified (NOT ignored).
-6. **Commit & Push to `main`**: Push to `main` to trigger `.github/workflows/release.yml`, which renames and publishes the release assets.
+6. **Commit & Push to `main`**: Push to `main` to trigger `.github/workflows/release.yml`, which compiles, renames, and publishes the release assets automatically.
 ---
 
 ## 🔒 Security & Google Play Protect Policies

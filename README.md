@@ -2,12 +2,12 @@
 
 [![Latest Release](https://img.shields.io/github/v/release/V3NK47XD/PixelPet?color=F59E0B&label=Release)](https://github.com/V3NK47XD/PixelPet/releases/latest)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/V3NK47XD/PixelPet/release.yml?branch=main&label=Build%20%26%20Release)](https://github.com/V3NK47XD/PixelPet/actions)
-[![Download APK](https://img.shields.io/badge/Download-APK%20(v1.0.1)-60A5FA?logo=android)](https://github.com/V3NK47XD/PixelPet/releases/latest)
+[![Download APK](https://img.shields.io/badge/Download-APK%20(v1.0.2)-60A5FA?logo=android)](https://github.com/V3NK47XD/PixelPet/releases/latest)
 
 > A cute, expressive pixel-art companion that lives near your phone's front camera, tethered by an organic physics leash, and reacts to your phone activity!
 
-**Current Version:** `v1.0.1`  
-**Direct Download:** [`PixelPet-v1.0.1.apk`](https://github.com/V3NK47XD/PixelPet/releases/latest/download/PixelPet-v1.0.1.apk) | [`app-debug.apk`](app/build/outputs/apk/debug/app-debug.apk)
+**Current Version:** `v1.0.2`  
+**Direct Download:** [`PixelPet-v1.0.2.apk`](https://github.com/V3NK47XD/PixelPet/releases/latest/download/PixelPet-v1.0.2.apk) | [`app-debug.apk`](app/build/outputs/apk/debug/app-debug.apk)
 
 ---
 
@@ -83,11 +83,12 @@
 
 | Version | Date | Key Highlights |
 | :--- | :--- | :--- |
+| **`v1.0.2`** | 2026-10-22 | Fluid gyroscope tilt & shake inertia physics, zero-scroll all-in-one UI with retro rotary speaker dials, cute peach theme, and dev tools bottom sheet. |
 | **`v1.0.1`** | 2026-10-21 | Battery efficiency optimization: screen on/off pausing, zero IPC idle hovering, static bodyMap, debounced writes, texting app mood (WhatsApp/Discord/Messages/LinkedIn). |
 | **`v1.0.0`** | 2026-10-21 | Tethered camera anchor, physics leash, autonomous drift, leash-constrained dragging, sleep/wake tap toggle, multi-tap anger tantrum, contextual app moods. |
 
 * **Latest Release**: [PixelPet Releases Page](https://github.com/V3NK47XD/PixelPet/releases/latest)
-* **Direct APK Download**: [`PixelPet-v1.0.1.apk`](https://github.com/V3NK47XD/PixelPet/releases/latest/download/PixelPet-v1.0.1.apk)
+* **Direct APK Download**: [`PixelPet-v1.0.2.apk`](https://github.com/V3NK47XD/PixelPet/releases/latest/download/PixelPet-v1.0.2.apk)
 * **Tracked Build Output**: [`app/build/outputs/apk/debug/app-debug.apk`](app/build/outputs/apk/debug/app-debug.apk)
 
 ### Automated CI/CD Release Workflow
