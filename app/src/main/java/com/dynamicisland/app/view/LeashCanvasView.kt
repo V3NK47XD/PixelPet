@@ -29,22 +29,19 @@ class LeashCanvasView @JvmOverloads constructor(
 
     private val prefs = PreferencesHelper(context)
 
-    // Keychain Wire Paints: 2-tone Duolingo 2.5D styling
+    // Keychain Wire Paints: 2-tone Duolingo 2.5D styling (Noticeably Thicker & Chunky)
     private val leashShadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 3.8f
         strokeCap = Paint.Cap.ROUND
     }
 
     private val leashPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 2.4f
         strokeCap = Paint.Cap.ROUND
     }
 
     private val anchorRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 2.2f
         color = Color.parseColor("#F59E0B")
     }
 
@@ -55,7 +52,6 @@ class LeashCanvasView @JvmOverloads constructor(
 
     private val keychainLinkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 1.8f
         color = Color.parseColor("#FCD34D") // Metallic gold sheen for keychain connector link
     }
 
@@ -90,9 +86,13 @@ class LeashCanvasView @JvmOverloads constructor(
     private var shiverPhase: Float = 0f
 
     init {
+        val density = context.resources.displayMetrics.density
+        leashShadowPaint.strokeWidth = 5.4f * density
+        leashPaint.strokeWidth = 3.6f * density
+        anchorRingPaint.strokeWidth = 2.8f * density
+        keychainLinkPaint.strokeWidth = 2.2f * density
         updateLeashColor()
     }
-
     fun updateLeashColor() {
         val baseColor = try {
             Color.parseColor(prefs.leashColor)
@@ -151,11 +151,10 @@ class LeashCanvasView @JvmOverloads constructor(
             canvas.drawText("PASS-THROUGH AREA (Touches drop to app)", 8.dpToPx().toFloat(), h - 6.dpToPx(), debugTextPaint)
         }
 
-        // 2. Camera Anchor Keyring & Keychain Hardware
-        val ringRadius = 4.5.dpToPx().toFloat()
+        // 2. Camera Anchor Keyring & Keychain Hardware (Chunky & Tactile)
+        val ringRadius = 5.5.dpToPx().toFloat()
         canvas.drawCircle(anchorX, anchorY, ringRadius, anchorRingPaint)
         canvas.drawCircle(anchorX, anchorY, ringRadius * 0.45f, anchorCenterPaint)
-
         // 3. Multi-Segment Keychain Wire with Fluid Inertia & Shiver Ripples
         if (petTopXPx > 0f && petTopYPx > 0f) {
             val startX = anchorX
@@ -218,13 +217,13 @@ class LeashCanvasView @JvmOverloads constructor(
                 canvas.save()
                 canvas.translate(startX, startY)
                 canvas.rotate(linkAngleDeg - 90f)
-                val linkOval = RectF(-1.8.dpToPx().toFloat(), -0.8.dpToPx().toFloat(), 1.8.dpToPx().toFloat(), 3.2.dpToPx().toFloat())
+                val linkOval = RectF(-2.4.dpToPx().toFloat(), -1.0.dpToPx().toFloat(), 2.4.dpToPx().toFloat(), 4.2.dpToPx().toFloat())
                 canvas.drawOval(linkOval, keychainLinkPaint)
                 canvas.restore()
 
                 // Clasp bead where keychain wire connects to pet sprout
-                canvas.drawCircle(petTopXPx, petTopYPx, 2.5.dpToPx().toFloat(), anchorRingPaint)
-                canvas.drawCircle(petTopXPx, petTopYPx, 1.2.dpToPx().toFloat(), keychainLinkPaint)
+                canvas.drawCircle(petTopXPx, petTopYPx, 3.4.dpToPx().toFloat(), anchorRingPaint)
+                canvas.drawCircle(petTopXPx, petTopYPx, 1.8.dpToPx().toFloat(), keychainLinkPaint)
             }
         }
     }

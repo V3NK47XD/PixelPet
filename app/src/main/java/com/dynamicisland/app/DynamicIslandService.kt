@@ -365,13 +365,12 @@ class DynamicIslandService : Service() {
     }
 
     private fun startDriftEngine() {
-        if (isDriftEngineRunning) return
+        if (isDriftEngineRunning || prefs.isGyroPhysicsEnabled) return
         isDriftEngineRunning = true
 
         if (floatBobAnimator?.isStarted != true) {
             floatBobAnimator?.start()
         }
-
         pickNextFloatingSpot()
         scheduleNextDrift()
     }
@@ -385,15 +384,14 @@ class DynamicIslandService : Service() {
     }
 
     private fun scheduleNextDrift() {
+        if (prefs.isGyroPhysicsEnabled) return // Mode 2: Never drift automatically!
         handler.removeCallbacks(driftRunnable)
         val nextDelayMs = Random.nextLong(4500L, 8500L) // Never sits > 10s
         handler.postDelayed(driftRunnable, nextDelayMs)
     }
-
     private fun pickNextFloatingSpot() {
-        if (isDragging) return
+        if (isDragging || prefs.isGyroPhysicsEnabled) return
         val leashLength = prefs.leashLengthDp.toFloat()
-
         // Spots around camera: Left, Right, Underneath dangling, Lean Left, Lean Right, Close Hover
         val (nextX, nextY) = when (Random.nextInt(6)) {
             0 -> Pair(-(leashLength * 0.75f), leashLength * 0.55f)
@@ -478,10 +476,8 @@ class DynamicIslandService : Service() {
         }
 
         val petSize = prefs.petSizeDp.dpToPx()
-        val stageWidth = (prefs.leashLengthDp * 2 + prefs.petSizeDp + 36).dpToPx()
-        val stageHeight = (prefs.leashLengthDp + prefs.petSizeDp + 24).dpToPx()
-
-        // -------------------------------------------------------------
+        val stageWidth = (prefs.leashLengthDp * 2.5f + prefs.petSizeDp + 48).toInt().dpToPx()
+        val stageHeight = (prefs.leashLengthDp * 1.6f + prefs.petSizeDp + 36).toInt().dpToPx()
         // WINDOW A: Leash & Anchor Window (FLAG_NOT_TOUCHABLE)
         // Passes 100% of touches outside the pet straight to underlying app!
         // -------------------------------------------------------------
@@ -545,7 +541,18 @@ class DynamicIslandService : Service() {
             // Add Window A first (background leash), then Window B (interactive pet on top)
             windowManager?.addView(leash, leashParams)
             windowManager?.addView(container, petParams)
-            startDriftEngine()
+            if (prefs.isGyroPhysicsEnabled) {
+                // Mode 2: Keychain Gravity Mode (Zero random drift)
+                currentDriftXDp = 0f
+                currentDriftYDp = prefs.leashLengthDp * 0.75f
+                if (floatBobAnimator?.isStarted != true) {
+                    floatBobAnimator?.start()
+                }
+                physicsEngine?.start()
+            } else {
+                // Mode 1: Autonomous Random Drift Mode
+                startDriftEngine()
+            }
             updateLeashAttachment(slackFactor = 1.0f)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -746,8 +753,8 @@ class DynamicIslandService : Service() {
     private fun applyUpdatedSettings() {
         refreshCachedSettings()
         val petSize = cachedPetSizeDp.dpToPx()
-        val stageWidth = (cachedLeashLengthDp * 2 + cachedPetSizeDp + 36).dpToPx()
-        val stageHeight = (cachedLeashLengthDp + cachedPetSizeDp + 24).dpToPx()
+        val stageWidth = (cachedLeashLengthDp * 2.5f + cachedPetSizeDp + 48).toInt().dpToPx()
+        val stageHeight = (cachedLeashLengthDp * 1.6f + cachedPetSizeDp + 36).toInt().dpToPx()
 
         // 1. Update Leash Window
         leashParams?.let { params ->
@@ -777,13 +784,34 @@ class DynamicIslandService : Service() {
             updatePetWindowLayout()
         }
 
+        if (prefs.isGyroPhysicsEnabled) {
+            // Mode 2: Keychain Gravity Mode (Cancel random drift, hang straight from camera)
+            handler.removeCallbacks(driftRunnable)
+            driftAnimator?.cancel()
+            isDriftEngineRunning = false
+            currentDriftXDp = 0f
+            currentDriftYDp = cachedLeashLengthDp * 0.75f
+            if (floatBobAnimator?.isStarted != true) {
+                floatBobAnimator?.start()
+            }
+            physicsEngine?.onSettingsChanged()
+            physicsEngine?.start()
+        } else {
+            // Mode 1: Autonomous Random Drift Mode
+            physicsEngine?.stop()
+            physicsOffsetXDp = 0f
+            physicsOffsetYDp = 0f
+            physicsTiltDeg = 0f
+            if (!isDriftEngineRunning) {
+                startDriftEngine()
+            }
+        }
+        updatePetWindowLayout()
         updateLeashAttachment(slackFactor = 1.0f)
-        physicsEngine?.onSettingsChanged()
         moodManager.recalculateMood()
     }
 
     private fun removeOverlay() {
-        stopDriftEngine()
 
         petContainer?.let { container ->
             try {

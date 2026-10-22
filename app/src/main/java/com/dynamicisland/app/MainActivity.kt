@@ -138,8 +138,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.knobLeash.apply {
-            minValue = 18f
-            maxValue = 60f
+            minValue = 20f
+            maxValue = 120f
             stepSize = 2f
             unitSuffix = "dp"
             knobTitle = "LEASH"
@@ -235,6 +235,8 @@ class MainActivity : AppCompatActivity() {
         // Behavior Switches
         binding.switchGyroPhysics.setOnCheckedChangeListener { _, isChecked ->
             prefs.isGyroPhysicsEnabled = isChecked
+            binding.previewTetherStage.onSettingsChanged()
+            updateCalibrationStatusUI()
             notifySettingsChanged()
         }
 
@@ -360,14 +362,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateCalibrationStatusUI() {
-        if (prefs.isOrientationCalibrated) {
-            val y = prefs.calibratedAccelY
-            val pitchDeg = Math.toDegrees(kotlin.math.asin((y / 9.8f).coerceIn(-1f, 1f).toDouble())).toInt()
-            binding.tvCalibrationStatus.text = "Hold: Calibrated (~${pitchDeg}° pitch) ✨"
-            binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.peach_primary))
-        } else {
-            binding.tvCalibrationStatus.text = "Neutral Hold: Default (45°) • Tap calibrate"
+        if (!prefs.isGyroPhysicsEnabled) {
+            binding.tvCalibrationStatus.text = "Mode 1: Autonomous Random Drift (Physics OFF)"
             binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.peach_cream))
+            binding.btnCalibrateHold.visibility = View.GONE
+        } else {
+            binding.btnCalibrateHold.visibility = View.VISIBLE
+            if (prefs.isOrientationCalibrated) {
+                val y = prefs.calibratedAccelY
+                val pitchDeg = Math.toDegrees(kotlin.math.asin((y / 9.8f).coerceIn(-1f, 1f).toDouble())).toInt()
+                binding.tvCalibrationStatus.text = "Mode 2: Gravity Keychain (~${pitchDeg}° pitch) ✨"
+                binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.peach_primary))
+            } else {
+                binding.tvCalibrationStatus.text = "Mode 2: Gravity Keychain • Tap calibrate"
+                binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.peach_cream))
+            }
         }
     }
 

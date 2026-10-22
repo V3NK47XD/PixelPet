@@ -463,8 +463,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:checked="true"
-                android:text="Fluid Keychain &amp; Tilt Physics 📱"
-                android:textColor="@color/peach_light"
+                android:text="Keychain Gravity Mode (OFF: Drift) 📱"
                 android:textSize="11.5sp"
                 app:thumbTint="@color/peach_primary"
                 app:trackTint="@color/peach_dark" />

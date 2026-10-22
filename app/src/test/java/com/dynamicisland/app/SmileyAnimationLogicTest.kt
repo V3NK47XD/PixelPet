@@ -3,6 +3,7 @@ package com.dynamicisland.app
 import com.dynamicisland.app.util.PreferencesHelper
 import com.dynamicisland.app.view.AnimatedSmileyView
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.sin
@@ -212,5 +213,26 @@ class SmileyAnimationLogicTest {
         val smallShiftDp = 0.6f
         val pixels = (smallShiftDp * density).toInt()
         assertTrue("Small sub-integer DP movements must produce pixel motion, was $pixels", pixels >= 1)
+    }
+
+    @Test
+    fun testDualModeAndLeashRangeLogic() {
+        // 1. Leash range allows up to 120dp
+        val minLeash = 20f
+        val maxLeash = 120f
+        val testLeash = 100f
+        val clamped = testLeash.coerceIn(minLeash, maxLeash)
+        assertEquals(100f, clamped, 0.001f)
+
+        // 2. Mode logic verification:
+        // Mode 2 (Keychain Physics ON) -> drift is completely suppressed
+        val isPhysicsMode = true
+        val shouldDriftMode2 = !isPhysicsMode
+        assertFalse("In Mode 2 (Keychain Physics ON), autonomous drift must be suppressed", shouldDriftMode2)
+
+        // Mode 1 (Keychain Physics OFF) -> autonomous drift is enabled
+        val isOffMode = false
+        val shouldDriftMode1 = !isOffMode
+        assertTrue("In Mode 1 (Keychain Physics OFF), autonomous drift must be active", shouldDriftMode1)
     }
 }

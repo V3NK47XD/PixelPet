@@ -49,22 +49,19 @@ class TetheredPetStageView @JvmOverloads constructor(
     private val prefs = PreferencesHelper(context)
     private val handler = Handler(Looper.getMainLooper())
     private val touchableRegionHelper = com.dynamicisland.app.util.TouchableRegionHelper(this)
-    // Keychain Wire Paints: 2-tone Duolingo 2.5D styling
+    // Keychain Wire Paints: 2-tone Duolingo 2.5D styling (Noticeably Thicker & Chunky)
     private val leashShadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 3.8f
         strokeCap = Paint.Cap.ROUND
     }
 
     private val leashPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 2.4f
         strokeCap = Paint.Cap.ROUND
     }
 
     private val anchorRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 2.2f
         color = Color.parseColor("#F59E0B")
     }
 
@@ -75,7 +72,6 @@ class TetheredPetStageView @JvmOverloads constructor(
 
     private val keychainLinkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 1.8f
         color = Color.parseColor("#FCD34D") // Metallic gold sheen for keychain connector link
     }
     private val leashPath = Path()
@@ -136,6 +132,12 @@ class TetheredPetStageView @JvmOverloads constructor(
     init {
         setWillNotDraw(false) // Enables onDraw for the leash
 
+        val density = context.resources.displayMetrics.density
+        leashShadowPaint.strokeWidth = 5.4f * density
+        leashPaint.strokeWidth = 3.6f * density
+        anchorRingPaint.strokeWidth = 2.8f * density
+        keychainLinkPaint.strokeWidth = 2.2f * density
+
         petView = PixelPetView(context).apply {
             setAnimationIntensity(prefs.animationIntensity)
         }
@@ -188,7 +190,7 @@ class TetheredPetStageView @JvmOverloads constructor(
     }
 
     fun startDriftEngine() {
-        if (isDriftEngineRunning) return
+        if (isDriftEngineRunning || prefs.isGyroPhysicsEnabled) return
         isDriftEngineRunning = true
 
         if (continuousFloatAnimator?.isStarted != true) {
@@ -208,6 +210,7 @@ class TetheredPetStageView @JvmOverloads constructor(
     }
 
     private fun scheduleNextDrift() {
+        if (prefs.isGyroPhysicsEnabled) return // Mode 2: Never drift automatically!
         handler.removeCallbacks(driftRunnable)
         val nextDelayMs = Random.nextLong(4500L, 8500L) // 4.5s to 8.5s (never sits > 10s)
         handler.postDelayed(driftRunnable, nextDelayMs)
@@ -217,7 +220,7 @@ class TetheredPetStageView @JvmOverloads constructor(
      * Autonomous spot picker: floats to a new organic spot around the camera cutout
      */
     fun pickNextFloatingSpot() {
-        if (isDraggingPet) return
+        if (isDraggingPet || prefs.isGyroPhysicsEnabled) return
         val leashLength = prefs.leashLengthDp.toFloat()
 
         // Spots around the camera:
@@ -334,10 +337,15 @@ class TetheredPetStageView @JvmOverloads constructor(
     }
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        startDriftEngine()
         touchableRegionHelper.attach { getPetTouchRegion() }
 
         if (prefs.isGyroPhysicsEnabled) {
+            // Mode 2: Keychain Gravity Mode (Zero random drift)
+            currentDriftXDp = 0f
+            currentDriftYDp = prefs.leashLengthDp * 0.75f
+            if (continuousFloatAnimator?.isStarted != true) {
+                continuousFloatAnimator?.start()
+            }
             physicsEngine = com.dynamicisland.app.util.PetPhysicsEngine(context) { offsetXDp, offsetYDp, tiltDeg, velocityX, shiverAmp, shiverPhase, isTension ->
                 if (!isDraggingPet) {
                     physicsOffsetXDp = offsetXDp
@@ -353,6 +361,51 @@ class TetheredPetStageView @JvmOverloads constructor(
                 }
             }
             physicsEngine?.start()
+        } else {
+            // Mode 1: Autonomous Random Drift Mode
+            startDriftEngine()
+        }
+    }
+
+    fun onSettingsChanged() {
+        updateLeashColor()
+        if (prefs.isGyroPhysicsEnabled) {
+            // Mode 2: Gravity Mode - cancel random drift and center pet beneath camera
+            stopDriftEngine()
+            currentDriftXDp = 0f
+            currentDriftYDp = prefs.leashLengthDp * 0.75f
+            if (physicsEngine == null) {
+                physicsEngine = com.dynamicisland.app.util.PetPhysicsEngine(context) { offsetXDp, offsetYDp, tiltDeg, velocityX, shiverAmp, shiverPhase, isTension ->
+                    if (!isDraggingPet) {
+                        physicsOffsetXDp = offsetXDp
+                        physicsOffsetYDp = offsetYDp
+                        physicsTiltDeg = tiltDeg
+                        physicsVelocityXDp = velocityX
+                        shiverAmplitudeDp = shiverAmp
+                        this.shiverPhase = shiverPhase
+                        leashSlackFactor = if (isTension) 0.35f else 1.0f
+                        petView.setPhysicsInertia(physicsTiltDeg, velocityX, shiverAmp)
+                        updatePetViewLayout()
+                        invalidate()
+                    }
+                }
+            }
+            physicsEngine?.onSettingsChanged()
+            physicsEngine?.start()
+            if (continuousFloatAnimator?.isStarted != true) {
+                continuousFloatAnimator?.start()
+            }
+            updatePetViewLayout()
+            invalidate()
+        } else {
+            // Mode 1: Random Drift Mode
+            physicsEngine?.stop()
+            physicsOffsetXDp = 0f
+            physicsOffsetYDp = 0f
+            physicsTiltDeg = 0f
+            startDriftEngine()
+            updatePetViewLayout()
+            invalidate()
         }
     }
 
@@ -385,10 +438,10 @@ class TetheredPetStageView @JvmOverloads constructor(
         val anchorY = 8.dpToPx().toFloat()
 
         // 1. Draw Anchor Ring / Knot at Camera Lens Center
-        val ringRadius = 4.5.dpToPx().toFloat()
+        // 1. Draw Anchor Ring / Knot at Camera Lens Center (Chunky & Tactile)
+        val ringRadius = 5.5.dpToPx().toFloat()
         canvas.drawCircle(anchorX, anchorY, ringRadius, anchorRingPaint)
         canvas.drawCircle(anchorX, anchorY, ringRadius * 0.45f, anchorCenterPaint)
-
         // 2. Calculate Pet Attachment Point (Head Sprout at top of Pet)
         val petSizePx = prefs.petSizeDp.dpToPx().toFloat()
         val density = context.resources.displayMetrics.density
@@ -448,14 +501,13 @@ class TetheredPetStageView @JvmOverloads constructor(
             val linkAngleDeg = Math.toDegrees(linkAngleRad).toFloat()
             canvas.save()
             canvas.translate(startX, startY)
-            canvas.rotate(linkAngleDeg - 90f)
-            val linkOval = RectF(-1.8.dpToPx().toFloat(), -0.8.dpToPx().toFloat(), 1.8.dpToPx().toFloat(), 3.2.dpToPx().toFloat())
+            val linkOval = RectF(-2.4.dpToPx().toFloat(), -1.0.dpToPx().toFloat(), 2.4.dpToPx().toFloat(), 4.2.dpToPx().toFloat())
             canvas.drawOval(linkOval, keychainLinkPaint)
             canvas.restore()
 
             // Clasp bead where keychain wire connects to pet sprout
-            canvas.drawCircle(petTopX, petTopY, 2.5.dpToPx().toFloat(), anchorRingPaint)
-            canvas.drawCircle(petTopX, petTopY, 1.2.dpToPx().toFloat(), keychainLinkPaint)
+            canvas.drawCircle(petTopX, petTopY, 3.4.dpToPx().toFloat(), anchorRingPaint)
+            canvas.drawCircle(petTopX, petTopY, 1.8.dpToPx().toFloat(), keychainLinkPaint)
         }
     }
 

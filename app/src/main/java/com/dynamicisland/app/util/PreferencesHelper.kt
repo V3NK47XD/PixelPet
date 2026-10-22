@@ -126,7 +126,7 @@ class PreferencesHelper(context: Context) {
         set(value) = prefs.edit().putBoolean(KEY_PHONE_EVENTS_ENABLED, value).apply()
 
     var leashLengthDp: Int
-        get() = prefs.getInt(KEY_LEASH_LENGTH_DP, 36)
+        get() = prefs.getInt(KEY_LEASH_LENGTH_DP, 48)
         set(value) = prefs.edit().putInt(KEY_LEASH_LENGTH_DP, value).apply()
 
     var leashColor: String
