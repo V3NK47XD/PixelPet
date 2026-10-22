@@ -123,3 +123,4 @@ On Android 13 and 14+, sideloaded APKs have sensitive permissions locked by defa
 
 ## 📄 License
 MIT License.
+ 
