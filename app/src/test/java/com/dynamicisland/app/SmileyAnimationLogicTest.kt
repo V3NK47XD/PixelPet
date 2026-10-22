@@ -183,4 +183,34 @@ class SmileyAnimationLogicTest {
         }
         assertTrue("Fused angle should converge near accelTarget, was $fusedAngle", kotlin.math.abs(fusedAngle - accelTarget) < 0.05f)
     }
+
+    @Test
+    fun testCalibratedAccelerometerNeutralReferenceMath() {
+        val neutralX = 0f
+        val neutralY = 6.8f // User's natural ~44° holding angle
+        val swingScale = 6.2f
+
+        // 1. In calibrated position: zero deflection (perfect equilibrium)
+        val deltaXNeutral = 0f - neutralX
+        val targetXNeutral = (-deltaXNeutral * swingScale).coerceIn(-28f, 28f)
+        assertEquals(0f, targetXNeutral, 0.0001f)
+
+        // 2. Tilt left by 20 degrees: ax = +2.5 m/s^2 -> swings left (negative X)
+        val axLeft = 2.5f
+        val deltaXLeft = axLeft - neutralX
+        val targetXLeft = (-deltaXLeft * swingScale).coerceIn(-28f, 28f)
+        assertTrue("Tilting left should deflect keychain left (negative X)", targetXLeft < -10f)
+
+        // 3. Tilt right by 20 degrees: ax = -2.5 m/s^2 -> swings right (positive X)
+        val axRight = -2.5f
+        val deltaXRight = axRight - neutralX
+        val targetXRight = (-deltaXRight * swingScale).coerceIn(-28f, 28f)
+        assertTrue("Tilting right should deflect keychain right (positive X)", targetXRight > 10f)
+
+        // 4. Sub-pixel resolution test: small movements (< 1dp) must produce non-zero pixel shifts
+        val density = 2.75f // common 1080p density
+        val smallShiftDp = 0.6f
+        val pixels = (smallShiftDp * density).toInt()
+        assertTrue("Small sub-integer DP movements must produce pixel motion, was $pixels", pixels >= 1)
+    }
 }

@@ -63,12 +63,13 @@
 | **💀 Critical Battery**| Battery $<5\%$ | Pale red face (`#F87171`), dramatic fainting collapse ($55^\circ$ tilt) with `X X` eyes and exhausted sigh. |
 | **😄 Happy** | Phone unlocked / Pet app open | Joyful celebratory hops, closed crinkle eyes (`^ _ ^`), star sparkles. |
 
-### 🔑 Virtual Keychain Physics & Shiver Ripples (Duolingo 2.5D Style)
-* **Natural Wire Bending & Inertia**: When you tilt and swing your phone, the wire bends, sags, and loops with natural pendulum inertia like a real keychain dangling from your camera cutout.
+### 🔑 Virtual Keychain Physics & Natural Hold Calibration
+* **Natural Neutral Position Calibration**: First-launch interactive popup allows you to hold your phone in your usual comfortable reading position. Pixel Pet auto-calibrates this as $(0, 0)$ equilibrium so the pet hangs naturally without awkward offsets!
+* **Accelerometer-First Dynamics**: Direct 3-axis accelerometer sensor processing provides 100% universal compatibility across all Android phones, responding with zero delay to phone tilt, swings, and waves.
+* **Rope Keychain Pendulum & Inertia Lag**: Tilting the phone swings the pet in a true gravitational pendulum arc; moving the phone quickly applies inertia lag so the pet trails behind and overshoots when stopping!
 * **Rapid Shake Shiver Ripples**: When you shake the phone rapidly, dynamic high-frequency standing waves ripple and shiver through the wire, naturally damping out as it settles!
 * **Duolingo-Style 2.5D Hardware**: Dual-tone depth wire styling (darker shadow under core), a rotating metallic jump-ring hinge at the camera anchor, and a golden clasp bead at the sprout knot.
 * **Expressive Secondary Motion**: The pet's head sprout flexes in counter-phase to swing velocity, with playful squishy bounce when shaken!
-### 🎛️ Zero-Scroll All-in-One UI & Rotary Speaker Knobs
 * **No Scrolling Needed**: All core controls, live preview, presets, and dials fit neatly on a single non-scrolling screen.
 * **Retro Rotary Knobs**: Replaced vertical sliders with compact 270° rotary volume dials (`CAM X`, `CAM Y`, `SIZE`, `LEASH`) with tactile haptic feedback.
 * **Cute Peach Palette**: Warm peach (`#FF9F68`) and light orange accents with dark terracotta surfaces.

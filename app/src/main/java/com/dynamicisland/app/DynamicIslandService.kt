@@ -247,6 +247,7 @@ class DynamicIslandService : Service() {
                 )
             }
         }
+        physicsEngine?.start()
 
         com.dynamicisland.app.util.ForegroundAppDetector.addListener(appChangeListener)
         com.dynamicisland.app.util.ForegroundAppDetector.startMonitoring(this)
@@ -286,6 +287,7 @@ class DynamicIslandService : Service() {
                 }
                 tryStartForegroundNotification()
                 showOverlay()
+                physicsEngine?.start()
                 prefs.isIslandEnabled = true
                 petView?.setMood(moodManager.currentMood)
             }
@@ -706,8 +708,9 @@ class DynamicIslandService : Service() {
 
     private fun updatePetWindowLayout() {
         petParams?.let { params ->
-            val petX = (cachedCameraRefX + currentDriftXDp + physicsOffsetXDp).toInt().dpToPx()
-            val petY = (cachedCameraRefY + currentDriftYDp + physicsOffsetYDp - (cachedPetSizeDp / 2f)).toInt().dpToPx()
+            val density = resources.displayMetrics.density
+            val petX = ((cachedCameraRefX + currentDriftXDp + physicsOffsetXDp) * density).toInt()
+            val petY = ((cachedCameraRefY + currentDriftYDp + physicsOffsetYDp - (cachedPetSizeDp / 2f)) * density).toInt()
 
             if (params.x != petX || params.y != petY) {
                 params.x = petX
@@ -729,12 +732,13 @@ class DynamicIslandService : Service() {
         val leash = leashView ?: return
         val leashParams = leashParams ?: return
 
+        val density = resources.displayMetrics.density
         val leashWidth = leashParams.width.toFloat()
         val leashAnchorX = leashWidth / 2f
         val leashAnchorY = 8.dpToPx().toFloat()
 
-        val petTopXInLeash = leashAnchorX + (currentDriftXDp + physicsOffsetXDp).dpToPx()
-        val petTopYInLeash = leashAnchorY + (currentDriftYDp + physicsOffsetYDp - (cachedPetSizeDp * 0.42f)).dpToPx()
+        val petTopXInLeash = leashAnchorX + ((currentDriftXDp + physicsOffsetXDp) * density)
+        val petTopYInLeash = leashAnchorY + ((currentDriftYDp + physicsOffsetYDp - (cachedPetSizeDp * 0.42f)) * density)
 
         leash.updateKeychainWire(petTopXInLeash, petTopYInLeash, slackFactor, velocityXDp, shiverAmplitudeDp, shiverPhase)
     }

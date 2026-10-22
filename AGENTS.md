@@ -61,14 +61,16 @@ graph TD
      - **100% Touch Pass-Through Outside Pet**: Punches a transparent touch hole across the entire remainder of the window so user taps on camera, status bar, and underlying apps pass through completely uninterrupted.
 
 3. **`com.dynamicisland.app.util.PetPhysicsEngine`**:
-   - Low-overhead sensor listener (`Sensor.TYPE_GRAVITY` / `Sensor.TYPE_ACCELEROMETER` and `Sensor.TYPE_GYROSCOPE`).
-   - **Optimized 2D Gyroscope & Sensor Fusion**:
-     - $\Delta t$ discrete integration of angular velocity with 0.035 rad/s deadzone and 0.96 drift decay (eliminates table micro-creep).
-     - **Complementary Filter**: Fuses high-frequency gyro rotation (94%) with low-frequency gravity vector (6%) for zero-latency, drift-free hanging angle tracking.
-     - **Centrifugal Force Coupling**: In-plane phone spins calculate centrifugal acceleration $F = \omega_z^2 R$, pulling the leash taut.
-     - **Dynamic Shake Shivering**: Shaking injects high-frequency harmonic waves along the wire that damp out naturally.
-   - **100% Battery-Safe**: Completely unregisters sensor listeners whenever disabled in settings OR when the screen turns off (`ACTION_SCREEN_OFF`).
-
+   - **Accelerometer-First Architecture**: Uses 3-axis `Sensor.TYPE_ACCELEROMETER` as the primary universal sensor (100% hardware compatibility on every Android device), with optional `Sensor.TYPE_GYROSCOPE` enhancement.
+   - **User Neutral Orientation Calibration**:
+     - Calibrates to the user's natural comfortable phone reading position ($\vec{A}_{\text{neutral}} = (a_{x0}, a_{y0}, a_{z0})$).
+     - First-launch interactive popup dialog guides user to hold phone naturally with live spirit bubble level readout.
+     - Deviation from calibrated holding position drives natural pendulum swinging, rope sag, and inertia lag.
+   - **Pendulum Rope Physics**:
+     - Mass-spring-damper pendulum simulation with sub-pixel float resolution.
+     - Dynamic high-pass acceleration detects phone waving/motion and applies inertia lag.
+     - Shake detection triggers high-frequency wire shiver ripples.
+   - **100% Battery-Safe**: Completely unregisters sensor listeners on screen off (`ACTION_SCREEN_OFF`) or when toggled off in settings.
 4. **`com.dynamicisland.app.view.RotaryKnobView`**:
    - Compact 270° rotary dial potentiometer custom view replacing bulky vertical sliders.
    - Saves screen space to enable a 100% zero-scroll all-in-one UI dashboard.

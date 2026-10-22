@@ -39,7 +39,10 @@ class PreferencesHelper(context: Context) {
         private const val KEY_LEASH_COLOR = "leash_color"
         private const val KEY_TOUCH_DEBUG_ENABLED = "touch_debug_enabled"
         private const val KEY_GYRO_PHYSICS_ENABLED = "gyro_physics_enabled"
-
+        private const val KEY_ORIENTATION_CALIBRATED = "orientation_calibrated"
+        private const val KEY_CALIBRATED_ACCEL_X = "calibrated_accel_x"
+        private const val KEY_CALIBRATED_ACCEL_Y = "calibrated_accel_y"
+        private const val KEY_CALIBRATED_ACCEL_Z = "calibrated_accel_z"
         val DEFAULT_NERD_PACKAGES = setOf(
             "com.openai.chatgpt",
             "com.google.android.apps.bard",
@@ -137,6 +140,23 @@ class PreferencesHelper(context: Context) {
     var isGyroPhysicsEnabled: Boolean
         get() = prefs.getBoolean(KEY_GYRO_PHYSICS_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_GYRO_PHYSICS_ENABLED, value).apply()
+
+    var isOrientationCalibrated: Boolean
+        get() = prefs.getBoolean(KEY_ORIENTATION_CALIBRATED, false)
+        set(value) = prefs.edit().putBoolean(KEY_ORIENTATION_CALIBRATED, value).apply()
+
+    var calibratedAccelX: Float
+        get() = prefs.getFloat(KEY_CALIBRATED_ACCEL_X, 0f)
+        set(value) = prefs.edit().putFloat(KEY_CALIBRATED_ACCEL_X, value).apply()
+
+    var calibratedAccelY: Float
+        get() = prefs.getFloat(KEY_CALIBRATED_ACCEL_Y, 6.8f) // Ergonomic ~44° natural holding angle
+        set(value) = prefs.edit().putFloat(KEY_CALIBRATED_ACCEL_Y, value).apply()
+
+    var calibratedAccelZ: Float
+        get() = prefs.getFloat(KEY_CALIBRATED_ACCEL_Z, 6.8f)
+        set(value) = prefs.edit().putFloat(KEY_CALIBRATED_ACCEL_Z, value).apply()
+
     var isIslandEnabled: Boolean
         get() = prefs.getBoolean(KEY_ISLAND_ENABLED, false)
         set(value) = prefs.edit().putBoolean(KEY_ISLAND_ENABLED, value).apply()

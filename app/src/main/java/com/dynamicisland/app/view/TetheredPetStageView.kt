@@ -299,9 +299,9 @@ class TetheredPetStageView @JvmOverloads constructor(
         val anchorXPx = width / 2f
         val anchorYPx = 8.dpToPx().toFloat()
 
-        val petCenterXPx = anchorXPx + (currentDriftXDp + physicsOffsetXDp).dpToPx()
-        val petCenterYPx = anchorYPx + (currentDriftYDp + floatBobYDp + physicsOffsetYDp).dpToPx()
-
+        val density = context.resources.displayMetrics.density
+        val petCenterXPx = anchorXPx + ((currentDriftXDp + physicsOffsetXDp) * density)
+        val petCenterYPx = anchorYPx + ((currentDriftYDp + floatBobYDp + physicsOffsetYDp) * density)
         val left = (petCenterXPx - (petSizePx / 2f)).toInt()
         val top = (petCenterYPx - (petSizePx / 2f)).toInt()
 
@@ -391,8 +391,9 @@ class TetheredPetStageView @JvmOverloads constructor(
 
         // 2. Calculate Pet Attachment Point (Head Sprout at top of Pet)
         val petSizePx = prefs.petSizeDp.dpToPx().toFloat()
-        val petCenterXPx = anchorX + (currentDriftXDp + physicsOffsetXDp).dpToPx()
-        val petCenterYPx = anchorY + (currentDriftYDp + floatBobYDp + physicsOffsetYDp).dpToPx()
+        val density = context.resources.displayMetrics.density
+        val petCenterXPx = anchorX + ((currentDriftXDp + physicsOffsetXDp) * density)
+        val petCenterYPx = anchorY + ((currentDriftYDp + floatBobYDp + physicsOffsetYDp) * density)
         val petTopX = petCenterXPx
         val petTopY = petCenterYPx - (petSizePx * 0.42f)
 
@@ -408,13 +409,10 @@ class TetheredPetStageView @JvmOverloads constructor(
             val ny = dx / length
 
             val baseSagPx = length * 0.15f * leashSlackFactor
-            val density = context.resources.displayMetrics.density
             val bendPx = (-physicsVelocityXDp * 1.15f) * density
             val shiverPx = shiverAmplitudeDp * density
-
             val segments = 18
             leashPath.reset()
-
             for (i in 0..segments) {
                 val u = i.toFloat() / segments.toFloat()
                 val bx = startX + (u * dx)

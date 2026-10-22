@@ -1,18 +1,28 @@
 package com.dynamicisland.app
 
 import android.Manifest
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.dynamicisland.app.databinding.ActivityMainBinding
+import com.dynamicisland.app.databinding.DialogCalibrateOrientationBinding
 import com.dynamicisland.app.databinding.DialogDevToolsBinding
 import com.dynamicisland.app.util.BatteryOptimizationHelper
 import com.dynamicisland.app.util.ForegroundAppDetector
@@ -20,7 +30,6 @@ import com.dynamicisland.app.util.OverlayPermissionHelper
 import com.dynamicisland.app.util.PreferencesHelper
 import com.dynamicisland.app.view.PixelPetView
 import com.google.android.material.bottomsheet.BottomSheetDialog
-
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -55,8 +64,16 @@ class MainActivity : AppCompatActivity() {
         setupUI()
         setupListeners()
         requestNotificationPermissionIfNeeded()
-
         checkAndHandlePermissions(autoLaunch = true)
+
+        // First Launch: Prompt user to calibrate their comfortable holding orientation
+        if (!prefs.isOrientationCalibrated) {
+            binding.root.postDelayed({
+                if (!isFinishing && !isDestroyed) {
+                    showOrientationCalibrationDialog()
+                }
+            }, 850)
+        }
     }
 
     override fun onResume() {
@@ -145,6 +162,7 @@ class MainActivity : AppCompatActivity() {
         binding.switchGyroPhysics.isChecked = prefs.isGyroPhysicsEnabled
         binding.switchSleepiness.isChecked = prefs.isSleepinessEnabled
         binding.switchTouchReactions.isChecked = prefs.isTouchReactionEnabled
+        updateCalibrationStatusUI()
 
         // 4. Preview Pet in Tether Stage
         binding.previewTetherStage.petView.setAnimationIntensity(prefs.animationIntensity)
@@ -228,6 +246,10 @@ class MainActivity : AppCompatActivity() {
         binding.switchTouchReactions.setOnCheckedChangeListener { _, isChecked ->
             prefs.isTouchReactionEnabled = isChecked
             notifySettingsChanged()
+        }
+
+        binding.btnCalibrateHold.setOnClickListener {
+            showOrientationCalibrationDialog()
         }
     }
 
@@ -337,11 +359,132 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    private fun updateCalibrationStatusUI() {
+        if (prefs.isOrientationCalibrated) {
+            val y = prefs.calibratedAccelY
+            val pitchDeg = Math.toDegrees(kotlin.math.asin((y / 9.8f).coerceIn(-1f, 1f).toDouble())).toInt()
+            binding.tvCalibrationStatus.text = "Hold: Calibrated (~${pitchDeg}° pitch) ✨"
+            binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.peach_primary))
+        } else {
+            binding.tvCalibrationStatus.text = "Neutral Hold: Default (45°) • Tap calibrate"
+            binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.peach_cream))
+        }
+    }
+
+    private fun showOrientationCalibrationDialog() {
+        val dialog = BottomSheetDialog(this)
+        val diagBinding = DialogCalibrateOrientationBinding.inflate(layoutInflater)
+        dialog.setContentView(diagBinding.root)
+
+        val sensorManager = getSystemService(Context.SENSOR_SERVICE) as? SensorManager
+        val accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+
+        var currentAx = 0f
+        var currentAy = 6.8f
+        var currentAz = 6.8f
+        var isCalibrating = false
+        val samples = mutableListOf<Triple<Float, Float, Float>>()
+
+        val listener = object : SensorEventListener {
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+            override fun onSensorChanged(event: SensorEvent?) {
+                if (event == null) return
+                currentAx = event.values[0]
+                currentAy = event.values[1]
+                currentAz = event.values[2]
+
+                // Live visual bubble level readout
+                val density = resources.displayMetrics.density
+                val bubbleRangePx = 36f * density
+                val bubbleX = (-currentAx / 9.8f * bubbleRangePx).coerceIn(-bubbleRangePx, bubbleRangePx)
+                val bubbleY = ((currentAy - 6.8f) / 9.8f * bubbleRangePx).coerceIn(-bubbleRangePx, bubbleRangePx)
+
+                diagBinding.viewLevelBubble.translationX = bubbleX
+                diagBinding.viewLevelBubble.translationY = bubbleY
+
+                val rollDeg = (-currentAx * 5.7f).toInt()
+                val pitchDeg = Math.toDegrees(kotlin.math.asin((currentAy / 9.8f).coerceIn(-1f, 1f).toDouble())).toInt()
+                diagBinding.tvLiveTiltReadout.text = "Roll: ${rollDeg}° • Pitch: ${pitchDeg}°"
+
+                if (isCalibrating) {
+                    samples.add(Triple(currentAx, currentAy, currentAz))
+                }
+            }
+        }
+
+        accelerometer?.let {
+            sensorManager.registerListener(listener, it, SensorManager.SENSOR_DELAY_GAME)
+        }
+
+        dialog.setOnDismissListener {
+            sensorManager?.unregisterListener(listener)
+        }
+
+        diagBinding.btnStartCalibration.setOnClickListener {
+            if (isCalibrating) return@setOnClickListener
+            isCalibrating = true
+            samples.clear()
+
+            diagBinding.progressCalibration.visibility = View.VISIBLE
+            diagBinding.progressCalibration.progress = 0
+            diagBinding.tvCalibrationPrompt.text = "Calibrating... Hold phone still in your hand 🐣"
+            diagBinding.btnStartCalibration.isEnabled = false
+            diagBinding.btnSkipCalibration.isEnabled = false
+
+            val progressAnim = ValueAnimator.ofInt(0, 100).apply {
+                duration = 1200
+                addUpdateListener { anim ->
+                    diagBinding.progressCalibration.progress = anim.animatedValue as Int
+                }
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        isCalibrating = false
+                        if (samples.isNotEmpty()) {
+                            val avgX = samples.map { it.first }.average().toFloat()
+                            val avgY = samples.map { it.second }.average().toFloat()
+                            val avgZ = samples.map { it.third }.average().toFloat()
+
+                            prefs.calibratedAccelX = avgX
+                            prefs.calibratedAccelY = avgY
+                            prefs.calibratedAccelZ = avgZ
+                            prefs.isOrientationCalibrated = true
+
+                            binding.previewTetherStage.petView.triggerExcitedHop()
+                            binding.root.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                            diagBinding.tvCalibrationPrompt.text = "Calibrated! ✨ Your natural position is saved."
+                            diagBinding.tvCalibrationPrompt.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.peach_primary))
+
+                            updateCalibrationStatusUI()
+                            notifySettingsChanged()
+
+                            diagBinding.root.postDelayed({
+                                dialog.dismiss()
+                            }, 500)
+                        } else {
+                            dialog.dismiss()
+                        }
+                    }
+                })
+            }
+            progressAnim.start()
+        }
+
+        diagBinding.btnSkipCalibration.setOnClickListener {
+            prefs.calibratedAccelX = 0f
+            prefs.calibratedAccelY = 6.8f
+            prefs.calibratedAccelZ = 6.8f
+            prefs.isOrientationCalibrated = true
+            updateCalibrationStatusUI()
+            notifySettingsChanged()
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
     private fun setPreviewMood(mood: PixelPetView.PetMood, description: String) {
         binding.previewTetherStage.petView.setMood(mood)
         binding.tvPreviewMoodDesc.text = description
     }
-
     private fun setLeashColor(colorHex: String) {
         prefs.leashColor = colorHex
         binding.previewTetherStage.updateLeashColor()

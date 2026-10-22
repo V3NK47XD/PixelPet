@@ -463,11 +463,48 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:checked="true"
-                android:text="Fluid Gyroscope &amp; Tilt Physics 📱"
+                android:text="Fluid Keychain &amp; Tilt Physics 📱"
                 android:textColor="@color/peach_light"
                 android:textSize="11.5sp"
                 app:thumbTint="@color/peach_primary"
                 app:trackTint="@color/peach_dark" />
+
+            <!-- Neutral Hold Calibration Row -->
+            <LinearLayout
+                android:id="@+id/layoutCalibrationRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="4dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp">
+
+                <TextView
+                    android:id="@+id/tvCalibrationStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Neutral Hold: Default (45°)"
+                    android:textColor="@color/peach_cream"
+                    android:textSize="10.5sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCalibrateHold"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:paddingStart="10dp"
+                    android:paddingTop="0dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="0dp"
+                    android:text="📐 Calibrate"
+                    android:textColor="@color/peach_dark"
+                    android:textSize="10.5sp"
+                    app:backgroundTint="@color/peach_primary"
+                    app:cornerRadius="8dp" />
+            </LinearLayout>
 
             <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/switchSleepiness"

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/peach_surface_card"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <!-- Header with Cute Icon & Title -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_card_surface"
+            android:backgroundTint="@color/peach_surface_border"
+            android:gravity="center"
+            android:text="🐣"
+            android:textSize="24sp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="Hold Your Phone Naturally"
+                android:textColor="@color/peach_light"
+                android:textSize="17sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Neutral gravity calibration"
+                android:textColor="@color/peach_primary"
+                android:textSize="11.5sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:lineSpacingExtra="2dp"
+        android:text="Hold your phone comfortably as you normally look at it. Pixel Pet will calibrate its neutral gravity reference so the keychain naturally swings, sways, and settles when you tilt or move!"
+        android:textColor="@color/peach_cream"
+        android:textSize="12.5sp" />
+
+    <!-- Live Level Target Indicator Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        app:cardBackgroundColor="@color/peach_dark"
+        app:cardCornerRadius="16dp"
+        app:strokeColor="@color/peach_surface_border"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Target Center with Bubble -->
+            <FrameLayout
+                android:id="@+id/layoutLevelTarget"
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:background="@drawable/bg_card_surface"
+                android:backgroundTint="@color/peach_surface_card">
+
+                <!-- Crosshairs -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_gravity="center"
+                    android:background="@color/peach_surface_border" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:background="@color/peach_surface_border" />
+
+                <!-- Center Bullseye Ring -->
+                <View
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_card_surface"
+                    android:backgroundTint="#25FF9F68" />
+
+                <!-- Live Bubble Dot -->
+                <View
+                    android:id="@+id/viewLevelBubble"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_card_surface"
+                    android:backgroundTint="@color/peach_primary" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tvLiveTiltReadout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:fontFamily="monospace"
+                android:text="Roll: 0.0° • Pitch: 45.0°"
+                android:textColor="@color/peach_primary"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/tvCalibrationPrompt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Hold steady in your normal reading angle"
+                android:textColor="@color/peach_cream"
+                android:textSize="11.5sp" />
+
+            <!-- Calibration Sampling Progress Bar -->
+            <ProgressBar
+                android:id="@+id/progressCalibration"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginTop="10dp"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="@color/peach_primary"
+                android:visibility="gone" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSkipCalibration"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:text="Default (45°)"
+            android:textColor="@color/peach_cream"
+            android:textSize="12sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnStartCalibration"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1.6"
+            android:text="Calibrate Position ✨"
+            android:textColor="@color/peach_dark"
+            android:textSize="12.5sp"
+            app:backgroundTint="@color/peach_primary"
+            app:cornerRadius="10dp" />
+    </LinearLayout>
+</LinearLayout>
