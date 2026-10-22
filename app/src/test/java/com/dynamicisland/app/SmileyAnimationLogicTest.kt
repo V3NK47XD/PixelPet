@@ -162,4 +162,25 @@ class SmileyAnimationLogicTest {
         }
         assertTrue("Shiver amplitude should decay near zero, was $shiverAmp", shiverAmp < 0.05f)
     }
+
+    @Test
+    fun testGyroComplementaryFilterAndDeadzone() {
+        val deadzone = 0.035f
+        fun cleanGyro(gz: Float) = if (kotlin.math.abs(gz) > deadzone) gz * 0.96f else 0f
+
+        // Micro-jitter below deadzone is filtered to 0
+        assertEquals(0f, cleanGyro(0.012f), 0.0001f)
+        assertEquals(0f, cleanGyro(-0.025f), 0.0001f)
+
+        // Active movement above deadzone passes with 0.96 bias correction
+        assertEquals(1.5f * 0.96f, cleanGyro(1.5f), 0.0001f)
+
+        // Complementary filter pulls smoothly toward accelerometer reference
+        var fusedAngle = 0f
+        val accelTarget = 0.5f // ~28.6 degrees
+        for (i in 0..50) {
+            fusedAngle = (0.94f * fusedAngle) + (0.06f * accelTarget)
+        }
+        assertTrue("Fused angle should converge near accelTarget, was $fusedAngle", kotlin.math.abs(fusedAngle - accelTarget) < 0.05f)
+    }
 }

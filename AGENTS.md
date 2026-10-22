@@ -62,8 +62,11 @@ graph TD
 
 3. **`com.dynamicisland.app.util.PetPhysicsEngine`**:
    - Low-overhead sensor listener (`Sensor.TYPE_GRAVITY` / `Sensor.TYPE_ACCELEROMETER` and `Sensor.TYPE_GYROSCOPE`).
-   - Simulates physical inertia: tilting the phone swings the pet on its leash; shaking injects rotational momentum and high-frequency wire shiver waves.
-   - Settles smoothly back to equilibrium when held still via damped harmonic spring physics.
+   - **Optimized 2D Gyroscope & Sensor Fusion**:
+     - $\Delta t$ discrete integration of angular velocity with 0.035 rad/s deadzone and 0.96 drift decay (eliminates table micro-creep).
+     - **Complementary Filter**: Fuses high-frequency gyro rotation (94%) with low-frequency gravity vector (6%) for zero-latency, drift-free hanging angle tracking.
+     - **Centrifugal Force Coupling**: In-plane phone spins calculate centrifugal acceleration $F = \omega_z^2 R$, pulling the leash taut.
+     - **Dynamic Shake Shivering**: Shaking injects high-frequency harmonic waves along the wire that damp out naturally.
    - **100% Battery-Safe**: Completely unregisters sensor listeners whenever disabled in settings OR when the screen turns off (`ACTION_SCREEN_OFF`).
 
 4. **`com.dynamicisland.app.view.RotaryKnobView`**:

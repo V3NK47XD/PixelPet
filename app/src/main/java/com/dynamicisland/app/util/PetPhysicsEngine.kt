@@ -72,12 +72,17 @@ class PetPhysicsEngine(
     private var targetTiltXDp = 0f
     private var targetTiltYDp = 0f
 
+    // 2D Gyroscope Time-Delta Integration & Complementary Sensor Fusion
+    private var lastGyroTimeNs: Long = 0L
+    private var gyroIntegratedAngleRad: Float = 0f
+    private var fusedHangAngleRad: Float = 0f
+    private var centrifugalForceDp: Float = 0f
+
     // Shake tracking
     private var lastAccelX = 0f
     private var lastAccelY = 0f
     private var lastAccelZ = 9.8f
     private var lastShakeTime = 0L
-
     // Physics step loop (runs at ~35 FPS when active and needed)
     private val physicsStepRunnable = object : Runnable {
         override fun run() {
@@ -166,6 +171,10 @@ class PetPhysicsEngine(
         currentTiltDeg = 0f
         shiverAmplitudeDp = 0f
         shiverPhase = 0f
+        lastGyroTimeNs = 0L
+        gyroIntegratedAngleRad = 0f
+        fusedHangAngleRad = 0f
+        centrifugalForceDp = 0f
         onPhysicsUpdate(0f, 0f, 0f, 0f, 0f, 0f, false)
     }
 
@@ -174,17 +183,27 @@ class PetPhysicsEngine(
 
         when (event.sensor.type) {
             Sensor.TYPE_GRAVITY, Sensor.TYPE_ACCELEROMETER -> {
-                val ax = event.values[0] // Lateral tilt (left/right): positive when tilted left
-                val ay = event.values[1] // Forward tilt (up/down): positive when phone held upright
+                val ax = event.values[0] // Lateral tilt (left/right)
+                val ay = event.values[1] // Forward tilt (up/down)
                 val az = event.values[2]
 
-                // Invert ax because when phone tilts left, gravity pulls pet left (negative offset)
-                val rawTiltXDp = (-ax * 2.8f).coerceIn(-28f, 28f)
-                val rawTiltYDp = ((ay - 6.5f) * 1.5f).coerceIn(-10f, 20f)
+                // Accelerometer reference angle in 2D screen plane
+                val accelAngleRad = kotlin.math.atan2(-ax.toDouble(), ay.toDouble()).toFloat()
 
-                // Smooth low-pass filter
-                targetTiltXDp = (targetTiltXDp * 0.75f) + (rawTiltXDp * 0.25f)
-                targetTiltYDp = (targetTiltYDp * 0.75f) + (rawTiltYDp * 0.25f)
+                // Complementary filter fusion (94% smooth gyro integration, 6% gravity reference pull)
+                fusedHangAngleRad = (0.94f * (fusedHangAngleRad + gyroIntegratedAngleRad)) + (0.06f * accelAngleRad)
+                gyroIntegratedAngleRad = 0f // consumed into fused hanging angle
+
+                // Project 2D hanging offset using effective pendulum arm (28dp radius)
+                val hangRadiusDp = 28f
+                val rawTiltXDp = (kotlin.math.sin(fusedHangAngleRad.toDouble()).toFloat() * hangRadiusDp).coerceIn(-28f, 28f)
+                val pitchSagDp = ((ay - 6.5f) * 1.5f).coerceIn(-10f, 20f)
+                val rawTiltYDp = (hangRadiusDp * (1f - kotlin.math.cos(fusedHangAngleRad.toDouble()).toFloat()) * 0.45f + pitchSagDp).coerceIn(-10f, 22f)
+
+                // Smooth low-pass filter toward target
+                targetTiltXDp = (targetTiltXDp * 0.72f) + (rawTiltXDp * 0.28f)
+                targetTiltYDp = (targetTiltYDp * 0.72f) + (rawTiltYDp * 0.28f)
+
                 // Shake detection for rapid phone shake & wire shiver
                 val deltaAccel = abs(ax - lastAccelX) + abs(ay - lastAccelY) + abs(az - lastAccelZ)
                 lastAccelX = ax
@@ -205,11 +224,38 @@ class PetPhysicsEngine(
             }
 
             Sensor.TYPE_GYROSCOPE -> {
-                // Angular twist velocity around Z axis adds rotational swing and wire flex
-                val angularZ = event.values[2] // rad/s
-                if (abs(angularZ) > 1.0f) {
-                    velocityX += (-angularZ * 4.2f)
-                    val gyroShiver = (abs(angularZ) * 2.2f).coerceIn(0f, 12f)
+                val nowNs = event.timestamp
+                val timeDiff = if (lastGyroTimeNs != 0L) {
+                    ((nowNs - lastGyroTimeNs) / 1_000_000_000f).coerceIn(0.005f, 0.1f)
+                } else {
+                    0.025f
+                }
+                lastGyroTimeNs = nowNs
+
+                val gx = event.values[0] // Pitch angular velocity
+                val gy = event.values[1] // Roll angular velocity
+                val gz = event.values[2] // Yaw angular velocity (in screen plane)
+
+                // Deadzone to eliminate micro-drift when phone is stationary
+                val deadzone = 0.035f
+                val cleanGz = if (abs(gz) > deadzone) gz * 0.96f else 0f
+                val cleanGy = if (abs(gy) > deadzone) gy * 0.96f else 0f
+
+                // Time-differential integration of in-plane rotation
+                gyroIntegratedAngleRad += (-cleanGz * timeDiff)
+
+                // Roll velocity imparts lateral linear impulse to hanging bob
+                if (abs(cleanGy) > 0.05f) {
+                    velocityX += (-cleanGy * 18f * timeDiff)
+                }
+
+                // In-plane spin creates centrifugal tension: F = m * omega^2 * R
+                val spinSpeed = abs(cleanGz)
+                centrifugalForceDp = (spinSpeed * spinSpeed * 2.5f).coerceIn(0f, 14f)
+
+                if (spinSpeed > 1.0f) {
+                    velocityX += (-cleanGz * 4.2f)
+                    val gyroShiver = (spinSpeed * 2.2f).coerceIn(0f, 12f)
                     shiverAmplitudeDp = maxOf(shiverAmplitudeDp, gyroShiver)
                 }
             }
@@ -222,17 +268,19 @@ class PetPhysicsEngine(
         velocityY += -8f
     }
     private fun stepPhysics() {
+        // Centrifugal force from in-plane spinning pulls leash downward
+        val effectiveTargetY = targetTiltYDp + (centrifugalForceDp * 0.5f)
+        centrifugalForceDp *= 0.88f // exponential decay
+
         // Damped harmonic spring toward sensor target
         val forceX = (targetTiltXDp - currentOffsetXDp) * springK
-        val forceY = (targetTiltYDp - currentOffsetYDp) * springK
+        val forceY = (effectiveTargetY - currentOffsetYDp) * springK
 
         velocityX = (velocityX + forceX) * damping
         velocityY = (velocityY + forceY) * damping
 
         currentOffsetXDp += velocityX
         currentOffsetYDp += velocityY
-
-        // Constrain max physics swing to 32dp
         val maxSwing = 32f
         val dist = sqrt((currentOffsetXDp * currentOffsetXDp) + (currentOffsetYDp * currentOffsetYDp))
         if (dist > maxSwing && dist > 0f) {
