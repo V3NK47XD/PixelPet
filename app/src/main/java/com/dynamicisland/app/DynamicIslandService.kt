@@ -104,6 +104,7 @@ class DynamicIslandService : Service() {
     private lateinit var prefs: PreferencesHelper
     private lateinit var moodManager: com.dynamicisland.app.util.PetMoodManager
     private var phoneEventManager: com.dynamicisland.app.util.PhoneEventManager? = null
+    private var physicsEngine: com.dynamicisland.app.util.PetPhysicsEngine? = null
     private val handler = Handler(Looper.getMainLooper())
 
     // Window 1: Pass-Through Leash & Anchor Window
@@ -120,8 +121,10 @@ class DynamicIslandService : Service() {
     private var currentDriftYDp = 22f
     private var floatBobYDp = 0f
     private var tiltAngleDeg = 0f
+    private var physicsOffsetXDp = 0f
+    private var physicsOffsetYDp = 0f
+    private var physicsTiltDeg = 0f
     private var leashSlackFactor = 1.0f
-
     // Cached Settings to avoid repeated SharedPreferences lookups in animation callbacks
     private var cachedCameraRefX = 0
     private var cachedCameraRefY = 22
@@ -212,6 +215,7 @@ class DynamicIslandService : Service() {
                 floatBobAnimator?.pause()
                 driftAnimator?.pause()
                 handler.removeCallbacks(driftRunnable)
+                physicsEngine?.onScreenOff()
                 com.dynamicisland.app.util.ForegroundAppDetector.pauseMonitoring()
             }
 
@@ -220,11 +224,24 @@ class DynamicIslandService : Service() {
                 petView?.resumeAnimations()
                 floatBobAnimator?.resume()
                 driftAnimator?.resume()
+                physicsEngine?.onScreenOn()
                 scheduleNextDrift()
                 moodManager.recalculateMood()
             }
         })
         phoneEventManager?.start()
+
+        physicsEngine = com.dynamicisland.app.util.PetPhysicsEngine(this) { offsetXDp, offsetYDp, tiltDeg, isTension ->
+            if (!isDragging) {
+                physicsOffsetXDp = offsetXDp
+                physicsOffsetYDp = offsetYDp
+                physicsTiltDeg = tiltDeg
+                petView?.rotation = tiltAngleDeg + physicsTiltDeg
+                updatePetWindowLayout()
+                updateLeashAttachment(slackFactor = if (isTension) 0.35f else 1.0f)
+            }
+        }
+        physicsEngine?.start()
 
         com.dynamicisland.app.util.ForegroundAppDetector.addListener(appChangeListener)
         com.dynamicisland.app.util.ForegroundAppDetector.startMonitoring(this)
@@ -684,8 +701,8 @@ class DynamicIslandService : Service() {
 
     private fun updatePetWindowLayout() {
         petParams?.let { params ->
-            val petX = (cachedCameraRefX + currentDriftXDp).toInt().dpToPx()
-            val petY = (cachedCameraRefY + currentDriftYDp - (cachedPetSizeDp / 2f)).toInt().dpToPx()
+            val petX = (cachedCameraRefX + currentDriftXDp + physicsOffsetXDp).toInt().dpToPx()
+            val petY = (cachedCameraRefY + currentDriftYDp + physicsOffsetYDp - (cachedPetSizeDp / 2f)).toInt().dpToPx()
 
             if (params.x != petX || params.y != petY) {
                 params.x = petX
@@ -706,8 +723,8 @@ class DynamicIslandService : Service() {
         val leashAnchorX = leashWidth / 2f
         val leashAnchorY = 8.dpToPx().toFloat()
 
-        val petTopXInLeash = leashAnchorX + currentDriftXDp.dpToPx()
-        val petTopYInLeash = leashAnchorY + (currentDriftYDp - (cachedPetSizeDp * 0.42f)).dpToPx()
+        val petTopXInLeash = leashAnchorX + (currentDriftXDp + physicsOffsetXDp).dpToPx()
+        val petTopYInLeash = leashAnchorY + (currentDriftYDp + physicsOffsetYDp - (cachedPetSizeDp * 0.42f)).dpToPx()
 
         leash.updatePetAttachment(petTopXInLeash, petTopYInLeash, slackFactor)
     }
@@ -747,6 +764,7 @@ class DynamicIslandService : Service() {
         }
 
         updateLeashAttachment(slackFactor = 1.0f)
+        physicsEngine?.onSettingsChanged()
         moodManager.recalculateMood()
     }
 
@@ -779,6 +797,8 @@ class DynamicIslandService : Service() {
 
     override fun onDestroy() {
         phoneEventManager?.stop()
+        physicsEngine?.stop()
+        physicsEngine = null
         com.dynamicisland.app.util.ForegroundAppDetector.removeListener(appChangeListener)
         com.dynamicisland.app.util.ForegroundAppDetector.stopMonitoring()
         removeOverlay()

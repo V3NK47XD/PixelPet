@@ -75,7 +75,11 @@ class TetheredPetStageView @JvmOverloads constructor(
 
     private var floatBobYDp = 0f
     private var tiltAngleDeg = 0f
+    private var physicsOffsetXDp = 0f
+    private var physicsOffsetYDp = 0f
+    private var physicsTiltDeg = 0f
     private var leashSlackFactor = 1.0f
+    private var physicsEngine: com.dynamicisland.app.util.PetPhysicsEngine? = null
 
     private var driftAnimator: ValueAnimator? = null
     private var continuousFloatAnimator: ValueAnimator? = null
@@ -272,14 +276,14 @@ class TetheredPetStageView @JvmOverloads constructor(
         val anchorXPx = width / 2f
         val anchorYPx = 8.dpToPx().toFloat()
 
-        val petCenterXPx = anchorXPx + currentDriftXDp.dpToPx()
-        val petCenterYPx = anchorYPx + (currentDriftYDp + floatBobYDp).dpToPx()
+        val petCenterXPx = anchorXPx + (currentDriftXDp + physicsOffsetXDp).dpToPx()
+        val petCenterYPx = anchorYPx + (currentDriftYDp + floatBobYDp + physicsOffsetYDp).dpToPx()
 
         val left = (petCenterXPx - (petSizePx / 2f)).toInt()
         val top = (petCenterYPx - (petSizePx / 2f)).toInt()
 
         petView.layout(left, top, left + petSizePx, top + petSizePx)
-        petView.rotation = tiltAngleDeg
+        petView.rotation = tiltAngleDeg + physicsTiltDeg
         touchableRegionHelper.requestUpdate()
     }
 
@@ -305,16 +309,30 @@ class TetheredPetStageView @JvmOverloads constructor(
         super.onLayout(changed, left, top, right, bottom)
         updatePetViewLayout()
     }
-
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         startDriftEngine()
         touchableRegionHelper.attach { getPetTouchRegion() }
+
+        if (prefs.isGyroPhysicsEnabled) {
+            physicsEngine = com.dynamicisland.app.util.PetPhysicsEngine(context) { offsetXDp, offsetYDp, tiltDeg, _ ->
+                if (!isDraggingPet) {
+                    physicsOffsetXDp = offsetXDp
+                    physicsOffsetYDp = offsetYDp
+                    physicsTiltDeg = tiltDeg
+                    updatePetViewLayout()
+                    invalidate()
+                }
+            }
+            physicsEngine?.start()
+        }
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         stopDriftEngine()
+        physicsEngine?.stop()
+        physicsEngine = null
         touchableRegionHelper.detach()
     }
 
@@ -345,9 +363,8 @@ class TetheredPetStageView @JvmOverloads constructor(
 
         // 2. Calculate Pet Attachment Point (Head Sprout at top of Pet)
         val petSizePx = prefs.petSizeDp.dpToPx().toFloat()
-        val petCenterXPx = anchorX + currentDriftXDp.dpToPx()
-        val petCenterYPx = anchorY + (currentDriftYDp + floatBobYDp).dpToPx()
-
+        val petCenterXPx = anchorX + (currentDriftXDp + physicsOffsetXDp).dpToPx()
+        val petCenterYPx = anchorY + (currentDriftYDp + floatBobYDp + physicsOffsetYDp).dpToPx()
         val petTopX = petCenterXPx
         val petTopY = petCenterYPx - (petSizePx * 0.42f)
 

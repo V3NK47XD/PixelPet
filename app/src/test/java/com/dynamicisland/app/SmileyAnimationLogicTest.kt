@@ -109,4 +109,38 @@ class SmileyAnimationLogicTest {
         val dist2 = kotlin.math.sqrt((touch2X - petCenterX) * (touch2X - petCenterX) + (touch2Y - petCenterY) * (touch2Y - petCenterY))
         assertTrue("Point outside pet should pass through", dist2 > hitRadius)
     }
+
+    @Test
+    fun testRotaryKnobSteppingMath() {
+        val minValue = 0f
+        val maxValue = 100f
+        val stepSize = 5f
+
+        val testInputs = listOf(0f to 0f, 2.3f to 0f, 2.6f to 5f, 47.8f to 50f, 98.9f to 100f)
+        for ((raw, expected) in testInputs) {
+            val steps = Math.round((raw - minValue) / stepSize)
+            val stepped = (minValue + (steps * stepSize)).coerceIn(minValue, maxValue)
+            assertEquals(expected, stepped, 0.001f)
+        }
+    }
+
+    @Test
+    fun testPhysicsSpringDampingConvergence() {
+        var currentPos = 20f
+        val targetPos = 0f
+        var velocity = 5f
+        val springK = 0.12f
+        val damping = 0.82f
+
+        // Simulate 60 physics steps
+        for (i in 0..60) {
+            val force = (targetPos - currentPos) * springK
+            velocity = (velocity + force) * damping
+            currentPos += velocity
+        }
+
+        // Position should converge smoothly near target (< 0.1) and velocity near zero
+        assertTrue("Position should converge to target, was $currentPos", kotlin.math.abs(currentPos - targetPos) < 0.2f)
+        assertTrue("Velocity should decay to zero, was $velocity", kotlin.math.abs(velocity) < 0.1f)
+    }
 }

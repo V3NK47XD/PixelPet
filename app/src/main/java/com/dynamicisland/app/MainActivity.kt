@@ -5,23 +5,28 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.dynamicisland.app.databinding.ActivityMainBinding
+import com.dynamicisland.app.databinding.DialogDevToolsBinding
 import com.dynamicisland.app.util.BatteryOptimizationHelper
 import com.dynamicisland.app.util.ForegroundAppDetector
 import com.dynamicisland.app.util.OverlayPermissionHelper
 import com.dynamicisland.app.util.PreferencesHelper
 import com.dynamicisland.app.view.PixelPetView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var prefs: PreferencesHelper
-    private val prefWriteHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
+    private val prefWriteHandler = Handler(Looper.getMainLooper())
     private val pendingWrites = mutableMapOf<String, Runnable>()
 
     private fun debouncePrefWrite(key: String, delayMs: Long = 250L, writeAction: () -> Unit) {
@@ -33,10 +38,11 @@ class MainActivity : AppCompatActivity() {
         pendingWrites[key] = runnable
         prefWriteHandler.postDelayed(runnable, delayMs)
     }
+
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {
-        // Notification permission handled silently
+        // Handled silently
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,7 +56,6 @@ class MainActivity : AppCompatActivity() {
         setupListeners()
         requestNotificationPermissionIfNeeded()
 
-        // Check permissions and auto-prompt when appropriate on launch
         checkAndHandlePermissions(autoLaunch = true)
     }
 
@@ -60,49 +65,88 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        // 1. Sliders initialization
-        binding.sliderOffsetX.value = prefs.cameraRefX.toFloat().coerceIn(-150f, 150f)
-        binding.tvOffsetXVal.text = "${prefs.cameraRefX} dp"
+        // 1. Configure Rotary Knobs Deck (Compact Zero-Scroll Dials)
+        binding.knobCameraX.apply {
+            minValue = -150f
+            maxValue = 150f
+            stepSize = 1f
+            unitSuffix = "dp"
+            knobTitle = "CAM X"
+            value = prefs.cameraRefX.toFloat()
+            onValueChanged = { newVal, fromUser ->
+                val intVal = newVal.toInt()
+                if (fromUser) {
+                    debouncePrefWrite("cameraRefX") {
+                        prefs.cameraRefX = intVal
+                        notifySettingsChanged()
+                    }
+                }
+            }
+        }
 
-        binding.sliderOffsetY.value = prefs.cameraRefY.toFloat().coerceIn(0f, 120f)
-        binding.tvOffsetYVal.text = "${prefs.cameraRefY} dp"
-        binding.sliderPetSize.value = prefs.petSizeDp.toFloat().coerceIn(32f, 96f)
-        binding.tvPetSizeVal.text = "${prefs.petSizeDp} dp"
+        binding.knobCameraY.apply {
+            minValue = 0f
+            maxValue = 120f
+            stepSize = 1f
+            unitSuffix = "dp"
+            knobTitle = "CAM Y"
+            value = prefs.cameraRefY.toFloat()
+            onValueChanged = { newVal, fromUser ->
+                val intVal = newVal.toInt()
+                if (fromUser) {
+                    debouncePrefWrite("cameraRefY") {
+                        prefs.cameraRefY = intVal
+                        notifySettingsChanged()
+                    }
+                }
+            }
+        }
 
-        binding.sliderIntensity.value = prefs.animationIntensity.coerceIn(0.5f, 1.5f)
-        binding.tvIntensityVal.text = "${(prefs.animationIntensity * 100).toInt()}%"
+        binding.knobPetSize.apply {
+            minValue = 32f
+            maxValue = 96f
+            stepSize = 2f
+            unitSuffix = "dp"
+            knobTitle = "SIZE"
+            value = prefs.petSizeDp.toFloat()
+            onValueChanged = { newVal, fromUser ->
+                val intVal = newVal.toInt()
+                if (fromUser) {
+                    debouncePrefWrite("petSizeDp") {
+                        prefs.petSizeDp = intVal
+                        notifySettingsChanged()
+                    }
+                }
+            }
+        }
 
-        binding.sliderAngerMinutes.value = prefs.instagramAngerMinutes.toFloat().coerceIn(1f, 15f)
-        binding.tvAngerMinutesVal.text = "${prefs.instagramAngerMinutes} minutes"
+        binding.knobLeash.apply {
+            minValue = 18f
+            maxValue = 60f
+            stepSize = 2f
+            unitSuffix = "dp"
+            knobTitle = "LEASH"
+            value = prefs.leashLengthDp.toFloat()
+            onValueChanged = { newVal, fromUser ->
+                val intVal = newVal.toInt()
+                if (fromUser) {
+                    debouncePrefWrite("leashLengthDp") {
+                        prefs.leashLengthDp = intVal
+                        notifySettingsChanged()
+                    }
+                }
+            }
+        }
 
-        binding.sliderLeashLength.value = prefs.leashLengthDp.toFloat().coerceIn(18f, 60f)
-        binding.tvLeashLengthVal.text = "${prefs.leashLengthDp} dp"
         // 2. Camera alignment preset
         updateAlignmentButtonsUI(prefs.cameraAlignment)
 
-        // 3. Nerd mode app checkboxes
-        val nerdApps = prefs.nerdApps
-        binding.cbChatGPT.isChecked = nerdApps.contains("com.openai.chatgpt")
-        binding.cbGemini.isChecked = nerdApps.contains("com.google.android.apps.bard")
-        binding.cbWPS.isChecked = nerdApps.contains("cn.wps.moffice_eng") || nerdApps.contains("com.onlyoffice.documents")
-        binding.cbPDF.isChecked = nerdApps.contains("com.adobe.reader")
-
-        // 4. Camera World & Behavior Switches
-        binding.switchDynamicMovement.isChecked = prefs.isDynamicMovementEnabled
-        binding.switchHideAndSeek.isChecked = prefs.isHideAndSeekEnabled
-        binding.switchTouchReactions.isChecked = prefs.isTouchReactionEnabled
-        binding.switchTouchDebug.isChecked = prefs.isTouchDebugEnabled
-        // 5. Sleepiness & System Settings
+        // 3. Feature Switches
+        binding.switchGyroPhysics.isChecked = prefs.isGyroPhysicsEnabled
         binding.switchSleepiness.isChecked = prefs.isSleepinessEnabled
-        binding.sliderSleepyHour.value = prefs.sleepyStartHour.toFloat().coerceIn(19f, 25f)
-        val startH = prefs.sleepyStartHour
-        val hourLabel = if (startH == 24 || startH == 0) "12 AM (Midnight)" else if (startH > 12) "${startH - 12} PM" else "$startH AM"
-        binding.tvSleepyHourVal.text = "$startH:00 ($hourLabel)"
+        binding.switchTouchReactions.isChecked = prefs.isTouchReactionEnabled
 
-        binding.switchGoogleNerd.isChecked = prefs.isGoogleNerdAppsEnabled
-        binding.switchPhoneEvents.isChecked = prefs.isPhoneEventsEnabled
-
-        // 6. Preview Pet in Tether Stage
+        // 4. Preview Pet in Tether Stage
         binding.previewTetherStage.petView.setAnimationIntensity(prefs.animationIntensity)
         binding.previewTetherStage.petView.setMood(PixelPetView.PetMood.IDLE)
         binding.previewTetherStage.updateLeashColor()
@@ -117,25 +161,158 @@ class MainActivity : AppCompatActivity() {
         binding.btnTestDrift.setOnClickListener {
             binding.previewTetherStage.pickNextFloatingSpot()
         }
-        // Master Pet Toggle Switch
+
+        // Master Switch
         binding.switchPetMaster.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                startPetOverlay()
-            } else {
-                stopPetOverlay()
+            if (isChecked) startPetOverlay() else stopPetOverlay()
+        }
+
+        // Developer / Advanced Tools Bottom Sheet
+        binding.btnDevTools.setOnClickListener {
+            showDevToolsBottomSheet()
+        }
+
+        // Permission Quick Fix
+        binding.btnQuickFixPermission.setOnClickListener {
+            if (!OverlayPermissionHelper.hasOverlayPermission(this)) {
+                OverlayPermissionHelper.requestOverlayPermission(this)
+            } else if (!ForegroundAppDetector.hasUsageStatsPermission(this)) {
+                ForegroundAppDetector.openUsageAccessSettings(this)
+            } else if (!BatteryOptimizationHelper.isBatteryOptimizationIgnored(this)) {
+                BatteryOptimizationHelper.requestIgnoreBatteryOptimization(this)
             }
         }
 
-        // Permission Buttons
-        binding.btnGrantPermission.setOnClickListener {
-            OverlayPermissionHelper.requestOverlayPermission(this)
+        // Mood preview chips
+        binding.chipMoodIdle.setOnClickListener {
+            setPreviewMood(PixelPetView.PetMood.IDLE, "😴 Idle • Floating near camera")
+        }
+        binding.chipMoodHappy.setOnClickListener {
+            setPreviewMood(PixelPetView.PetMood.HAPPY, "😄 Happy • Joyful hops and sparkles")
+        }
+        binding.chipMoodSad.setOnClickListener {
+            setPreviewMood(PixelPetView.PetMood.SAD, "🥺 Sad • Crying teardrop & frown")
+        }
+        binding.chipMoodAngry.setOnClickListener {
+            setPreviewMood(PixelPetView.PetMood.ANGRY, "😡 Angry • Rage vibration & steam")
+        }
+        binding.chipMoodNerd.setOnClickListener {
+            setPreviewMood(PixelPetView.PetMood.NERD, "🤓 Nerd • Glasses drop & scanning")
+        }
+        binding.chipMoodTexting.setOnClickListener {
+            setPreviewMood(PixelPetView.PetMood.TEXTING, "💬 Texting • Speech bubble •••")
         }
 
-        binding.btnGrantUsageAccess.setOnClickListener {
-            ForegroundAppDetector.openUsageAccessSettings(this)
+        // Camera Alignment Presets
+        binding.btnAlignLeft.setOnClickListener { setCameraAlignment("LEFT") }
+        binding.btnAlignCenter.setOnClickListener { setCameraAlignment("CENTER") }
+        binding.btnAlignRight.setOnClickListener { setCameraAlignment("RIGHT") }
+
+        // Leash Color Selector Buttons
+        binding.btnLeashRed.setOnClickListener { setLeashColor("#F43F5E") }
+        binding.btnLeashGold.setOnClickListener { setLeashColor("#F59E0B") }
+        binding.btnLeashSilver.setOnClickListener { setLeashColor("#E2E8F0") }
+        binding.btnLeashMint.setOnClickListener { setLeashColor("#34D399") }
+
+        // Behavior Switches
+        binding.switchGyroPhysics.setOnCheckedChangeListener { _, isChecked ->
+            prefs.isGyroPhysicsEnabled = isChecked
+            notifySettingsChanged()
         }
 
-        binding.btnFixRestrictedSettings.setOnClickListener {
+        binding.switchSleepiness.setOnCheckedChangeListener { _, isChecked ->
+            prefs.isSleepinessEnabled = isChecked
+            notifySettingsChanged()
+        }
+
+        binding.switchTouchReactions.setOnCheckedChangeListener { _, isChecked ->
+            prefs.isTouchReactionEnabled = isChecked
+            notifySettingsChanged()
+        }
+    }
+
+    private fun showDevToolsBottomSheet() {
+        val dialog = BottomSheetDialog(this)
+        val sheetBinding = DialogDevToolsBinding.inflate(layoutInflater)
+        dialog.setContentView(sheetBinding.root)
+
+        // Bind Developer Settings
+        sheetBinding.switchTouchDebug.isChecked = prefs.isTouchDebugEnabled
+        sheetBinding.switchTouchDebug.setOnCheckedChangeListener { _, isChecked ->
+            prefs.isTouchDebugEnabled = isChecked
+            binding.previewTetherStage.invalidate()
+            notifySettingsChanged()
+        }
+
+        sheetBinding.switchHideAndSeek.isChecked = prefs.isHideAndSeekEnabled
+        sheetBinding.switchHideAndSeek.setOnCheckedChangeListener { _, isChecked ->
+            prefs.isHideAndSeekEnabled = isChecked
+            notifySettingsChanged()
+        }
+
+        sheetBinding.switchGoogleNerd.isChecked = prefs.isGoogleNerdAppsEnabled
+        sheetBinding.switchGoogleNerd.setOnCheckedChangeListener { _, isChecked ->
+            prefs.isGoogleNerdAppsEnabled = isChecked
+            notifySettingsChanged()
+        }
+
+        sheetBinding.switchPhoneEvents.isChecked = prefs.isPhoneEventsEnabled
+        sheetBinding.switchPhoneEvents.setOnCheckedChangeListener { _, isChecked ->
+            prefs.isPhoneEventsEnabled = isChecked
+        }
+
+        // Anger Timer Dial
+        sheetBinding.knobAngerTimer.apply {
+            minValue = 1f
+            maxValue = 15f
+            stepSize = 1f
+            unitSuffix = "m"
+            knobTitle = "ANGER"
+            value = prefs.instagramAngerMinutes.toFloat()
+            onValueChanged = { newVal, fromUser ->
+                if (fromUser) {
+                    debouncePrefWrite("angerMinutes") {
+                        prefs.instagramAngerMinutes = newVal.toInt()
+                    }
+                }
+            }
+        }
+
+        // Nerd Apps Checkboxes
+        val nerdApps = prefs.nerdApps
+        sheetBinding.cbChatGPT.isChecked = nerdApps.contains("com.openai.chatgpt")
+        sheetBinding.cbGemini.isChecked = nerdApps.contains("com.google.android.apps.bard")
+        sheetBinding.cbWPS.isChecked = nerdApps.contains("cn.wps.moffice_eng") || nerdApps.contains("com.onlyoffice.documents")
+        sheetBinding.cbPDF.isChecked = nerdApps.contains("com.adobe.reader")
+
+        val updateNerdApps = {
+            val apps = mutableSetOf<String>()
+            if (sheetBinding.cbChatGPT.isChecked) apps.add("com.openai.chatgpt")
+            if (sheetBinding.cbGemini.isChecked) apps.add("com.google.android.apps.bard")
+            if (sheetBinding.cbWPS.isChecked) {
+                apps.add("cn.wps.moffice_eng")
+                apps.add("cn.wps.moffice")
+                apps.add("com.onlyoffice.documents")
+            }
+            if (sheetBinding.cbPDF.isChecked) {
+                apps.add("com.adobe.reader")
+                apps.add("com.google.android.apps.pdfviewer")
+            }
+            prefs.nerdApps = apps
+        }
+        sheetBinding.cbChatGPT.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
+        sheetBinding.cbGemini.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
+        sheetBinding.cbWPS.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
+        sheetBinding.cbPDF.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
+
+        // Action Buttons
+        sheetBinding.btnOpenActiveLog.setOnClickListener {
+            dialog.dismiss()
+            startActivity(Intent(this, DebugActivity::class.java))
+        }
+
+        sheetBinding.btnUnlockRestricted.setOnClickListener {
+            dialog.dismiss()
             AlertDialog.Builder(this)
                 .setTitle("Unlock 'Restricted Settings'")
                 .setMessage(
@@ -153,173 +330,11 @@ class MainActivity : AppCompatActivity() {
                 .show()
         }
 
-        // Mood preview chips
-        binding.chipMoodIdle.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.IDLE, "Idle • Breathing and floating gently")
-        }
-        binding.chipMoodHappy.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.HAPPY, "Happy • Joyful hops and star sparkles!")
-        }
-        binding.chipMoodSad.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.SAD, "Sad (Instagram) • Droopy head, frown & trickling tears")
-        }
-        binding.chipMoodAngry.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.ANGRY, "Angry (>5m Instagram) • Fiery red, furious vibration & steam puffs!")
-        }
-        binding.chipMoodNerd.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.NERD, "Nerd (Learning) • Glasses drop down and eyes scan reading text")
-        }
-        binding.chipMoodTexting.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.TEXTING, "Texting (WhatsApp/Discord) • Typing ••• speech bubble & rapid hands")
+        sheetBinding.btnCloseDev.setOnClickListener {
+            dialog.dismiss()
         }
 
-        // Camera Alignment Presets
-        binding.btnAlignLeft.setOnClickListener { setCameraAlignment("LEFT") }
-        binding.btnAlignCenter.setOnClickListener { setCameraAlignment("CENTER") }
-        binding.btnAlignRight.setOnClickListener { setCameraAlignment("RIGHT") }
-
-        // Position & Size Sliders (Real-time updates)
-        binding.sliderOffsetX.addOnChangeListener { _, value, fromUser ->
-            if (fromUser) {
-                val offset = value.toInt()
-                binding.tvOffsetXVal.text = "$offset dp"
-                debouncePrefWrite("cameraRefX") {
-                    prefs.cameraRefX = offset
-                    notifySettingsChanged()
-                }
-            }
-        }
-
-        binding.sliderOffsetY.addOnChangeListener { _, value, fromUser ->
-            if (fromUser) {
-                val offset = value.toInt()
-                binding.tvOffsetYVal.text = "$offset dp"
-                debouncePrefWrite("cameraRefY") {
-                    prefs.cameraRefY = offset
-                    notifySettingsChanged()
-                }
-            }
-        }
-
-        binding.sliderPetSize.addOnChangeListener { _, value, fromUser ->
-            if (fromUser) {
-                val size = value.toInt()
-                binding.tvPetSizeVal.text = "$size dp"
-                debouncePrefWrite("petSizeDp") {
-                    prefs.petSizeDp = size
-                    notifySettingsChanged()
-                }
-            }
-        }
-
-        binding.sliderIntensity.addOnChangeListener { _, value, fromUser ->
-            if (fromUser) {
-                binding.tvIntensityVal.text = "${(value * 100).toInt()}%"
-                binding.previewTetherStage.petView.setAnimationIntensity(value)
-                debouncePrefWrite("animationIntensity") {
-                    prefs.animationIntensity = value
-                    notifySettingsChanged()
-                }
-            }
-        }
-
-        binding.sliderAngerMinutes.addOnChangeListener { _, value, fromUser ->
-            if (fromUser) {
-                val mins = value.toInt()
-                binding.tvAngerMinutesVal.text = "$mins minutes"
-                debouncePrefWrite("angerMinutes") {
-                    prefs.instagramAngerMinutes = mins
-                }
-            }
-        }
-
-        binding.sliderLeashLength.addOnChangeListener { _, value, fromUser ->
-            if (fromUser) {
-                val len = value.toInt()
-                binding.tvLeashLengthVal.text = "$len dp"
-                debouncePrefWrite("leashLengthDp") {
-                    prefs.leashLengthDp = len
-                    notifySettingsChanged()
-                }
-            }
-        }
-
-        binding.btnLeashRed.setOnClickListener { setLeashColor("#F43F5E") }
-        binding.btnLeashGold.setOnClickListener { setLeashColor("#F59E0B") }
-        binding.btnLeashSilver.setOnClickListener { setLeashColor("#E2E8F0") }
-        binding.btnLeashMint.setOnClickListener { setLeashColor("#34D399") }
-        // Nerd Mode App Checkboxes
-        val updateNerdApps = {
-            val apps = mutableSetOf<String>()
-            if (binding.cbChatGPT.isChecked) apps.add("com.openai.chatgpt")
-            if (binding.cbGemini.isChecked) apps.add("com.google.android.apps.bard")
-            if (binding.cbWPS.isChecked) {
-                apps.add("cn.wps.moffice_eng")
-                apps.add("cn.wps.moffice")
-                apps.add("com.onlyoffice.documents")
-            }
-            if (binding.cbPDF.isChecked) {
-                apps.add("com.adobe.reader")
-                apps.add("com.google.android.apps.pdfviewer")
-            }
-            prefs.nerdApps = apps
-        }
-        binding.cbChatGPT.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
-        binding.cbGemini.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
-        binding.cbWPS.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
-        binding.cbPDF.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
-
-        // Behavior & Camera World Switches
-        binding.switchDynamicMovement.setOnCheckedChangeListener { _, isChecked ->
-            prefs.isDynamicMovementEnabled = isChecked
-            notifySettingsChanged()
-        }
-
-        binding.switchHideAndSeek.setOnCheckedChangeListener { _, isChecked ->
-            prefs.isHideAndSeekEnabled = isChecked
-            notifySettingsChanged()
-        }
-
-        binding.switchTouchReactions.setOnCheckedChangeListener { _, isChecked ->
-            prefs.isTouchReactionEnabled = isChecked
-            notifySettingsChanged()
-        }
-
-        binding.switchTouchDebug.setOnCheckedChangeListener { _, isChecked ->
-            prefs.isTouchDebugEnabled = isChecked
-            binding.previewTetherStage.invalidate()
-            notifySettingsChanged()
-        }
-
-        // Sleepiness & System Settings
-        binding.switchSleepiness.setOnCheckedChangeListener { _, isChecked ->
-            prefs.isSleepinessEnabled = isChecked
-            notifySettingsChanged()
-        }
-
-        binding.sliderSleepyHour.addOnChangeListener { _, value, fromUser ->
-            if (fromUser) {
-                val h = value.toInt()
-                prefs.sleepyStartHour = h
-                val hLabel = if (h == 24 || h == 0) "12 AM (Midnight)" else if (h > 12) "${h - 12} PM" else "$h AM"
-                binding.tvSleepyHourVal.text = "$h:00 ($hLabel)"
-                notifySettingsChanged()
-            }
-        }
-
-        binding.switchGoogleNerd.setOnCheckedChangeListener { _, isChecked ->
-            prefs.isGoogleNerdAppsEnabled = isChecked
-            notifySettingsChanged()
-        }
-
-        binding.switchPhoneEvents.setOnCheckedChangeListener { _, isChecked ->
-            prefs.isPhoneEventsEnabled = isChecked
-        }
-
-        // Debugger Screen
-        binding.btnOpenDebug.setOnClickListener {
-            startActivity(Intent(this, DebugActivity::class.java))
-        }
+        dialog.show()
     }
 
     private fun setPreviewMood(mood: PixelPetView.PetMood, description: String) {
@@ -349,18 +364,16 @@ class MainActivity : AppCompatActivity() {
                 prefs.cameraRefY = 22
             }
         }
-        binding.sliderOffsetX.value = prefs.cameraRefX.toFloat()
-        binding.tvOffsetXVal.text = "${prefs.cameraRefX} dp"
-        binding.sliderOffsetY.value = prefs.cameraRefY.toFloat()
-        binding.tvOffsetYVal.text = "${prefs.cameraRefY} dp"
+        binding.knobCameraX.value = prefs.cameraRefX.toFloat()
+        binding.knobCameraY.value = prefs.cameraRefY.toFloat()
 
         updateAlignmentButtonsUI(alignment)
         notifySettingsChanged()
     }
 
     private fun updateAlignmentButtonsUI(alignment: String) {
-        val selectedColor = ContextCompat.getColor(this, R.color.smiley_yellow)
-        val defaultColor = ContextCompat.getColor(this, R.color.surface_dark)
+        val selectedColor = ContextCompat.getColor(this, R.color.peach_primary)
+        val defaultColor = ContextCompat.getColor(this, R.color.peach_surface)
 
         val selectedText = ContextCompat.getColor(this, R.color.background_dark)
         val defaultText = ContextCompat.getColor(this, R.color.text_primary)
@@ -386,10 +399,12 @@ class MainActivity : AppCompatActivity() {
         val isBatteryUnrestricted = BatteryOptimizationHelper.isBatteryOptimizationIgnored(this)
         val hasUsage = ForegroundAppDetector.hasUsageStatsPermission(this)
 
+        val hasMissingPermissions = !hasOverlay || !isBatteryUnrestricted || !hasUsage
+        binding.cardPermissionAlert.visibility = if (hasMissingPermissions) View.VISIBLE else View.GONE
+
         // 1. Overlay Status
         if (hasOverlay) {
-            binding.cardPermission.visibility = View.GONE
-            binding.tvOverlayBadge.text = "Overlay: Granted 🟢"
+            binding.tvOverlayBadge.text = "Overlay: 🟢"
             binding.tvOverlayBadge.setTextColor(ContextCompat.getColor(this, R.color.status_active))
 
             if (prefs.isIslandEnabled) {
@@ -403,8 +418,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         } else {
-            binding.cardPermission.visibility = View.VISIBLE
-            binding.tvOverlayBadge.text = "Overlay: Missing ⚠️"
+            binding.tvOverlayBadge.text = "Overlay: ⚠️"
             binding.tvOverlayBadge.setTextColor(ContextCompat.getColor(this, R.color.status_warning))
             updateMasterSwitchUI(false)
 
@@ -420,22 +434,20 @@ class MainActivity : AppCompatActivity() {
 
         // 2. Battery Status
         if (isBatteryUnrestricted) {
-            binding.tvBatteryBadge.text = "Battery: Unrestricted ⚡"
+            binding.tvBatteryBadge.text = "Battery: ⚡"
             binding.tvBatteryBadge.setTextColor(ContextCompat.getColor(this, R.color.status_active))
         } else {
-            binding.tvBatteryBadge.text = "Battery: Optimized ⚠️"
+            binding.tvBatteryBadge.text = "Battery: ⚠️"
             binding.tvBatteryBadge.setTextColor(ContextCompat.getColor(this, R.color.status_warning))
         }
 
         // 3. Usage Access Status
         if (hasUsage) {
-            binding.cardUsageAccess.visibility = View.GONE
-            binding.tvUsageBadge.text = "Usage: Active 🟢"
+            binding.tvUsageBadge.text = "Usage: 🟢"
             binding.tvUsageBadge.setTextColor(ContextCompat.getColor(this, R.color.status_active))
             ForegroundAppDetector.startMonitoring(this)
         } else {
-            binding.cardUsageAccess.visibility = View.VISIBLE
-            binding.tvUsageBadge.text = "Usage: Missing ⚠️"
+            binding.tvUsageBadge.text = "Usage: ⚠️"
             binding.tvUsageBadge.setTextColor(ContextCompat.getColor(this, R.color.status_warning))
 
             if (hasOverlay && (!prefs.hasAutoRequestedUsage || autoLaunch)) {

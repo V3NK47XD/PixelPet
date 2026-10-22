@@ -65,21 +65,18 @@
 
 ---
 
-### ⚙️ In-App Settings & Live Preview
-* **Front Camera Presets**:
-  - `◀ Top Left` (for left corner punch-hole cameras)
-  - `⏺ Top Center` (for center cutouts)
-  - `Top Right ▶` (for right corner cameras)
-* **Precise Sliders**:
-  - **Camera X Offset**: $-150\text{dp}$ to $+150\text{dp}$
-  - **Camera Y Offset**: $0\text{dp}$ to $120\text{dp}$
-  - **Pet Size**: $32\text{dp}$ to $96\text{dp}$ (default $54\text{dp}$)
-  - **Leash Length**: $18\text{dp}$ to $60\text{dp}$ (default $36\text{dp}$)
-  - **Animation Intensity**: $50\%$ to $150\%$
-  - **Instagram Anger Timer**: $1\text{ min}$ to $15\text{ min}$ (default $5\text{m}$)
-  - **Bedtime Hour**: $19:00$ ($7\text{ PM}$) to $01:00$ ($1\text{ AM}$)
-* **Live Tether Stage Preview**: See the anchor ring, curved leash, and pet floating live inside the settings screen, with a **"Drift to Next Spot 🎲"** test button.
+### 📱 Fluid Gyroscope & Physical Inertia
+* **Natural Tilt & Shake Reactions**: When you tilt your phone, the pet swings and drifts in the tilt direction. When you shake the phone, the pet swings around in an energetic orbit on its leash!
+* **Spring-Damper Stabilization**: When the phone is held still, the pet settles smoothly back into its natural alignment without jitter.
+* **100% Battery-Safe**: If disabled in settings, or when the screen turns off, sensor listeners are completely unregistered.
 
+---
+
+### 🎛️ Zero-Scroll All-in-One UI & Rotary Speaker Knobs
+* **No Scrolling Needed**: All core controls, live preview, presets, and dials fit neatly on a single non-scrolling screen.
+* **Retro Rotary Knobs**: Replaced vertical sliders with compact 270° rotary volume dials (`CAM X`, `CAM Y`, `SIZE`, `LEASH`) with tactile haptic feedback.
+* **Cute Peach Palette**: Warm peach (`#FF9F68`) and light orange accents with dark terracotta surfaces.
+* **Separated Developer Tools**: Developer features (Touch Debug Mode, Foreground App Log, Anger Timer dial, Nerd app selectors) are accessible via the **⚙️ Dev Tools** sheet.
 ---
 
 ## 📦 Releases & Versioning

@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- App Theme Palette: Modern Deep Black & Neon Accents -->
-    <color name="primary">#6366F1</color>
-    <color name="primary_variant">#4F46E5</color>
+    <color name="primary">#FF9F68</color> <!-- Cute Warm Peach -->
+    <color name="primary_variant">#F97316</color>
     <color name="secondary">#10B981</color>
-    <color name="accent">#F59E0B</color>
+    <color name="accent">#FDBA74</color>
 
+    <!-- Cute Peach & Warm Orange Theme Palette -->
+    <color name="peach_primary">#FF9F68</color>
+    <color name="peach_light">#FFE4D6</color>
+    <color name="peach_accent">#FDBA74</color>
+    <color name="peach_dark">#181210</color>
+    <color name="peach_surface">#221A17</color>
+    <color name="peach_surface_card">#2E221E</color>
+    <color name="peach_surface_border">#4A3730</color>
     <color name="background_dark">#0F1117</color>
     <color name="surface_dark">#181B26</color>
     <color name="surface_card">#202534</color>

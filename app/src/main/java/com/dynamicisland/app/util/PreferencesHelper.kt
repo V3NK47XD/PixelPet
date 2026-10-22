@@ -38,6 +38,7 @@ class PreferencesHelper(context: Context) {
         private const val KEY_LEASH_LENGTH_DP = "leash_length_dp"
         private const val KEY_LEASH_COLOR = "leash_color"
         private const val KEY_TOUCH_DEBUG_ENABLED = "touch_debug_enabled"
+        private const val KEY_GYRO_PHYSICS_ENABLED = "gyro_physics_enabled"
 
         val DEFAULT_NERD_PACKAGES = setOf(
             "com.openai.chatgpt",
@@ -132,6 +133,10 @@ class PreferencesHelper(context: Context) {
     var isTouchDebugEnabled: Boolean
         get() = prefs.getBoolean(KEY_TOUCH_DEBUG_ENABLED, false)
         set(value) = prefs.edit().putBoolean(KEY_TOUCH_DEBUG_ENABLED, value).apply()
+
+    var isGyroPhysicsEnabled: Boolean
+        get() = prefs.getBoolean(KEY_GYRO_PHYSICS_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_GYRO_PHYSICS_ENABLED, value).apply()
     var isIslandEnabled: Boolean
         get() = prefs.getBoolean(KEY_ISLAND_ENABLED, false)
         set(value) = prefs.edit().putBoolean(KEY_ISLAND_ENABLED, value).apply()

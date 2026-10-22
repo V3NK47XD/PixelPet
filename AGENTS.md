@@ -57,12 +57,23 @@ graph TD
      - Restricts the window's touchable region strictly to the pet's visible circular body shape.
      - **100% Touch Pass-Through Outside Pet**: Punches a transparent touch hole across the entire remainder of the window so user taps on camera, status bar, and underlying apps pass through completely uninterrupted.
 
-3. **`com.dynamicisland.app.util.TouchableRegionHelper`**:
+3. **`com.dynamicisland.app.util.PetPhysicsEngine`**:
+   - Low-overhead sensor listener (`Sensor.TYPE_GRAVITY` / `Sensor.TYPE_ACCELEROMETER` and `Sensor.TYPE_GYROSCOPE`).
+   - Simulates physical inertia: tilting the phone swings the pet on its leash; shaking injects rotational momentum.
+   - Settles smoothly back to equilibrium when held still via damped harmonic spring physics.
+   - **100% Battery-Safe**: Completely unregisters sensor listeners whenever disabled in settings OR when the screen turns off (`ACTION_SCREEN_OFF`).
+
+4. **`com.dynamicisland.app.view.RotaryKnobView`**:
+   - Compact 270° rotary dial potentiometer custom view replacing bulky vertical sliders.
+   - Saves screen space to enable a 100% zero-scroll all-in-one UI dashboard.
+   - Tactile haptic feedback and smooth circular/vertical touch gestures.
+
+5. **`com.dynamicisland.app.util.TouchableRegionHelper`**:
    - Dynamically hooks Android's internal `ViewTreeObserver.OnComputeInternalInsetsListener`.
    - Supplies an `android.graphics.Region` generated from `Path.addCircle(petCenterX, petCenterY, radius)` matching the pet's exact coordinates.
    - Synchronizes touchable region in real-time as the pet drifts or is dragged.
 
-4. **`com.dynamicisland.app.util.PetMoodManager`**:
+6. **`com.dynamicisland.app.util.PetMoodManager`**:
    - Resolves pet emotional state according to a strict priority hierarchy:
      1. `CRITICAL_BATTERY` ($<5\%$)
      2. `CHARGING` (Power connected)
