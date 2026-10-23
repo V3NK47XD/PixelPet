@@ -225,18 +225,18 @@ class PetPhysicsEngine(
                 val deltaY = ay - neutralAccelY
                 val deltaZ = az - neutralAccelZ
 
-                // Normalized lateral tilt: -deltaX / 9.8f
-                val normalizedTiltX = (-deltaX / 9.8f).coerceIn(-0.85f, 0.85f)
+                // Full 180° lateral tilt ratio: -deltaX / 9.8f across full [-1.0, 1.0]
+                val normalizedTiltX = (-deltaX / 9.8f).coerceIn(-1.0f, 1.0f)
                 val swingAngleRad = kotlin.math.asin(normalizedTiltX.toDouble()).toFloat()
 
                 // Circular pendulum arc of radius R = leashLengthDp centered at camera anchor:
                 val leashR = prefs.leashLengthDp.toFloat().coerceAtLeast(20f)
-                // Lateral displacement: R * sin(theta)
-                val rawTargetX = (leashR * kotlin.math.sin(swingAngleRad.toDouble()).toFloat()).coerceIn(-35f, 35f)
-                // Vertical displacement: circular arc lift (-R * (1 - cos(theta))) + forward pitch sag
-                val arcLiftDp = -leashR * (1f - kotlin.math.cos(swingAngleRad.toDouble()).toFloat()) * 0.65f
-                val pitchSagDp = (deltaY * 1.5f).coerceIn(-12f, 22f)
-                val rawTargetY = (arcLiftDp + pitchSagDp).coerceIn(-14f, 24f)
+                // Full 180° lateral swing displacement: reaches +/- leashR at 90° tilt
+                val rawTargetX = (leashR * kotlin.math.sin(swingAngleRad.toDouble()).toFloat()).coerceIn(-leashR, leashR)
+                // Circular arc lift: at 90° tilt (cos = 0), the pet rises by -leashR horizontally
+                val arcLiftDp = -leashR * (1f - kotlin.math.cos(swingAngleRad.toDouble()).toFloat())
+                val pitchSagDp = (deltaY * 1.5f).coerceIn(-14f, 24f)
+                val rawTargetY = (arcLiftDp + pitchSagDp).coerceIn(-leashR, 28f)
 
                 // Responsive low-pass filter
                 targetTiltXDp = (targetTiltXDp * 0.60f) + (rawTargetX * 0.40f)
@@ -324,8 +324,9 @@ class PetPhysicsEngine(
         currentOffsetXDp += velocityX
         currentOffsetYDp += velocityY
 
-        // Constrain max physics swing to 32dp
-        val maxSwing = 32f
+        // Constrain max physics swing to full leash arc radius
+        val leashR = prefs.leashLengthDp.toFloat().coerceAtLeast(20f)
+        val maxSwing = leashR * 1.15f
         val dist = sqrt((currentOffsetXDp * currentOffsetXDp) + (currentOffsetYDp * currentOffsetYDp))
         if (dist > maxSwing && dist > 0f) {
             val scale = maxSwing / dist
@@ -333,9 +334,9 @@ class PetPhysicsEngine(
             currentOffsetYDp *= scale
         }
 
-        // Dynamic tilt angle: exact tangent to circular pendulum swing arc + rotational momentum
-        val swingTangentDeg = Math.toDegrees(kotlin.math.atan2(currentOffsetXDp.toDouble(), (prefs.leashLengthDp.toFloat()).toDouble())).toFloat()
-        currentTiltDeg = (swingTangentDeg + velocityX * 1.25f).coerceIn(-30f, 30f)
+        // Dynamic tilt angle: exact tangent to circular pendulum swing arc across full 180° (-90° to +90°)
+        val swingTangentDeg = Math.toDegrees(kotlin.math.atan2(currentOffsetXDp.toDouble(), (leashR + currentOffsetYDp).coerceAtLeast(1f).toDouble())).toFloat()
+        currentTiltDeg = (swingTangentDeg + velocityX * 1.25f).coerceIn(-90f, 90f)
         // High-frequency wire shiver vibration wave
         if (shiverAmplitudeDp > 0.05f) {
             shiverPhase += 0.95f

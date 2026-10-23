@@ -4,11 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/peach_dark"
+    android:background="@color/duo_bg_dark"
     android:orientation="vertical"
     android:padding="12dp">
 
-    <!-- 1. Top Header Bar -->
+    <!-- 1. Top Header Bar: Pet Name, Settings & Master Switch -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="44dp"
@@ -21,19 +21,39 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Pixel Pet 🐣"
-                android:textColor="@color/peach_light"
-                android:textSize="20sp"
-                android:fontFamily="sans-serif-black" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvPetName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-black"
+                    android:text="Kiddo"
+                    android:textColor="@color/duo_text_white"
+                    android:textSize="22sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnEditPetName"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginStart="6dp"
+                    android:text="✎"
+                    android:textColor="@color/duo_green"
+                    android:textSize="12sp"
+                    app:backgroundTint="@color/duo_card_dark" />
+            </LinearLayout>
 
             <TextView
+                android:id="@+id/tvPetTagline"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Camera Companion • Zero-Scroll Controls"
-                android:textColor="@color/peach_accent"
+                android:text="Camera Cutout Companion"
+                android:textColor="@color/duo_text_muted"
                 android:textSize="10.5sp" />
         </LinearLayout>
 
@@ -42,23 +62,24 @@
             style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="38dp"
             android:layout_height="38dp"
-            android:layout_marginEnd="6dp"
-            android:backgroundTint="@color/peach_surface"
-            android:text="⚙️"
-            android:textSize="14sp"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="@color/duo_card_dark"
+            android:text="⚙"
+            android:textColor="@color/duo_text_white"
+            android:textSize="16sp"
             app:cornerRadius="19dp"
-            app:strokeColor="@color/peach_surface_border"
-            app:strokeWidth="1dp" />
+            app:strokeColor="@color/duo_card_border"
+            app:strokeWidth="1.5dp" />
 
         <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/switchPetMaster"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:thumbTint="@color/peach_primary"
-            app:trackTint="@color/peach_surface_card" />
+            app:thumbTint="@color/duo_green"
+            app:trackTint="@color/duo_card_border" />
     </LinearLayout>
 
-    <!-- 2. Compact Status Badges Row -->
+    <!-- 2. Duolingo Style Status Cards Row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -68,49 +89,43 @@
         <TextView
             android:id="@+id/tvOverlayBadge"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="28dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_card_surface"
+            android:background="@drawable/bg_duo_button_card"
+            android:fontFamily="sans-serif-bold"
             android:gravity="center"
-            android:paddingTop="3dp"
-            android:paddingBottom="3dp"
-            android:text="Overlay: 🟢"
-            android:textColor="@color/peach_light"
-            android:textSize="9.5sp"
-            android:fontFamily="sans-serif-medium" />
+            android:text="Overlay Active"
+            android:textColor="@color/duo_text_white"
+            android:textSize="10sp" />
 
         <TextView
             android:id="@+id/tvBatteryBadge"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="6dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_card_surface"
+            android:background="@drawable/bg_duo_button_card"
+            android:fontFamily="sans-serif-bold"
             android:gravity="center"
-            android:paddingTop="3dp"
-            android:paddingBottom="3dp"
-            android:text="Battery: ⚡"
-            android:textColor="@color/peach_light"
-            android:textSize="9.5sp"
-            android:fontFamily="sans-serif-medium" />
+            android:text="Battery Safe"
+            android:textColor="@color/duo_text_white"
+            android:textSize="10sp" />
 
         <TextView
             android:id="@+id/tvUsageBadge"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="6dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_card_surface"
+            android:background="@drawable/bg_duo_button_card"
+            android:fontFamily="sans-serif-bold"
             android:gravity="center"
-            android:paddingTop="3dp"
-            android:paddingBottom="3dp"
-            android:text="Usage: 🟢"
-            android:textColor="@color/peach_light"
-            android:textSize="9.5sp"
-            android:fontFamily="sans-serif-medium" />
+            android:text="App Detect"
+            android:textColor="@color/duo_text_white"
+            android:textSize="10sp" />
     </LinearLayout>
 
-    <!-- Compact Permission Action Banner (Visible only when permissions missing) -->
+    <!-- Permission Banner (Visible only when permissions missing) -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardPermissionAlert"
         android:layout_width="match_parent"
@@ -118,7 +133,7 @@
         android:layout_marginTop="6dp"
         android:visibility="gone"
         app:cardBackgroundColor="#2A1B18"
-        app:cardCornerRadius="10dp"
+        app:cardCornerRadius="12dp"
         app:strokeColor="#7F2315"
         app:strokeWidth="1dp">
 
@@ -134,7 +149,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="⚠️ Permissions missing for floating pet."
+                android:text="Permissions needed for floating companion."
                 android:textColor="#FCA5A5"
                 android:textSize="11sp" />
 
@@ -143,10 +158,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="32dp"
                 android:text="Grant"
-                android:textColor="@color/background_dark"
+                android:textColor="@color/duo_bg_dark"
                 android:textSize="10sp"
-                app:backgroundTint="@color/smiley_yellow"
-                app:cornerRadius="6dp" />
+                app:backgroundTint="@color/duo_orange"
+                app:cornerRadius="8dp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -156,10 +171,10 @@
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
         android:layout_weight="1.1"
-        app:cardBackgroundColor="@color/peach_surface"
-        app:cardCornerRadius="18dp"
-        app:strokeColor="@color/peach_surface_border"
-        app:strokeWidth="1dp">
+        app:cardBackgroundColor="@color/duo_card_dark"
+        app:cardCornerRadius="20dp"
+        app:strokeColor="@color/duo_card_border"
+        app:strokeWidth="1.5dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -186,27 +201,26 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="😴 Idle • Floating near camera"
-                    android:textColor="@color/peach_accent"
-                    android:textSize="11sp"
-                    android:fontFamily="sans-serif-bold" />
+                    android:fontFamily="sans-serif-bold"
+                    android:text="Kiddo • Floating near camera"
+                    android:textColor="@color/duo_text_white"
+                    android:textSize="11.5sp" />
 
                 <TextView
                     android:id="@+id/btnTestDrift"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_card_surface"
-                    android:paddingStart="8dp"
-                    android:paddingTop="3dp"
-                    android:paddingEnd="8dp"
-                    android:paddingBottom="3dp"
-                    android:text="Drift 🎲"
-                    android:textColor="@color/peach_primary"
-                    android:textSize="10.5sp"
-                    android:fontFamily="sans-serif-bold" />
+                    android:layout_height="26dp"
+                    android:background="@drawable/bg_duo_button_card"
+                    android:fontFamily="sans-serif-bold"
+                    android:gravity="center"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:text="Drift"
+                    android:textColor="@color/duo_green"
+                    android:textSize="10.5sp" />
             </LinearLayout>
 
-            <!-- Compact Mood Selector Chips -->
+            <!-- Mood Selector Chips -->
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -225,7 +239,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:checked="true"
-                        android:text="😴 Idle"
+                        android:text="Idle"
                         android:textSize="10sp" />
 
                     <com.google.android.material.chip.Chip
@@ -233,7 +247,7 @@
                         style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="😄 Happy"
+                        android:text="Happy"
                         android:textSize="10sp" />
 
                     <com.google.android.material.chip.Chip
@@ -241,7 +255,7 @@
                         style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🥺 Sad"
+                        android:text="Sad"
                         android:textSize="10sp" />
 
                     <com.google.android.material.chip.Chip
@@ -249,7 +263,7 @@
                         style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="😡 Angry"
+                        android:text="Angry"
                         android:textSize="10sp" />
 
                     <com.google.android.material.chip.Chip
@@ -257,7 +271,7 @@
                         style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🤓 Nerd"
+                        android:text="Nerd"
                         android:textSize="10sp" />
 
                     <com.google.android.material.chip.Chip
@@ -265,22 +279,22 @@
                         style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="💬 Chat"
+                        android:text="Chat"
                         android:textSize="10sp" />
                 </com.google.android.material.chip.ChipGroup>
             </HorizontalScrollView>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- 4. Rotary Speaker Knobs Deck (Replaces Long Sliders -> Zero-Scroll Space Saver!) -->
+    <!-- 4. Rotary Control Deck -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        app:cardBackgroundColor="@color/peach_surface_card"
-        app:cardCornerRadius="16dp"
-        app:strokeColor="@color/peach_surface_border"
-        app:strokeWidth="1dp">
+        app:cardBackgroundColor="@color/duo_card_dark"
+        app:cardCornerRadius="18dp"
+        app:strokeColor="@color/duo_card_border"
+        app:strokeWidth="1.5dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -291,14 +305,14 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ROTARY CONTROL DECK • DIAL TO ADJUST"
-                android:textColor="@color/peach_accent"
-                android:textSize="9.5sp"
-                android:fontFamily="sans-serif-bold" />
+                android:fontFamily="sans-serif-black"
+                android:text="KEYCHAIN CONTROLS"
+                android:textColor="@color/duo_text_muted"
+                android:textSize="9.5sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="82dp"
+                android:layout_height="84dp"
                 android:layout_marginTop="4dp"
                 android:orientation="horizontal">
 
@@ -329,7 +343,7 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- 5. Quick Camera Presets & Leash Colors Row -->
+    <!-- 5. Quick Camera Alignment & Leash Colors Row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -349,11 +363,11 @@
                 android:layout_height="34dp"
                 android:layout_weight="1"
                 android:padding="0dp"
-                android:text="◀ Left"
-                android:textColor="@color/text_primary"
-                android:textSize="9.5sp"
-                app:backgroundTint="@color/peach_surface"
-                app:cornerRadius="6dp" />
+                android:text="Left"
+                android:textColor="@color/duo_text_white"
+                android:textSize="10sp"
+                app:backgroundTint="@color/duo_card_dark"
+                app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAlignCenter"
@@ -362,11 +376,11 @@
                 android:layout_marginStart="4dp"
                 android:layout_weight="1"
                 android:padding="0dp"
-                android:text="⏺ Center"
-                android:textColor="@color/background_dark"
-                android:textSize="9.5sp"
-                app:backgroundTint="@color/peach_primary"
-                app:cornerRadius="6dp" />
+                android:text="Center"
+                android:textColor="@color/duo_bg_dark"
+                android:textSize="10sp"
+                app:backgroundTint="@color/duo_green"
+                app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAlignRight"
@@ -375,14 +389,14 @@
                 android:layout_marginStart="4dp"
                 android:layout_weight="1"
                 android:padding="0dp"
-                android:text="Right ▶"
-                android:textColor="@color/text_primary"
-                android:textSize="9.5sp"
-                app:backgroundTint="@color/peach_surface"
-                app:cornerRadius="6dp" />
+                android:text="Right"
+                android:textColor="@color/duo_text_white"
+                android:textSize="10sp"
+                app:backgroundTint="@color/duo_card_dark"
+                app:cornerRadius="8dp" />
         </LinearLayout>
 
-        <!-- Leash Colors -->
+        <!-- Leash Colors (3D Color Buttons) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -396,10 +410,11 @@
                 android:layout_height="34dp"
                 android:layout_weight="1"
                 android:padding="0dp"
-                android:text="🎀"
-                android:textSize="12sp"
+                android:text="Red"
+                android:textColor="@color/duo_text_white"
+                android:textSize="10sp"
                 app:backgroundTint="#F43F5E"
-                app:cornerRadius="6dp" />
+                app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLeashGold"
@@ -408,10 +423,11 @@
                 android:layout_marginStart="3dp"
                 android:layout_weight="1"
                 android:padding="0dp"
-                android:text="🎗️"
-                android:textSize="12sp"
+                android:text="Gold"
+                android:textColor="@color/duo_bg_dark"
+                android:textSize="10sp"
                 app:backgroundTint="#F59E0B"
-                app:cornerRadius="6dp" />
+                app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLeashSilver"
@@ -420,10 +436,11 @@
                 android:layout_marginStart="3dp"
                 android:layout_weight="1"
                 android:padding="0dp"
-                android:text="🧵"
-                android:textSize="12sp"
+                android:text="Silver"
+                android:textColor="@color/duo_bg_dark"
+                android:textSize="10sp"
                 app:backgroundTint="#E2E8F0"
-                app:cornerRadius="6dp" />
+                app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLeashMint"
@@ -432,10 +449,11 @@
                 android:layout_marginStart="3dp"
                 android:layout_weight="1"
                 android:padding="0dp"
-                android:text="🌿"
-                android:textSize="12sp"
+                android:text="Mint"
+                android:textColor="@color/duo_bg_dark"
+                android:textSize="10sp"
                 app:backgroundTint="#34D399"
-                app:cornerRadius="6dp" />
+                app:cornerRadius="8dp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -444,10 +462,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        app:cardBackgroundColor="@color/peach_surface_card"
-        app:cardCornerRadius="14dp"
-        app:strokeColor="@color/peach_surface_border"
-        app:strokeWidth="1dp">
+        app:cardBackgroundColor="@color/duo_card_dark"
+        app:cardCornerRadius="18dp"
+        app:strokeColor="@color/duo_card_border"
+        app:strokeWidth="1.5dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -463,10 +481,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:checked="true"
-                android:text="Keychain Gravity Mode (OFF: Drift) 📱"
-                android:textSize="11.5sp"
-                app:thumbTint="@color/peach_primary"
-                app:trackTint="@color/peach_dark" />
+                android:text="Keychain Gravity Mode (OFF: Drift)"
+                android:textColor="@color/duo_text_white"
+                android:textSize="12sp"
+                app:thumbTint="@color/duo_green"
+                app:trackTint="@color/duo_card_border" />
 
             <!-- Neutral Hold Calibration Row -->
             <LinearLayout
@@ -485,24 +504,23 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Neutral Hold: Default (45°)"
-                    android:textColor="@color/peach_cream"
-                    android:textSize="10.5sp" />
+                    android:text="Neutral Hold: Calibrated"
+                    android:textColor="@color/duo_text_muted"
+                    android:textSize="11sp" />
 
-                <com.google.android.material.button.MaterialButton
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btnCalibrateHold"
-                    style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="32dp"
-                    android:paddingStart="10dp"
+                    android:background="@drawable/bg_duo_button_green"
+                    android:fontFamily="sans-serif-black"
+                    android:paddingStart="12dp"
                     android:paddingTop="0dp"
-                    android:paddingEnd="10dp"
+                    android:paddingEnd="12dp"
                     android:paddingBottom="0dp"
-                    android:text="📐 Calibrate"
-                    android:textColor="@color/peach_dark"
-                    android:textSize="10.5sp"
-                    app:backgroundTint="@color/peach_primary"
-                    app:cornerRadius="8dp" />
+                    android:text="Calibrate Angle"
+                    android:textColor="@color/duo_text_white"
+                    android:textSize="11sp" />
             </LinearLayout>
 
             <com.google.android.material.materialswitch.MaterialSwitch
@@ -510,22 +528,22 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:checked="true"
-                android:text="Late-Night Sleepiness (Lavender Zzz) 🌙"
-                android:textColor="@color/peach_light"
-                android:textSize="11.5sp"
-                app:thumbTint="@color/peach_primary"
-                app:trackTint="@color/peach_dark" />
+                android:text="Night Sleepiness (10 PM – 7 AM)"
+                android:textColor="@color/duo_text_white"
+                android:textSize="12sp"
+                app:thumbTint="@color/duo_green"
+                app:trackTint="@color/duo_card_border" />
 
             <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/switchTouchReactions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:checked="true"
-                android:text="Pet Touch Interactions (Drag &amp; Tap) 👆"
-                android:textColor="@color/peach_light"
-                android:textSize="11.5sp"
-                app:thumbTint="@color/peach_primary"
-                app:trackTint="@color/peach_dark" />
+                android:text="Touch Interactions (Drag &amp; Tap)"
+                android:textColor="@color/duo_text_white"
+                android:textSize="12sp"
+                app:thumbTint="@color/duo_green"
+                app:trackTint="@color/duo_card_border" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 

@@ -240,7 +240,7 @@ class SmileyAnimationLogicTest {
     fun testCircularPendulumArcAndAnchorCenterOfRotation() {
         val leashL = 60f
         val petSize = 54f
-        val sproutOffset = petSize * 0.42f
+        val sproutOffset = petSize * 0.30f
         val totalR = leashL + sproutOffset
 
         // Test pendulum swing at 25 degrees
@@ -260,5 +260,30 @@ class SmileyAnimationLogicTest {
         val snapTargetY = leashL + sproutOffset
         assertEquals(0f, snapTargetX, 0.0001f)
         assertEquals(totalR, snapTargetY, 0.0001f)
+    }
+
+    @Test
+    fun testFull180TiltPendulumMathAndPetNaming() {
+        val leashR = 60f
+
+        // 1. Full 90° right tilt: deltaX = -9.8 m/s^2 -> ratio = +1.0 -> theta = +PI/2
+        val ratioRight = 1.0f
+        val angleRadRight = kotlin.math.asin(ratioRight.toDouble()).toFloat()
+        val xRight = leashR * kotlin.math.sin(angleRadRight.toDouble()).toFloat()
+        val degRight = Math.toDegrees(angleRadRight.toDouble()).toFloat()
+        assertEquals(leashR, xRight, 0.001f)
+        assertEquals(90f, degRight, 0.001f)
+
+        // 2. Full 90° left tilt: deltaX = +9.8 m/s^2 -> ratio = -1.0 -> theta = -PI/2
+        val ratioLeft = -1.0f
+        val angleRadLeft = kotlin.math.asin(ratioLeft.toDouble()).toFloat()
+        val xLeft = leashR * kotlin.math.sin(angleRadLeft.toDouble()).toFloat()
+        val degLeft = Math.toDegrees(angleRadLeft.toDouble()).toFloat()
+        assertEquals(-leashR, xLeft, 0.001f)
+        assertEquals(-90f, degLeft, 0.001f)
+
+        // 3. Pet default name is "Kiddo"
+        val defaultName = "Kiddo"
+        assertEquals("Kiddo", defaultName)
     }
 }

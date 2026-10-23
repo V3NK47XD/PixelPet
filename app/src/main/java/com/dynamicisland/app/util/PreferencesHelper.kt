@@ -43,8 +43,9 @@ class PreferencesHelper(context: Context) {
         private const val KEY_CALIBRATED_ACCEL_X = "calibrated_accel_x"
         private const val KEY_CALIBRATED_ACCEL_Y = "calibrated_accel_y"
         private const val KEY_CALIBRATED_ACCEL_Z = "calibrated_accel_z"
+        private const val KEY_PET_NAME = "pet_name"
+        private const val KEY_ANGER_DURATION_SECONDS = "anger_duration_seconds"
         val DEFAULT_NERD_PACKAGES = setOf(
-            "com.openai.chatgpt",
             "com.google.android.apps.bard",
             "cn.wps.moffice_eng",
             "cn.wps.moffice",
@@ -184,4 +185,12 @@ class PreferencesHelper(context: Context) {
     var hasAutoRequestedUsage: Boolean
         get() = prefs.getBoolean(KEY_AUTO_REQUESTED_USAGE, false)
         set(value) = prefs.edit().putBoolean(KEY_AUTO_REQUESTED_USAGE, value).apply()
+
+    var petName: String
+        get() = prefs.getString(KEY_PET_NAME, "Kiddo") ?: "Kiddo"
+        set(value) = prefs.edit().putString(KEY_PET_NAME, value).apply()
+
+    var angerDurationSeconds: Int
+        get() = prefs.getInt(KEY_ANGER_DURATION_SECONDS, 8)
+        set(value) = prefs.edit().putInt(KEY_ANGER_DURATION_SECONDS, value).apply()
 }

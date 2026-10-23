@@ -93,7 +93,10 @@ class PixelPetView @JvmOverloads constructor(
         GIGGLE,
         DIZZY,
         YAWNING,
-        LIGHTBULB
+        LIGHTBULB,
+        WINK,
+        SURPRISED,
+        LOVE
     }
 
     private var currentMood: PetMood = PetMood.IDLE
@@ -543,12 +546,13 @@ class PixelPetView @JvmOverloads constructor(
                 triggerIdleActivity(IdleActivity.DIZZY, 1200L)
             }
             else -> {
-                // Random fun reaction
-                val randomPick = Random.nextInt(4)
+                // Random fun kid-friendly reaction
+                val randomPick = Random.nextInt(6)
                 when (randomPick) {
                     0 -> triggerIdleActivity(IdleActivity.WAVING, 1600L)
                     1 -> triggerIdleActivity(IdleActivity.GIGGLE, 1400L)
                     2 -> triggerIdleActivity(IdleActivity.BLUSHING, 1500L)
+                    3 -> triggerIdleActivity(IdleActivity.WINK, 1500L)
                     else -> triggerExcitedHop()
                 }
             }
@@ -569,6 +573,25 @@ class PixelPetView @JvmOverloads constructor(
                 invalidate()
             }
         }.start()
+    }
+
+    /**
+     * Flinch / punch wobble reaction when tapped rapidly
+     */
+    fun triggerPunchReaction() {
+        ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = 260
+            interpolator = android.view.animation.CycleInterpolator(1f)
+            addUpdateListener { anim ->
+                val f = anim.animatedFraction
+                scaleSquashX = 1f + (sin(f * Math.PI.toFloat()) * 0.22f)
+                scaleSquashY = 1f - (sin(f * Math.PI.toFloat()) * 0.18f)
+                rageTrembleX = (Random.nextFloat() - 0.5f) * 6f
+                rageTrembleY = (Random.nextFloat() - 0.5f) * 6f
+                invalidate()
+            }
+        }.start()
+        triggerIdleActivity(IdleActivity.STARTLED, 400L)
     }
 
     /**
@@ -901,6 +924,31 @@ class PixelPetView @JvmOverloads constructor(
                 drawPixel(canvas, 11, 13, colorEye, pixelSize)
                 drawPixelSpan(canvas, 15, 17, 12, colorEye, pixelSize)
                 drawPixel(canvas, 16, 13, colorEye, pixelSize)
+            }
+            currentActivity == IdleActivity.LOVE -> {
+                // Heart eyes (♥ ♥) in vibrant Duolingo coral red
+                val heartColor = Color.parseColor("#FF4B4B")
+                drawPixel(canvas, 9, 11, heartColor, pixelSize)
+                drawPixel(canvas, 11, 11, heartColor, pixelSize)
+                drawPixelSpan(canvas, 9, 11, 12, heartColor, pixelSize)
+                drawPixel(canvas, 10, 13, heartColor, pixelSize)
+
+                drawPixel(canvas, 16, 11, heartColor, pixelSize)
+                drawPixel(canvas, 18, 11, heartColor, pixelSize)
+                drawPixelSpan(canvas, 16, 18, 12, heartColor, pixelSize)
+                drawPixel(canvas, 17, 13, heartColor, pixelSize)
+            }
+            currentActivity == IdleActivity.WINK -> {
+                // Left eye winks (>), right eye wide with sparkle
+                drawPixelSpan(canvas, 9, 11, 12, colorEye, pixelSize)
+                drawPixel(canvas, 12, 11, colorEye, pixelSize)
+                drawPixel(canvas, 12, 13, colorEye, pixelSize)
+
+                drawPixelSpan(canvas, 16, 18, 11, colorEye, pixelSize)
+                drawPixelSpan(canvas, 16, 18, 13, colorEye, pixelSize)
+                drawPixel(canvas, 15, 12, colorEye, pixelSize)
+                drawPixel(canvas, 19, 12, colorEye, pixelSize)
+                drawPixel(canvas, 17, 12, colorEyeShine, pixelSize)
             }
             currentMood == PetMood.HAPPY || currentMood == PetMood.CHARGING -> {
                 // Joyful happy crinkle arcs (^ ^)

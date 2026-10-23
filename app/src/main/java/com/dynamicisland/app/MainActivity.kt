@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat
 import com.dynamicisland.app.databinding.ActivityMainBinding
 import com.dynamicisland.app.databinding.DialogCalibrateOrientationBinding
 import com.dynamicisland.app.databinding.DialogDevToolsBinding
+import com.dynamicisland.app.databinding.DialogRenamePetBinding
 import com.dynamicisland.app.util.BatteryOptimizationHelper
 import com.dynamicisland.app.util.ForegroundAppDetector
 import com.dynamicisland.app.util.OverlayPermissionHelper
@@ -164,13 +165,21 @@ class MainActivity : AppCompatActivity() {
         binding.switchTouchReactions.isChecked = prefs.isTouchReactionEnabled
         updateCalibrationStatusUI()
 
+        // Pet Name Header
+        binding.tvPetName.text = prefs.petName
+
         // 4. Preview Pet in Tether Stage
         binding.previewTetherStage.petView.setAnimationIntensity(prefs.animationIntensity)
         binding.previewTetherStage.petView.setMood(PixelPetView.PetMood.IDLE)
         binding.previewTetherStage.updateLeashColor()
+        binding.tvPreviewMoodDesc.text = "${prefs.petName} • Floating near camera"
     }
 
     private fun setupListeners() {
+        // Rename Pet Listeners
+        binding.tvPetName.setOnClickListener { showRenamePetDialog() }
+        binding.btnEditPetName.setOnClickListener { showRenamePetDialog() }
+
         // Preview pet tap reaction
         binding.previewTetherStage.petView.setOnClickListener {
             binding.previewTetherStage.petView.handleUserTap()
@@ -179,7 +188,6 @@ class MainActivity : AppCompatActivity() {
         binding.btnTestDrift.setOnClickListener {
             binding.previewTetherStage.pickNextFloatingSpot()
         }
-
         // Master Switch
         binding.switchPetMaster.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) startPetOverlay() else stopPetOverlay()
@@ -201,26 +209,25 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Mood preview chips
+        // Mood preview chips (Clean Duolingo labels, no emoji clutter)
         binding.chipMoodIdle.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.IDLE, "😴 Idle • Floating near camera")
+            setPreviewMood(PixelPetView.PetMood.IDLE, "Idle and floating")
         }
         binding.chipMoodHappy.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.HAPPY, "😄 Happy • Joyful hops and sparkles")
+            setPreviewMood(PixelPetView.PetMood.HAPPY, "Joyful hops and sparkles")
         }
         binding.chipMoodSad.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.SAD, "🥺 Sad • Crying teardrop & frown")
+            setPreviewMood(PixelPetView.PetMood.SAD, "Teardrops crying")
         }
         binding.chipMoodAngry.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.ANGRY, "😡 Angry • Rage vibration & steam")
+            setPreviewMood(PixelPetView.PetMood.ANGRY, "Rage steam tantrum")
         }
         binding.chipMoodNerd.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.NERD, "🤓 Nerd • Glasses drop & scanning")
+            setPreviewMood(PixelPetView.PetMood.NERD, "Glasses reading")
         }
         binding.chipMoodTexting.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.TEXTING, "💬 Texting • Speech bubble •••")
+            setPreviewMood(PixelPetView.PetMood.TEXTING, "Chat typing")
         }
-
         // Camera Alignment Presets
         binding.btnAlignLeft.setOnClickListener { setCameraAlignment("LEFT") }
         binding.btnAlignCenter.setOnClickListener { setCameraAlignment("CENTER") }
@@ -364,20 +371,52 @@ class MainActivity : AppCompatActivity() {
     private fun updateCalibrationStatusUI() {
         if (!prefs.isGyroPhysicsEnabled) {
             binding.tvCalibrationStatus.text = "Mode 1: Autonomous Random Drift (Physics OFF)"
-            binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.peach_cream))
+            binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.duo_text_muted))
             binding.btnCalibrateHold.visibility = View.GONE
         } else {
             binding.btnCalibrateHold.visibility = View.VISIBLE
             if (prefs.isOrientationCalibrated) {
                 val y = prefs.calibratedAccelY
                 val pitchDeg = Math.toDegrees(kotlin.math.asin((y / 9.8f).coerceIn(-1f, 1f).toDouble())).toInt()
-                binding.tvCalibrationStatus.text = "Mode 2: Gravity Keychain (~${pitchDeg}° pitch) ✨"
-                binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.peach_primary))
+                binding.tvCalibrationStatus.text = "Gravity Mode: Calibrated (~${pitchDeg}° pitch)"
+                binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.duo_green))
             } else {
-                binding.tvCalibrationStatus.text = "Mode 2: Gravity Keychain • Tap calibrate"
-                binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.peach_cream))
+                binding.tvCalibrationStatus.text = "Gravity Mode: Tap calibrate angle"
+                binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.duo_text_muted))
             }
         }
+    }
+
+    private fun showRenamePetDialog() {
+        val dialog = BottomSheetDialog(this)
+        val diagBinding = DialogRenamePetBinding.inflate(layoutInflater)
+        dialog.setContentView(diagBinding.root)
+
+        diagBinding.etPetNameInput.setText(prefs.petName)
+        diagBinding.etPetNameInput.selectAll()
+
+        diagBinding.btnSuggestKiddo.setOnClickListener { diagBinding.etPetNameInput.setText("Kiddo") }
+        diagBinding.btnSuggestMochi.setOnClickListener { diagBinding.etPetNameInput.setText("Mochi") }
+        diagBinding.btnSuggestPip.setOnClickListener { diagBinding.etPetNameInput.setText("Pip") }
+        diagBinding.btnSuggestSunny.setOnClickListener { diagBinding.etPetNameInput.setText("Sunny") }
+
+        diagBinding.btnSavePetName.setOnClickListener {
+            val name = diagBinding.etPetNameInput.text.toString().trim()
+            if (name.isNotBlank()) {
+                prefs.petName = name
+                binding.tvPetName.text = name
+                binding.tvPreviewMoodDesc.text = "$name • Floating near camera"
+                binding.root.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                notifySettingsChanged()
+                dialog.dismiss()
+            }
+        }
+
+        diagBinding.btnCancelRename.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun showOrientationCalibrationDialog() {
@@ -492,7 +531,7 @@ class MainActivity : AppCompatActivity() {
     }
     private fun setPreviewMood(mood: PixelPetView.PetMood, description: String) {
         binding.previewTetherStage.petView.setMood(mood)
-        binding.tvPreviewMoodDesc.text = description
+        binding.tvPreviewMoodDesc.text = "${prefs.petName} • $description"
     }
     private fun setLeashColor(colorHex: String) {
         prefs.leashColor = colorHex
@@ -556,8 +595,8 @@ class MainActivity : AppCompatActivity() {
 
         // 1. Overlay Status
         if (hasOverlay) {
-            binding.tvOverlayBadge.text = "Overlay: 🟢"
-            binding.tvOverlayBadge.setTextColor(ContextCompat.getColor(this, R.color.status_active))
+            binding.tvOverlayBadge.text = "Overlay Active"
+            binding.tvOverlayBadge.setTextColor(ContextCompat.getColor(this, R.color.duo_green))
 
             if (prefs.isIslandEnabled) {
                 DynamicIslandService.start(this)
@@ -570,7 +609,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         } else {
-            binding.tvOverlayBadge.text = "Overlay: ⚠️"
+            binding.tvOverlayBadge.text = "No Overlay"
             binding.tvOverlayBadge.setTextColor(ContextCompat.getColor(this, R.color.status_warning))
             updateMasterSwitchUI(false)
 
@@ -586,22 +625,21 @@ class MainActivity : AppCompatActivity() {
 
         // 2. Battery Status
         if (isBatteryUnrestricted) {
-            binding.tvBatteryBadge.text = "Battery: ⚡"
-            binding.tvBatteryBadge.setTextColor(ContextCompat.getColor(this, R.color.status_active))
+            binding.tvBatteryBadge.text = "Battery Safe"
+            binding.tvBatteryBadge.setTextColor(ContextCompat.getColor(this, R.color.duo_green))
         } else {
-            binding.tvBatteryBadge.text = "Battery: ⚠️"
+            binding.tvBatteryBadge.text = "Battery Restricted"
             binding.tvBatteryBadge.setTextColor(ContextCompat.getColor(this, R.color.status_warning))
         }
 
         // 3. Usage Access Status
         if (hasUsage) {
-            binding.tvUsageBadge.text = "Usage: 🟢"
-            binding.tvUsageBadge.setTextColor(ContextCompat.getColor(this, R.color.status_active))
+            binding.tvUsageBadge.text = "App Detect"
+            binding.tvUsageBadge.setTextColor(ContextCompat.getColor(this, R.color.duo_green))
             ForegroundAppDetector.startMonitoring(this)
         } else {
-            binding.tvUsageBadge.text = "Usage: ⚠️"
+            binding.tvUsageBadge.text = "Usage Needed"
             binding.tvUsageBadge.setTextColor(ContextCompat.getColor(this, R.color.status_warning))
-
             if (hasOverlay && (!prefs.hasAutoRequestedUsage || autoLaunch)) {
                 prefs.hasAutoRequestedUsage = true
                 binding.root.postDelayed({

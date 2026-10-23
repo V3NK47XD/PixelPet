@@ -272,7 +272,7 @@ class TetheredPetStageView @JvmOverloads constructor(
         // Gravity-pulled equilibrium position: forget user's drag state!
         val leashLength = prefs.leashLengthDp.toFloat()
         val targetX = 0f
-        val targetY = leashLength + (prefs.petSizeDp * 0.42f)
+        val targetY = leashLength + (prefs.petSizeDp * 0.30f)
         snapBackAnimator?.cancel()
         snapBackAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
             duration = 650
@@ -341,7 +341,7 @@ class TetheredPetStageView @JvmOverloads constructor(
         if (prefs.isGyroPhysicsEnabled) {
             // Mode 2: Keychain Gravity Mode (Zero random drift)
             currentDriftXDp = 0f
-            currentDriftYDp = prefs.leashLengthDp + (prefs.petSizeDp * 0.42f)
+            currentDriftYDp = prefs.leashLengthDp + (prefs.petSizeDp * 0.30f)
             if (continuousFloatAnimator?.isStarted != true) {
                 continuousFloatAnimator?.start()
             }
@@ -372,7 +372,7 @@ class TetheredPetStageView @JvmOverloads constructor(
             // Mode 2: Gravity Mode - cancel random drift and center pet beneath camera
             stopDriftEngine()
             currentDriftXDp = 0f
-            currentDriftYDp = prefs.leashLengthDp + (prefs.petSizeDp * 0.42f)
+            currentDriftYDp = prefs.leashLengthDp + (prefs.petSizeDp * 0.30f)
             if (physicsEngine == null) {
                 physicsEngine = com.dynamicisland.app.util.PetPhysicsEngine(context) { offsetXDp, offsetYDp, tiltDeg, velocityX, shiverAmp, shiverPhase, isTension ->
                     if (!isDraggingPet) {
@@ -445,7 +445,7 @@ class TetheredPetStageView @JvmOverloads constructor(
         val petCenterXPx = anchorX + ((currentDriftXDp + physicsOffsetXDp) * density)
         val petCenterYPx = anchorY + ((currentDriftYDp + floatBobYDp + physicsOffsetYDp) * density)
         val petTopX = petCenterXPx
-        val petTopY = petCenterYPx - (petSizePx * 0.42f)
+        val petTopY = petCenterYPx - (petSizePx * 0.30f)
 
         // 3. Multi-Segment Keychain Wire with Fluid Inertia & Shiver Ripples
         val startX = anchorX
@@ -618,12 +618,20 @@ class TetheredPetStageView @JvmOverloads constructor(
         }
         lastTapTimeMs = now
 
-        // 1. REPEATED RAPID TAPS -> GET ANGRY FOR A FEW SECONDS!
-        if (tapCount >= 3) {
+        // 1. REPEATED RAPID TAPS / PUNCHES (4+ times) -> Furious Tantrum with Timer!
+        if (tapCount >= 4) {
             triggerTemperTantrum()
             return
         }
 
+        // Single punch flinch
+        if (tapCount in 2..3) {
+            petView.triggerPunchReaction()
+            leashSlackFactor = 0.5f
+            invalidate()
+            postDelayed({ leashSlackFactor = 1.0f; invalidate() }, 260)
+            return
+        }
         // 2. SLEEP / WAKE TOGGLE
         if (petView.getMood() == PixelPetView.PetMood.SLEEPY) {
             // WAKE UP!
@@ -673,7 +681,8 @@ class TetheredPetStageView @JvmOverloads constructor(
         invalidate()
 
         // Calm down and return to normal after 3.8 seconds
-        handler.postDelayed(angryResetRunnable, 3800L)
+        val durationMs = prefs.angerDurationSeconds * 1000L
+        handler.postDelayed(angryResetRunnable, durationMs)
     }
 
     private fun Number.dpToPx(): Int =

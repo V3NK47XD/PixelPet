@@ -42,4 +42,19 @@
     <color name="status_active">#10B981</color>
     <color name="status_inactive">#EF4444</color>
     <color name="status_warning">#F59E0B</color>
+
+    <!-- Duolingo Playful & Kid-Themed Color Palette -->
+    <color name="duo_bg_dark">#131F24</color>
+    <color name="duo_card_dark">#18272F</color>
+    <color name="duo_card_border">#263843</color>
+    <color name="duo_green">#58CC02</color>
+    <color name="duo_green_shadow">#46A302</color>
+    <color name="duo_orange">#FF9600</color>
+    <color name="duo_orange_shadow">#CC7800</color>
+    <color name="duo_blue">#1CB0F6</color>
+    <color name="duo_blue_shadow">#1899D6</color>
+    <color name="duo_red">#FF4B4B</color>
+    <color name="duo_red_shadow">#D93B3B</color>
+    <color name="duo_text_white">#FFFFFF</color>
+    <color name="duo_text_muted">#93A8B3</color>
 </resources>

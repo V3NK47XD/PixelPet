@@ -438,7 +438,7 @@ class DynamicIslandService : Service() {
         val leashLength = prefs.leashLengthDp.toFloat()
         // Gravity-pulled equilibrium position: forget user's drag state!
         val targetX = 0f
-        val targetY = leashLength + (prefs.petSizeDp * 0.42f)
+        val targetY = leashLength + (prefs.petSizeDp * 0.30f)
         snapBackAnimator?.cancel()
         snapBackAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
             duration = 650
@@ -543,7 +543,7 @@ class DynamicIslandService : Service() {
             if (prefs.isGyroPhysicsEnabled) {
                 // Mode 2: Keychain Gravity Mode (Zero random drift)
                 currentDriftXDp = 0f
-                currentDriftYDp = prefs.leashLengthDp + (prefs.petSizeDp * 0.42f)
+                currentDriftYDp = prefs.leashLengthDp + (prefs.petSizeDp * 0.30f)
                 if (floatBobAnimator?.isStarted != true) {
                     floatBobAnimator?.start()
                 }
@@ -655,12 +655,19 @@ class DynamicIslandService : Service() {
         }
         lastTapTimeMs = now
 
-        // 1. Rapid Multi-Taps (3+ times) -> Angry Temper Tantrum for 3.8s!
-        if (tapCount >= 3) {
+        // 1. Rapid Multi-Taps / Punches (4+ times) -> Furious Temper Tantrum with Timer!
+        if (tapCount >= 4) {
             triggerTemperTantrum(pet)
             return
         }
 
+        // 2. Single or double punch flinch wobble
+        if (tapCount in 2..3) {
+            pet.triggerPunchReaction()
+            updateLeashAttachment(slackFactor = 0.5f)
+            handler.postDelayed({ updateLeashAttachment(slackFactor = 1.0f) }, 260)
+            return
+        }
         // 2. Sleep / Wake Toggle
         if (pet.getMood() == PixelPetView.PetMood.SLEEPY) {
             // Wake Up!
@@ -700,7 +707,8 @@ class DynamicIslandService : Service() {
         pet.triggerExcitedHop()
         updateLeashAttachment(slackFactor = 0.2f)
 
-        handler.postDelayed(angryResetRunnable, 3800L)
+        val durationMs = prefs.angerDurationSeconds * 1000L
+        handler.postDelayed(angryResetRunnable, durationMs)
     }
 
     private fun refreshCachedSettings() {
@@ -742,7 +750,7 @@ class DynamicIslandService : Service() {
         val leashAnchorX = leashWidth / 2f
         val leashAnchorY = 16.dpToPx().toFloat()
         val petTopXInLeash = leashAnchorX + ((currentDriftXDp + physicsOffsetXDp) * density)
-        val petTopYInLeash = leashAnchorY + ((currentDriftYDp + floatBobYDp + physicsOffsetYDp - (cachedPetSizeDp * 0.42f)) * density)
+        val petTopYInLeash = leashAnchorY + ((currentDriftYDp + floatBobYDp + physicsOffsetYDp - (cachedPetSizeDp * 0.30f)) * density)
         leash.updateKeychainWire(petTopXInLeash, petTopYInLeash, slackFactor, velocityXDp, shiverAmplitudeDp, shiverPhase)
     }
 
@@ -785,7 +793,7 @@ class DynamicIslandService : Service() {
             driftAnimator?.cancel()
             isDriftEngineRunning = false
             currentDriftXDp = 0f
-            currentDriftYDp = cachedLeashLengthDp + (cachedPetSizeDp * 0.42f)
+            currentDriftYDp = cachedLeashLengthDp + (cachedPetSizeDp * 0.30f)
             if (floatBobAnimator?.isStarted != true) {
                 floatBobAnimator?.start()
             }

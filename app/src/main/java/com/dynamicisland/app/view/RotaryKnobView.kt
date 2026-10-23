@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.HapticFeedbackConstants
@@ -48,15 +49,16 @@ class RotaryKnobView @JvmOverloads constructor(
             }
         }
 
-    // Palette: Cute Peach, Creamsicle Orange, and Warm Terracotta
-    private val colorTrackInactive = Color.parseColor("#3D2B24")
-    private val colorTrackActive = Color.parseColor("#FF9F68") // Warm peach
-    private val colorKnobBody = Color.parseColor("#261D1A")
-    private val colorKnobRim = Color.parseColor("#5A4036")
-    private val colorIndicatorDot = Color.parseColor("#FFD8BE")
-    private val colorValueText = Color.parseColor("#FFEADF")
-    private val colorTitleText = Color.parseColor("#FDBA74")
-
+    // Duolingo Tactile Colors: Rich Dark Slate, Parrot Green, and Warm Orange
+    private val colorTrackInactive = Color.parseColor("#263843")
+    private val colorTrackActive = Color.parseColor("#58CC02") // Duolingo Green
+    private val colorKnobBody = Color.parseColor("#1B272C")
+    private val colorKnobRim = Color.parseColor("#374E5B")
+    private val colorIndicatorDot = Color.parseColor("#FFFFFF")
+    private val colorValueText = Color.parseColor("#FFFFFF")
+    private val colorTitleText = Color.parseColor("#93A8B3")
+    private val colorBubbleBg = Color.parseColor("#58CC02")
+    private val colorBubbleShadow = Color.parseColor("#46A302")
     // Paints
     private val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
@@ -90,7 +92,25 @@ class RotaryKnobView @JvmOverloads constructor(
         isFakeBoldText = true
     }
 
+    private val bubbleBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = colorBubbleBg
+    }
+
+    private val bubbleShadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = colorBubbleShadow
+    }
+
+    private val bubbleTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        textAlign = Paint.Align.CENTER
+        color = Color.WHITE
+        isFakeBoldText = true
+    }
+
     private val trackArcRect = RectF()
+    private val bubbleRect = RectF()
+    private val bubblePointerPath = Path()
 
     // 270 degree rotation sweep: from 135° to 405° (i.e. -135° to +135° relative to bottom)
     private val startAngle = 135f
@@ -152,9 +172,41 @@ class RotaryKnobView @JvmOverloads constructor(
         val textY = cy - ((textValuePaint.descent() + textValuePaint.ascent()) / 2f)
         canvas.drawText(valText, cx, textY, textValuePaint)
 
-        // 6. Draw Knob Title Label at Bottom
-        textTitlePaint.textSize = 10.5f * density
-        canvas.drawText(knobTitle, cx, h - 2f * density, textTitlePaint)
+        // 6. Draw Knob Title Label at Bottom with live value
+        textTitlePaint.textSize = 10f * density
+        val bottomLabel = "$knobTitle: $valText"
+        canvas.drawText(bottomLabel, cx, h - 2f * density, textTitlePaint)
+
+        // 7. Floating Callout Value Bubble (Pops up above finger while dragging so value is never obscured!)
+        if (isDragging) {
+            val bubbleW = 58f * density
+            val bubbleH = 22f * density
+            val bubbleLeft = cx - (bubbleW / 2f)
+            val bubbleTop = 0f
+            val bubbleBottom = bubbleH
+            val cornerR = 7f * density
+
+            // Draw 3D shadow bevel
+            bubbleRect.set(bubbleLeft, bubbleTop + 2.5f * density, bubbleLeft + bubbleW, bubbleBottom + 2.5f * density)
+            canvas.drawRoundRect(bubbleRect, cornerR, cornerR, bubbleShadowPaint)
+
+            // Draw bubble face
+            bubbleRect.set(bubbleLeft, bubbleTop, bubbleLeft + bubbleW, bubbleBottom)
+            canvas.drawRoundRect(bubbleRect, cornerR, cornerR, bubbleBgPaint)
+
+            // Downward pointer arrow pointing towards the knob dial
+            bubblePointerPath.reset()
+            bubblePointerPath.moveTo(cx - 4.5f * density, bubbleBottom)
+            bubblePointerPath.lineTo(cx + 4.5f * density, bubbleBottom)
+            bubblePointerPath.lineTo(cx, bubbleBottom + 3.5f * density)
+            bubblePointerPath.close()
+            canvas.drawPath(bubblePointerPath, bubbleBgPaint)
+
+            // Bubble Text
+            bubbleTextPaint.textSize = 11.5f * density
+            val bTextY = (bubbleTop + bubbleBottom) / 2f - ((bubbleTextPaint.descent() + bubbleTextPaint.ascent()) / 2f)
+            canvas.drawText(valText, cx, bTextY, bubbleTextPaint)
+        }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -192,6 +244,7 @@ class RotaryKnobView @JvmOverloads constructor(
                 if (isDragging) {
                     isDragging = false
                     parent?.requestDisallowInterceptTouchEvent(false)
+                    invalidate()
                     return true
                 }
             }

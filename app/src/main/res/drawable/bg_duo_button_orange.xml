@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Darker 3D Bottom Bevel Shadow -->
+    <item android:top="3dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="14dp" />
+            <solid android:color="@color/duo_orange_shadow" />
+        </shape>
+    </item>
+    <!-- Raised Front Face -->
+    <item android:bottom="3dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="14dp" />
+            <solid android:color="@color/duo_orange" />
+        </shape>
+    </item>
+</layer-list>

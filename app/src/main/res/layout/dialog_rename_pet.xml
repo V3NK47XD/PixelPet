@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/duo_card_dark"
+    android:orientation="vertical"
+    android:padding="22dp">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_duo_button_card"
+            android:gravity="center"
+            android:text="🐣"
+            android:textSize="24sp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="Name Your Pet"
+                android:textColor="@color/duo_text_white"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="What should we call your companion?"
+                android:textColor="@color/duo_text_muted"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 3D Input Box Container -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_duo_button_card"
+        android:padding="4dp">
+
+        <EditText
+            android:id="@+id/etPetNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@null"
+            android:hint="Enter name (e.g. Kiddo, Mochi, Pip)"
+            android:imeOptions="actionDone"
+            android:importantForAutofill="no"
+            android:inputType="textCapWords"
+            android:maxLength="20"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:textColor="@color/duo_text_white"
+            android:textColorHint="@color/duo_text_muted"
+            android:textSize="15sp" />
+    </FrameLayout>
+
+    <!-- Quick suggestions pills -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSuggestKiddo"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="Kiddo"
+            android:textColor="@color/duo_green"
+            android:textSize="11.5sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSuggestMochi"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="Mochi"
+            android:textColor="@color/duo_orange"
+            android:textSize="11.5sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSuggestPip"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="Pip"
+            android:textColor="@color/duo_blue"
+            android:textSize="11.5sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSuggestSunny"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="Sunny"
+            android:textColor="@color/duo_green"
+            android:textSize="11.5sp" />
+    </LinearLayout>
+
+    <!-- Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancelRename"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:text="Cancel"
+            android:textColor="@color/duo_text_muted"
+            android:textSize="13sp" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnSavePetName"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1.6"
+            android:background="@drawable/bg_duo_button_green"
+            android:fontFamily="sans-serif-black"
+            android:text="Save Name"
+            android:textColor="@color/duo_text_white"
+            android:textSize="14sp" />
+    </LinearLayout>
+</LinearLayout>

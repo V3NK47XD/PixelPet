@@ -67,14 +67,19 @@ graph TD
      - First-launch interactive popup dialog guides user to hold phone naturally with live spirit bubble level readout.
      - Deviation from calibrated holding position drives natural pendulum swinging, rope sag, and inertia lag.
    - **Pendulum Rope Physics**:
+     - **Full 180° Tilt Arc**: Swings smoothly across a full $\pm 90^\circ$ range (leaning fully horizontal when phone is tilted 90° right or left).
+     - **Zero-Gap Clasp Bead Alignment**: Leash clasp bead sits directly on the top outline of the body ($0.30 \times \text{petSize}$), firmly fixed with zero floating gap.
      - Mass-spring-damper pendulum simulation with sub-pixel float resolution.
      - Dynamic high-pass acceleration detects phone waving/motion and applies inertia lag.
      - Shake detection triggers high-frequency wire shiver ripples.
    - **100% Battery-Safe**: Completely unregisters sensor listeners on screen off (`ACTION_SCREEN_OFF`) or when toggled off in settings.
 4. **`com.dynamicisland.app.view.RotaryKnobView`**:
    - Compact 270° rotary dial potentiometer custom view replacing bulky vertical sliders.
-   - Saves screen space to enable a 100% zero-scroll all-in-one UI dashboard.
+   - **Floating Value Callout Badge**: Pops up above the user's thumb during touch so the range number is never obscured by fingers.
    - Tactile haptic feedback and smooth circular/vertical touch gestures.
+5. **Pet Naming & Anger Tantrum Timer**:
+   - Custom pet naming (default `"Kiddo"`) displayed in header and notifications with rename dialog.
+   - Rapid punching (4+ taps) triggers furious temper tantrum with anger cooldown timer before blushing and calming down.
 
 5. **`com.dynamicisland.app.util.TouchableRegionHelper`**:
    - Dynamically hooks Android's internal `ViewTreeObserver.OnComputeInternalInsetsListener`.
