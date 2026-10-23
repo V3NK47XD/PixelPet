@@ -268,6 +268,7 @@ class TetheredPetStageView @JvmOverloads constructor(
     private fun performElasticSnapBack() {
         val startX = currentDriftXDp
         val startY = currentDriftYDp
+        val startTilt = tiltAngleDeg
 
         // Gravity-pulled equilibrium position: forget user's drag state!
         val leashLength = prefs.leashLengthDp.toFloat()
@@ -281,6 +282,8 @@ class TetheredPetStageView @JvmOverloads constructor(
                 val f = anim.animatedFraction
                 currentDriftXDp = startX + ((targetX - startX) * f)
                 currentDriftYDp = startY + ((targetY - startY) * f)
+                tiltAngleDeg = startTilt * (1f - f)
+                petView.rotation = tiltAngleDeg + (if (prefs.isGyroPhysicsEnabled) physicsTiltDeg else 0f)
                 // Spring wobble in leash slack
                 leashSlackFactor = 0.5f + (sin(f * Math.PI.toFloat() * 3) * 0.5f * (1f - f))
                 updatePetViewLayout()
@@ -288,6 +291,9 @@ class TetheredPetStageView @JvmOverloads constructor(
             }
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
+                    currentDriftXDp = 0f
+                    tiltAngleDeg = 0f
+                    petView.rotation = if (prefs.isGyroPhysicsEnabled) physicsTiltDeg else 0f
                     leashSlackFactor = 1.0f
                     if (!prefs.isGyroPhysicsEnabled) {
                         scheduleNextDrift()
@@ -620,12 +626,14 @@ class TetheredPetStageView @JvmOverloads constructor(
 
         // 1. REPEATED RAPID TAPS / PUNCHES (4+ times) -> Furious Tantrum with Timer!
         if (tapCount >= 4) {
+            com.dynamicisland.app.util.PetSoundHelper.playAngryTantrum()
             triggerTemperTantrum()
             return
         }
 
         // Single punch flinch
         if (tapCount in 2..3) {
+            com.dynamicisland.app.util.PetSoundHelper.playPunchSqueak()
             petView.triggerPunchReaction()
             leashSlackFactor = 0.5f
             invalidate()
@@ -655,8 +663,8 @@ class TetheredPetStageView @JvmOverloads constructor(
         }
 
         // 3. CONTEXTUAL MOOD TAP
+        com.dynamicisland.app.util.PetSoundHelper.playHappyChirp()
         petView.handleUserTap()
-
         // Playful leash jiggle
         leashSlackFactor = 1.6f
         postDelayed({ leashSlackFactor = 1.0f; invalidate() }, 300)

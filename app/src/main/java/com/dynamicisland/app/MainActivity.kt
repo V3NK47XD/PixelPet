@@ -309,6 +309,20 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        sheetBinding.knobTantrumDuration.apply {
+            minValue = 3f
+            maxValue = 30f
+            stepSize = 1f
+            unitSuffix = "s"
+            knobTitle = "COOL"
+            value = prefs.angerDurationSeconds.toFloat()
+            onValueChanged = { newVal, fromUser ->
+                if (fromUser) {
+                    prefs.angerDurationSeconds = newVal.toInt()
+                    notifySettingsChanged()
+                }
+            }
+        }
         // Nerd Apps Checkboxes
         val nerdApps = prefs.nerdApps
         sheetBinding.cbChatGPT.isChecked = nerdApps.contains("com.openai.chatgpt")

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/duo_bg_dark"
+    android:background="@color/peach_dark"
     android:orientation="vertical"
     android:padding="12dp">
 
@@ -33,7 +33,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-black"
                     android:text="Kiddo"
-                    android:textColor="@color/duo_text_white"
+                    android:textColor="@color/peach_light"
                     android:textSize="22sp" />
 
                 <com.google.android.material.button.MaterialButton
@@ -43,9 +43,9 @@
                     android:layout_height="28dp"
                     android:layout_marginStart="6dp"
                     android:text="✎"
-                    android:textColor="@color/duo_green"
+                    android:textColor="@color/peach_primary"
                     android:textSize="12sp"
-                    app:backgroundTint="@color/duo_card_dark" />
+                    app:backgroundTint="@color/peach_surface" />
             </LinearLayout>
 
             <TextView
@@ -53,33 +53,36 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Camera Cutout Companion"
-                android:textColor="@color/duo_text_muted"
+                android:textColor="@color/peach_accent"
                 android:textSize="10.5sp" />
         </LinearLayout>
 
+        <!-- Centered & Crisp Settings Gear Icon -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDevTools"
             style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="38dp"
             android:layout_height="38dp"
             android:layout_marginEnd="8dp"
-            android:backgroundTint="@color/duo_card_dark"
-            android:text="⚙"
-            android:textColor="@color/duo_text_white"
-            android:textSize="16sp"
+            android:backgroundTint="@color/peach_surface"
             app:cornerRadius="19dp"
-            app:strokeColor="@color/duo_card_border"
-            app:strokeWidth="1.5dp" />
+            app:icon="@drawable/ic_settings"
+            app:iconGravity="textStart"
+            app:iconSize="20dp"
+            app:iconTint="@color/peach_cream"
+            app:strokeColor="@color/peach_surface_border"
+            app:strokeWidth="1dp" />
 
+        <!-- Clean Toggle Switch (Never fills with solid ugly block) -->
         <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/switchPetMaster"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:thumbTint="@color/duo_green"
-            app:trackTint="@color/duo_card_border" />
+            app:thumbTint="@color/switch_thumb_selector"
+            app:trackTint="@color/switch_track_selector" />
     </LinearLayout>
 
-    <!-- 2. Duolingo Style Status Cards Row -->
+    <!-- 2. Clean Status Cards Row (No Emoji Clutter) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -91,11 +94,11 @@
             android:layout_width="0dp"
             android:layout_height="28dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_duo_button_card"
+            android:background="@drawable/bg_card_surface"
             android:fontFamily="sans-serif-bold"
             android:gravity="center"
             android:text="Overlay Active"
-            android:textColor="@color/duo_text_white"
+            android:textColor="@color/peach_cream"
             android:textSize="10sp" />
 
         <TextView
@@ -104,11 +107,11 @@
             android:layout_height="28dp"
             android:layout_marginStart="6dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_duo_button_card"
+            android:background="@drawable/bg_card_surface"
             android:fontFamily="sans-serif-bold"
             android:gravity="center"
             android:text="Battery Safe"
-            android:textColor="@color/duo_text_white"
+            android:textColor="@color/peach_cream"
             android:textSize="10sp" />
 
         <TextView
@@ -117,11 +120,11 @@
             android:layout_height="28dp"
             android:layout_marginStart="6dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_duo_button_card"
+            android:background="@drawable/bg_card_surface"
             android:fontFamily="sans-serif-bold"
             android:gravity="center"
             android:text="App Detect"
-            android:textColor="@color/duo_text_white"
+            android:textColor="@color/peach_cream"
             android:textSize="10sp" />
     </LinearLayout>
 
@@ -158,9 +161,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="32dp"
                 android:text="Grant"
-                android:textColor="@color/duo_bg_dark"
+                android:textColor="@color/peach_dark"
                 android:textSize="10sp"
-                app:backgroundTint="@color/duo_orange"
+                app:backgroundTint="@color/peach_primary"
                 app:cornerRadius="8dp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -171,10 +174,10 @@
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
         android:layout_weight="1.1"
-        app:cardBackgroundColor="@color/duo_card_dark"
-        app:cardCornerRadius="20dp"
-        app:strokeColor="@color/duo_card_border"
-        app:strokeWidth="1.5dp">
+        app:cardBackgroundColor="@color/peach_surface"
+        app:cardCornerRadius="18dp"
+        app:strokeColor="@color/peach_surface_border"
+        app:strokeWidth="1dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -203,20 +206,20 @@
                     android:layout_weight="1"
                     android:fontFamily="sans-serif-bold"
                     android:text="Kiddo • Floating near camera"
-                    android:textColor="@color/duo_text_white"
+                    android:textColor="@color/peach_light"
                     android:textSize="11.5sp" />
 
                 <TextView
                     android:id="@+id/btnTestDrift"
                     android:layout_width="wrap_content"
                     android:layout_height="26dp"
-                    android:background="@drawable/bg_duo_button_card"
+                    android:background="@drawable/bg_card_surface"
                     android:fontFamily="sans-serif-bold"
                     android:gravity="center"
                     android:paddingStart="10dp"
                     android:paddingEnd="10dp"
                     android:text="Drift"
-                    android:textColor="@color/duo_green"
+                    android:textColor="@color/peach_primary"
                     android:textSize="10.5sp" />
             </LinearLayout>
 
@@ -291,10 +294,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        app:cardBackgroundColor="@color/duo_card_dark"
-        app:cardCornerRadius="18dp"
-        app:strokeColor="@color/duo_card_border"
-        app:strokeWidth="1.5dp">
+        app:cardBackgroundColor="@color/peach_surface_card"
+        app:cardCornerRadius="16dp"
+        app:strokeColor="@color/peach_surface_border"
+        app:strokeWidth="1dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -305,9 +308,9 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-black"
+                android:fontFamily="sans-serif-bold"
                 android:text="KEYCHAIN CONTROLS"
-                android:textColor="@color/duo_text_muted"
+                android:textColor="@color/peach_accent"
                 android:textSize="9.5sp" />
 
             <LinearLayout
@@ -364,9 +367,9 @@
                 android:layout_weight="1"
                 android:padding="0dp"
                 android:text="Left"
-                android:textColor="@color/duo_text_white"
+                android:textColor="@color/peach_light"
                 android:textSize="10sp"
-                app:backgroundTint="@color/duo_card_dark"
+                app:backgroundTint="@color/peach_surface"
                 app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
@@ -377,9 +380,9 @@
                 android:layout_weight="1"
                 android:padding="0dp"
                 android:text="Center"
-                android:textColor="@color/duo_bg_dark"
+                android:textColor="@color/peach_dark"
                 android:textSize="10sp"
-                app:backgroundTint="@color/duo_green"
+                app:backgroundTint="@color/peach_primary"
                 app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
@@ -390,13 +393,13 @@
                 android:layout_weight="1"
                 android:padding="0dp"
                 android:text="Right"
-                android:textColor="@color/duo_text_white"
+                android:textColor="@color/peach_light"
                 android:textSize="10sp"
-                app:backgroundTint="@color/duo_card_dark"
+                app:backgroundTint="@color/peach_surface"
                 app:cornerRadius="8dp" />
         </LinearLayout>
 
-        <!-- Leash Colors (3D Color Buttons) -->
+        <!-- Leash Colors -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -424,7 +427,7 @@
                 android:layout_weight="1"
                 android:padding="0dp"
                 android:text="Gold"
-                android:textColor="@color/duo_bg_dark"
+                android:textColor="@color/peach_dark"
                 android:textSize="10sp"
                 app:backgroundTint="#F59E0B"
                 app:cornerRadius="8dp" />
@@ -437,7 +440,7 @@
                 android:layout_weight="1"
                 android:padding="0dp"
                 android:text="Silver"
-                android:textColor="@color/duo_bg_dark"
+                android:textColor="@color/peach_dark"
                 android:textSize="10sp"
                 app:backgroundTint="#E2E8F0"
                 app:cornerRadius="8dp" />
@@ -450,7 +453,7 @@
                 android:layout_weight="1"
                 android:padding="0dp"
                 android:text="Mint"
-                android:textColor="@color/duo_bg_dark"
+                android:textColor="@color/peach_dark"
                 android:textSize="10sp"
                 app:backgroundTint="#34D399"
                 app:cornerRadius="8dp" />
@@ -462,10 +465,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        app:cardBackgroundColor="@color/duo_card_dark"
-        app:cardCornerRadius="18dp"
-        app:strokeColor="@color/duo_card_border"
-        app:strokeWidth="1.5dp">
+        app:cardBackgroundColor="@color/peach_surface_card"
+        app:cardCornerRadius="16dp"
+        app:strokeColor="@color/peach_surface_border"
+        app:strokeWidth="1dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -482,10 +485,10 @@
                 android:layout_height="wrap_content"
                 android:checked="true"
                 android:text="Keychain Gravity Mode (OFF: Drift)"
-                android:textColor="@color/duo_text_white"
+                android:textColor="@color/peach_light"
                 android:textSize="12sp"
-                app:thumbTint="@color/duo_green"
-                app:trackTint="@color/duo_card_border" />
+                app:thumbTint="@color/switch_thumb_selector"
+                app:trackTint="@color/switch_track_selector" />
 
             <!-- Neutral Hold Calibration Row -->
             <LinearLayout
@@ -505,22 +508,23 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Neutral Hold: Calibrated"
-                    android:textColor="@color/duo_text_muted"
+                    android:textColor="@color/peach_cream"
                     android:textSize="11sp" />
 
-                <androidx.appcompat.widget.AppCompatButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCalibrateHold"
+                    style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="32dp"
-                    android:background="@drawable/bg_duo_button_green"
-                    android:fontFamily="sans-serif-black"
                     android:paddingStart="12dp"
                     android:paddingTop="0dp"
                     android:paddingEnd="12dp"
                     android:paddingBottom="0dp"
                     android:text="Calibrate Angle"
-                    android:textColor="@color/duo_text_white"
-                    android:textSize="11sp" />
+                    android:textColor="@color/peach_dark"
+                    android:textSize="11sp"
+                    app:backgroundTint="@color/peach_primary"
+                    app:cornerRadius="8dp" />
             </LinearLayout>
 
             <com.google.android.material.materialswitch.MaterialSwitch
@@ -529,10 +533,10 @@
                 android:layout_height="wrap_content"
                 android:checked="true"
                 android:text="Night Sleepiness (10 PM – 7 AM)"
-                android:textColor="@color/duo_text_white"
+                android:textColor="@color/peach_light"
                 android:textSize="12sp"
-                app:thumbTint="@color/duo_green"
-                app:trackTint="@color/duo_card_border" />
+                app:thumbTint="@color/switch_thumb_selector"
+                app:trackTint="@color/switch_track_selector" />
 
             <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/switchTouchReactions"
@@ -540,10 +544,10 @@
                 android:layout_height="wrap_content"
                 android:checked="true"
                 android:text="Touch Interactions (Drag &amp; Tap)"
-                android:textColor="@color/duo_text_white"
+                android:textColor="@color/peach_light"
                 android:textSize="12sp"
-                app:thumbTint="@color/duo_green"
-                app:trackTint="@color/duo_card_border" />
+                app:thumbTint="@color/switch_thumb_selector"
+                app:trackTint="@color/switch_track_selector" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 

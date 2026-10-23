@@ -49,16 +49,16 @@ class RotaryKnobView @JvmOverloads constructor(
             }
         }
 
-    // Duolingo Tactile Colors: Rich Dark Slate, Parrot Green, and Warm Orange
-    private val colorTrackInactive = Color.parseColor("#263843")
-    private val colorTrackActive = Color.parseColor("#58CC02") // Duolingo Green
-    private val colorKnobBody = Color.parseColor("#1B272C")
-    private val colorKnobRim = Color.parseColor("#374E5B")
-    private val colorIndicatorDot = Color.parseColor("#FFFFFF")
-    private val colorValueText = Color.parseColor("#FFFFFF")
-    private val colorTitleText = Color.parseColor("#93A8B3")
-    private val colorBubbleBg = Color.parseColor("#58CC02")
-    private val colorBubbleShadow = Color.parseColor("#46A302")
+    // Warm Peach & Creamsicle Orange Classy Palette
+    private val colorTrackInactive = Color.parseColor("#3D2B24")
+    private val colorTrackActive = Color.parseColor("#FF9F68") // Warm peach
+    private val colorKnobBody = Color.parseColor("#221A17")
+    private val colorKnobRim = Color.parseColor("#4A3730")
+    private val colorIndicatorDot = Color.parseColor("#FFE4D6")
+    private val colorValueText = Color.parseColor("#FFE4D6")
+    private val colorTitleText = Color.parseColor("#FDBA74")
+    private val colorBubbleBg = Color.parseColor("#FF9F68")
+    private val colorBubbleShadow = Color.parseColor("#D97706")
     // Paints
     private val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE

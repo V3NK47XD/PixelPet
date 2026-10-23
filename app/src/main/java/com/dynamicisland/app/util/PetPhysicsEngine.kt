@@ -8,6 +8,7 @@ import android.hardware.SensorManager
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.view.Choreographer
 import kotlin.math.abs
 import kotlin.math.sqrt
 
@@ -72,8 +73,8 @@ class PetPhysicsEngine(
         private set
     var velocityY = 0f
         private set
-    private val springK = 0.16f  // Restorative stiffness
-    private val damping = 0.84f  // Pendulum friction damping
+    private val springK = 0.09f  // Tuned for native 120Hz/144Hz VSync
+    private val damping = 0.93f  // Smooth high-refresh pendulum damping
 
     // Dynamic targets from accelerometer
     private var targetTiltXDp = 0f
@@ -93,19 +94,38 @@ class PetPhysicsEngine(
     private var lastGyroTimeNs = 0L
     private var centrifugalForceDp = 0f
 
-    // Physics step loop (runs at ~40 FPS when active and needed)
-    private val physicsStepRunnable = object : Runnable {
-        override fun run() {
+    // High-Refresh VSync Loop (Native 120Hz / 144Hz on supported displays)
+    private var isLoopScheduled = false
+
+    private val frameCallback = object : Choreographer.FrameCallback {
+        override fun doFrame(frameTimeNanos: Long) {
+            isLoopScheduled = false
             if (!isRegistered || !isScreenActive) return
 
             stepPhysics()
 
-            val hasMovement = abs(velocityX) > 0.05f || abs(velocityY) > 0.05f ||
-                    shiverAmplitudeDp > 0.05f ||
-                    abs(currentOffsetXDp - targetTiltXDp) > 0.1f
+            val hasMovement = abs(velocityX) > 0.02f || abs(velocityY) > 0.02f ||
+                    shiverAmplitudeDp > 0.02f ||
+                    abs(currentOffsetXDp - targetTiltXDp) > 0.05f
 
-            val nextDelay = if (hasMovement) 24L else 45L
-            handler.postDelayed(this, nextDelay)
+            if (hasMovement) {
+                scheduleNextFrame()
+            }
+        }
+    }
+
+    private fun scheduleNextFrame() {
+        if (!isLoopScheduled && isRegistered && isScreenActive) {
+            isLoopScheduled = true
+            try {
+                Choreographer.getInstance().postFrameCallback(frameCallback)
+            } catch (e: Exception) {
+                handler.post {
+                    if (isRegistered && isScreenActive) {
+                        Choreographer.getInstance().postFrameCallback(frameCallback)
+                    }
+                }
+            }
         }
     }
 
@@ -146,16 +166,21 @@ class PetPhysicsEngine(
 
     fun stop() {
         unregisterSensors()
-        handler.removeCallbacks(physicsStepRunnable)
+        try {
+            Choreographer.getInstance().removeFrameCallback(frameCallback)
+        } catch (ignored: Exception) {}
+        isLoopScheduled = false
         resetState()
     }
 
     fun onScreenOff() {
         isScreenActive = false
         unregisterSensors()
-        handler.removeCallbacks(physicsStepRunnable)
+        try {
+            Choreographer.getInstance().removeFrameCallback(frameCallback)
+        } catch (ignored: Exception) {}
+        isLoopScheduled = false
     }
-
     fun onScreenOn() {
         isScreenActive = true
         if (prefs.isGyroPhysicsEnabled) {
@@ -186,13 +211,16 @@ class PetPhysicsEngine(
         }
 
         isRegistered = true
-        handler.removeCallbacks(physicsStepRunnable)
-        handler.post(physicsStepRunnable)
+        scheduleNextFrame()
     }
 
     private fun unregisterSensors() {
         if (!isRegistered || sensorManager == null) return
         sensorManager.unregisterListener(this)
+        try {
+            Choreographer.getInstance().removeFrameCallback(frameCallback)
+        } catch (ignored: Exception) {}
+        isLoopScheduled = false
         isRegistered = false
     }
 
@@ -213,7 +241,7 @@ class PetPhysicsEngine(
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event == null || !isScreenActive) return
-
+        scheduleNextFrame()
         when (event.sensor.type) {
             Sensor.TYPE_ACCELEROMETER -> {
                 val ax = event.values[0] // Lateral tilt (+ left, - right)

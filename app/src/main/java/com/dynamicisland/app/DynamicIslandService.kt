@@ -434,11 +434,13 @@ class DynamicIslandService : Service() {
     private fun performElasticSnapBack() {
         val startX = currentDriftXDp
         val startY = currentDriftYDp
+        val startTilt = tiltAngleDeg
 
         val leashLength = prefs.leashLengthDp.toFloat()
         // Gravity-pulled equilibrium position: forget user's drag state!
         val targetX = 0f
         val targetY = leashLength + (prefs.petSizeDp * 0.30f)
+
         snapBackAnimator?.cancel()
         snapBackAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
             duration = 650
@@ -447,14 +449,21 @@ class DynamicIslandService : Service() {
                 val f = anim.animatedFraction
                 currentDriftXDp = startX + ((targetX - startX) * f)
                 currentDriftYDp = startY + ((targetY - startY) * f)
+                tiltAngleDeg = startTilt * (1f - f)
+                petView?.rotation = tiltAngleDeg + (if (prefs.isGyroPhysicsEnabled) physicsTiltDeg else 0f)
                 leashSlackFactor = 0.5f + (sin(f * PI.toFloat() * 3) * 0.5f * (1f - f))
                 updatePetWindowLayout()
                 updateLeashAttachment(leashSlackFactor)
             }
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
+                    currentDriftXDp = 0f
+                    tiltAngleDeg = 0f
+                    petView?.rotation = if (prefs.isGyroPhysicsEnabled) physicsTiltDeg else 0f
                     leashSlackFactor = 1.0f
-                    scheduleNextDrift()
+                    if (!prefs.isGyroPhysicsEnabled) {
+                        scheduleNextDrift()
+                    }
                 }
             })
         }
@@ -657,12 +666,14 @@ class DynamicIslandService : Service() {
 
         // 1. Rapid Multi-Taps / Punches (4+ times) -> Furious Temper Tantrum with Timer!
         if (tapCount >= 4) {
+            com.dynamicisland.app.util.PetSoundHelper.playAngryTantrum()
             triggerTemperTantrum(pet)
             return
         }
 
         // 2. Single or double punch flinch wobble
         if (tapCount in 2..3) {
+            com.dynamicisland.app.util.PetSoundHelper.playPunchSqueak()
             pet.triggerPunchReaction()
             updateLeashAttachment(slackFactor = 0.5f)
             handler.postDelayed({ updateLeashAttachment(slackFactor = 1.0f) }, 260)
@@ -691,6 +702,7 @@ class DynamicIslandService : Service() {
         }
 
         // 3. Contextual Mood Tap
+        com.dynamicisland.app.util.PetSoundHelper.playHappyChirp()
         pet.handleUserTap()
         updateLeashAttachment(slackFactor = 1.6f)
         handler.postDelayed({ updateLeashAttachment(slackFactor = 1.0f) }, 300)
