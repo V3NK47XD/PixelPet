@@ -119,14 +119,13 @@ class TetheredPetStageView @JvmOverloads constructor(
     }
 
     private val angryResetRunnable = Runnable {
-        if (isTemporarilyAngry) {
-            isTemporarilyAngry = false
-            tapCount = 0
-            petView.setMood(savedMoodBeforeAnger)
-            petView.triggerIdleActivity(PixelPetView.IdleActivity.BLUSHING, 1400L) // Cute embarrassed blush
-            leashSlackFactor = 1.0f
-            invalidate()
-        }
+        isTemporarilyAngry = false
+        tapCount = 0
+        val targetMood = if (savedMoodBeforeAnger == PixelPetView.PetMood.ANGRY) PixelPetView.PetMood.IDLE else savedMoodBeforeAnger
+        petView.setMood(targetMood)
+        petView.triggerIdleActivity(PixelPetView.IdleActivity.BLUSHING, 1400L) // Cute embarrassed blush
+        leashSlackFactor = 1.0f
+        invalidate()
     }
 
     init {
@@ -304,7 +303,7 @@ class TetheredPetStageView @JvmOverloads constructor(
         snapBackAnimator?.start()
     }
 
-    private fun updatePetViewLayout() {
+    fun updatePetViewLayout() {
         val petSizePx = prefs.petSizeDp.dpToPx()
         val anchorXPx = (width / 2f) + prefs.cameraRefX.dpToPx()
         val anchorYPx = prefs.cameraRefY.dpToPx().toFloat()
@@ -626,14 +625,14 @@ class TetheredPetStageView @JvmOverloads constructor(
 
         // 1. REPEATED RAPID TAPS / PUNCHES (4+ times) -> Furious Tantrum with Timer!
         if (tapCount >= 4) {
-            com.dynamicisland.app.util.PetSoundHelper.playAngryTantrum()
+            com.dynamicisland.app.util.PetSoundHelper.playAngryTantrum(context)
             triggerTemperTantrum()
             return
         }
 
         // Single punch flinch
         if (tapCount in 2..3) {
-            com.dynamicisland.app.util.PetSoundHelper.playPunchSqueak()
+            com.dynamicisland.app.util.PetSoundHelper.playPunchSqueak(context)
             petView.triggerPunchReaction()
             leashSlackFactor = 0.5f
             invalidate()
@@ -663,7 +662,7 @@ class TetheredPetStageView @JvmOverloads constructor(
         }
 
         // 3. CONTEXTUAL MOOD TAP
-        com.dynamicisland.app.util.PetSoundHelper.playHappyChirp()
+        com.dynamicisland.app.util.PetSoundHelper.playHappyChirp(context)
         petView.handleUserTap()
         // Playful leash jiggle
         leashSlackFactor = 1.6f
@@ -677,7 +676,8 @@ class TetheredPetStageView @JvmOverloads constructor(
     private fun triggerTemperTantrum() {
         handler.removeCallbacks(angryResetRunnable)
         if (!isTemporarilyAngry) {
-            savedMoodBeforeAnger = petView.getMood()
+            val previous = petView.getMood()
+            savedMoodBeforeAnger = if (previous == PixelPetView.PetMood.ANGRY) PixelPetView.PetMood.IDLE else previous
             isTemporarilyAngry = true
         }
 
@@ -688,8 +688,8 @@ class TetheredPetStageView @JvmOverloads constructor(
         leashSlackFactor = 0.2f
         invalidate()
 
-        // Calm down and return to normal after 3.8 seconds
-        val durationMs = prefs.angerDurationSeconds * 1000L
+        // Failsafe anger cooldown: 5-6 seconds
+        val durationMs = prefs.angerDurationSeconds.coerceIn(3, 8) * 1000L
         handler.postDelayed(angryResetRunnable, durationMs)
     }
 

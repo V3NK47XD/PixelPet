@@ -127,12 +127,20 @@ class PetMoodManager(private val context: Context) {
 
         if (elapsedMs >= angerThresholdMs) {
             val minutesSpent = (elapsedMs / 60000L).toInt()
-            updateMood(
-                PixelPetView.PetMood.ANGRY,
-                "Instagram open for $minutesSpent mins! Rage mode activated \uD83D\uDE21"
-            )
+            // Vent steam for 6 seconds, then settle to sad face so pet never gets permanently stuck in rage!
+            val angerBurstDurationMs = 6000L
+            val cycleDuration = angerThresholdMs + angerBurstDurationMs
+            val timeInCycle = elapsedMs % cycleDuration
+            if (timeInCycle in angerThresholdMs..(angerThresholdMs + angerBurstDurationMs)) {
+                updateMood(
+                    PixelPetView.PetMood.ANGRY,
+                    "Instagram open for $minutesSpent mins! Rage mode activated"
+                )
+            } else {
+                updateMood(PixelPetView.PetMood.SAD, "Instagram open")
+            }
         } else {
-            updateMood(PixelPetView.PetMood.SAD, "Instagram open \uD83E\uDD7A")
+            updateMood(PixelPetView.PetMood.SAD, "Instagram open")
         }
     }
 

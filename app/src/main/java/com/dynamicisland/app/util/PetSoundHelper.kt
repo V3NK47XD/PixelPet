@@ -1,5 +1,6 @@
 package com.dynamicisland.app.util
 
+import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioManager
@@ -9,78 +10,95 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 /**
- * PetSoundHelper: Ultra-low-latency programmatic sound effects for Pixel Pet.
+ * PetSoundHelper: Ultra-low-latency, soft, cute programmatic sound effects for Pixel Pet.
  *
- * Uses native AudioTrack with PCM sine synthesis:
- * - 0ms disk/file I/O latency (synthesized directly in memory)
- * - 100% offline, zero assets needed
- * - Playful 8-bit / chiptune pet expressions
+ * Characteristics:
+ * - 0ms disk/file I/O latency (synthesized directly in memory via AudioTrack PCM)
+ * - Soft, comfortable volume levels with individual mute / volume sliders
+ * - Gentle, adorable chiptune pet expressions
  */
 object PetSoundHelper {
 
     private val audioExecutor = Executors.newSingleThreadExecutor()
     private const val SAMPLE_RATE = 22050
 
-    fun playHappyChirp() {
+    fun playHappyChirp(context: Context? = null) {
+        val prefs = context?.let { PreferencesHelper(it) }
+        if (prefs != null && (!prefs.isSoundEnabled || !prefs.isTapSoundEnabled)) return
+        val volume = prefs?.soundVolume ?: 0.55f
+        if (volume <= 0.01f) return
+
         audioExecutor.execute {
-            // Cheerful ascending chirp: 520Hz -> 920Hz (110ms)
+            // Cute, sweet ascending chirp: 540Hz -> 860Hz (95ms)
+            val durationMs = 95
+            val numSamples = (SAMPLE_RATE * (durationMs / 1000.0)).toInt()
+            val buffer = ShortArray(numSamples)
+            val maxAmp = 10000.0 * volume
+
+            for (i in 0 until numSamples) {
+                val progress = i.toDouble() / numSamples
+                val freq = 540.0 + (320.0 * progress)
+                val angle = 2.0 * PI * freq * (i.toDouble() / SAMPLE_RATE)
+                val envelope = when {
+                    progress < 0.20 -> progress / 0.20
+                    progress > 0.65 -> (1.0 - progress) / 0.35
+                    else -> 1.0
+                }
+                buffer[i] = (sin(angle) * envelope * maxAmp).toInt().toShort()
+            }
+
+            playPcmBuffer(buffer)
+        }
+    }
+
+    fun playPunchSqueak(context: Context? = null) {
+        val prefs = context?.let { PreferencesHelper(it) }
+        if (prefs != null && (!prefs.isSoundEnabled || !prefs.isPunchSoundEnabled)) return
+        val volume = prefs?.soundVolume ?: 0.55f
+        if (volume <= 0.01f) return
+
+        audioExecutor.execute {
+            // Softer, cute plush toy pip: 460Hz -> 380Hz (60ms) - gentle and cuddly, NOT loud!
+            val durationMs = 60
+            val numSamples = (SAMPLE_RATE * (durationMs / 1000.0)).toInt()
+            val buffer = ShortArray(numSamples)
+            val maxAmp = 8000.0 * volume
+
+            for (i in 0 until numSamples) {
+                val progress = i.toDouble() / numSamples
+                val freq = 460.0 - (80.0 * progress)
+                val angle = 2.0 * PI * freq * (i.toDouble() / SAMPLE_RATE)
+                val envelope = when {
+                    progress < 0.15 -> progress / 0.15
+                    else -> (1.0 - progress)
+                }
+                buffer[i] = (sin(angle) * envelope * maxAmp).toInt().toShort()
+            }
+
+            playPcmBuffer(buffer)
+        }
+    }
+
+    fun playAngryTantrum(context: Context? = null) {
+        val prefs = context?.let { PreferencesHelper(it) }
+        if (prefs != null && (!prefs.isSoundEnabled || !prefs.isAngerSoundEnabled)) return
+        val volume = prefs?.soundVolume ?: 0.55f
+        if (volume <= 0.01f) return
+
+        audioExecutor.execute {
+            // Playful gentle rumble: 220Hz -> 260Hz (110ms)
             val durationMs = 110
             val numSamples = (SAMPLE_RATE * (durationMs / 1000.0)).toInt()
             val buffer = ShortArray(numSamples)
+            val maxAmp = 9500.0 * volume
 
             for (i in 0 until numSamples) {
                 val progress = i.toDouble() / numSamples
-                val freq = 520.0 + (400.0 * progress)
-                val angle = 2.0 * PI * freq * (i.toDouble() / SAMPLE_RATE)
-                // Smooth attack and decay envelope
-                val envelope = when {
-                    progress < 0.15 -> progress / 0.15
-                    progress > 0.70 -> (1.0 - progress) / 0.30
-                    else -> 1.0
-                }
-                buffer[i] = (sin(angle) * envelope * 24000.0).toInt().toShort()
-            }
-
-            playPcmBuffer(buffer)
-        }
-    }
-
-    fun playPunchSqueak() {
-        audioExecutor.execute {
-            // Startled flinch squeak: 750Hz -> 340Hz (85ms)
-            val durationMs = 85
-            val numSamples = (SAMPLE_RATE * (durationMs / 1000.0)).toInt()
-            val buffer = ShortArray(numSamples)
-
-            for (i in 0 until numSamples) {
-                val progress = i.toDouble() / numSamples
-                val freq = 750.0 - (410.0 * progress * progress)
-                val angle = 2.0 * PI * freq * (i.toDouble() / SAMPLE_RATE)
-                val envelope = when {
-                    progress < 0.1 -> progress / 0.1
-                    else -> (1.0 - progress)
-                }
-                buffer[i] = (sin(angle) * envelope * 26000.0).toInt().toShort()
-            }
-
-            playPcmBuffer(buffer)
-        }
-    }
-
-    fun playAngryTantrum() {
-        audioExecutor.execute {
-            // Angry rapid double grunt: 240Hz & 320Hz (140ms)
-            val durationMs = 140
-            val numSamples = (SAMPLE_RATE * (durationMs / 1000.0)).toInt()
-            val buffer = ShortArray(numSamples)
-
-            for (i in 0 until numSamples) {
-                val progress = i.toDouble() / numSamples
-                val freq = if (progress < 0.5) 240.0 else 320.0
+                val freq = if (progress < 0.5) 220.0 else 260.0
                 val angle = 2.0 * PI * freq * (i.toDouble() / SAMPLE_RATE)
                 val subProgress = (progress * 2.0) % 1.0
-                val envelope = (1.0 - subProgress) * 0.9
-                buffer[i] = (sin(angle) * envelope * 28000.0).toInt().toShort()
+                val envelope = (1.0 - subProgress) * 0.85
+                buffer[i] = (sin(angle) * envelope * maxAmp).toInt().toShort()
             }
 
             playPcmBuffer(buffer)
@@ -112,7 +130,7 @@ object PetSoundHelper {
 
             track.write(buffer, 0, buffer.size)
             track.play()
-            Thread.sleep((buffer.size * 1000L / SAMPLE_RATE) + 20L)
+            Thread.sleep((buffer.size * 1000L / SAMPLE_RATE) + 15L)
         } catch (e: Exception) {
             // Non-critical: sound fails silently if audio system is restricted
         } finally {

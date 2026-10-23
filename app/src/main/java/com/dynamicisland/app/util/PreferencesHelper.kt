@@ -45,6 +45,11 @@ class PreferencesHelper(context: Context) {
         private const val KEY_CALIBRATED_ACCEL_Z = "calibrated_accel_z"
         private const val KEY_PET_NAME = "pet_name"
         private const val KEY_ANGER_DURATION_SECONDS = "anger_duration_seconds"
+        private const val KEY_SOUND_ENABLED = "sound_master_enabled"
+        private const val KEY_SOUND_VOLUME = "sound_master_volume"
+        private const val KEY_SOUND_TAP_ENABLED = "sound_tap_enabled"
+        private const val KEY_SOUND_PUNCH_ENABLED = "sound_punch_enabled"
+        private const val KEY_SOUND_ANGER_ENABLED = "sound_anger_enabled"
         val DEFAULT_NERD_PACKAGES = setOf(
             "com.google.android.apps.bard",
             "cn.wps.moffice_eng",
@@ -191,6 +196,26 @@ class PreferencesHelper(context: Context) {
         set(value) = prefs.edit().putString(KEY_PET_NAME, value).apply()
 
     var angerDurationSeconds: Int
-        get() = prefs.getInt(KEY_ANGER_DURATION_SECONDS, 8)
+        get() = prefs.getInt(KEY_ANGER_DURATION_SECONDS, 6) // Default 6s anger cooldown
         set(value) = prefs.edit().putInt(KEY_ANGER_DURATION_SECONDS, value).apply()
+
+    var isSoundEnabled: Boolean
+        get() = prefs.getBoolean(KEY_SOUND_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_SOUND_ENABLED, value).apply()
+
+    var soundVolume: Float
+        get() = prefs.getFloat(KEY_SOUND_VOLUME, 0.55f)
+        set(value) = prefs.edit().putFloat(KEY_SOUND_VOLUME, value.coerceIn(0f, 1f)).apply()
+
+    var isTapSoundEnabled: Boolean
+        get() = prefs.getBoolean(KEY_SOUND_TAP_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_SOUND_TAP_ENABLED, value).apply()
+
+    var isPunchSoundEnabled: Boolean
+        get() = prefs.getBoolean(KEY_SOUND_PUNCH_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_SOUND_PUNCH_ENABLED, value).apply()
+
+    var isAngerSoundEnabled: Boolean
+        get() = prefs.getBoolean(KEY_SOUND_ANGER_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_SOUND_ANGER_ENABLED, value).apply()
 }

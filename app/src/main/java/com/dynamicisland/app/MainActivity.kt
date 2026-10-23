@@ -24,7 +24,12 @@ import androidx.core.content.ContextCompat
 import com.dynamicisland.app.databinding.ActivityMainBinding
 import com.dynamicisland.app.databinding.DialogCalibrateOrientationBinding
 import com.dynamicisland.app.databinding.DialogDevToolsBinding
+import com.dynamicisland.app.databinding.DialogMenuPetBinding
+import com.dynamicisland.app.databinding.DialogMenuPositionBinding
+import com.dynamicisland.app.databinding.DialogMenuReactionsBinding
+import com.dynamicisland.app.databinding.DialogMenuSoundBinding
 import com.dynamicisland.app.databinding.DialogRenamePetBinding
+import com.dynamicisland.app.util.PetSoundHelper
 import com.dynamicisland.app.util.BatteryOptimizationHelper
 import com.dynamicisland.app.util.ForegroundAppDetector
 import com.dynamicisland.app.util.OverlayPermissionHelper
@@ -83,92 +88,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        // 1. Configure Rotary Knobs Deck (Compact Zero-Scroll Dials)
-        binding.knobCameraX.apply {
-            minValue = -150f
-            maxValue = 150f
-            stepSize = 1f
-            unitSuffix = "dp"
-            knobTitle = "CAM X"
-            value = prefs.cameraRefX.toFloat()
-            onValueChanged = { newVal, fromUser ->
-                val intVal = newVal.toInt()
-                if (fromUser) {
-                    debouncePrefWrite("cameraRefX") {
-                        prefs.cameraRefX = intVal
-                        notifySettingsChanged()
-                    }
-                }
-            }
-        }
-
-        binding.knobCameraY.apply {
-            minValue = 0f
-            maxValue = 120f
-            stepSize = 1f
-            unitSuffix = "dp"
-            knobTitle = "CAM Y"
-            value = prefs.cameraRefY.toFloat()
-            onValueChanged = { newVal, fromUser ->
-                val intVal = newVal.toInt()
-                if (fromUser) {
-                    debouncePrefWrite("cameraRefY") {
-                        prefs.cameraRefY = intVal
-                        notifySettingsChanged()
-                    }
-                }
-            }
-        }
-
-        binding.knobPetSize.apply {
-            minValue = 32f
-            maxValue = 96f
-            stepSize = 2f
-            unitSuffix = "dp"
-            knobTitle = "SIZE"
-            value = prefs.petSizeDp.toFloat()
-            onValueChanged = { newVal, fromUser ->
-                val intVal = newVal.toInt()
-                if (fromUser) {
-                    debouncePrefWrite("petSizeDp") {
-                        prefs.petSizeDp = intVal
-                        notifySettingsChanged()
-                    }
-                }
-            }
-        }
-
-        binding.knobLeash.apply {
-            minValue = 20f
-            maxValue = 120f
-            stepSize = 2f
-            unitSuffix = "dp"
-            knobTitle = "LEASH"
-            value = prefs.leashLengthDp.toFloat()
-            onValueChanged = { newVal, fromUser ->
-                val intVal = newVal.toInt()
-                if (fromUser) {
-                    debouncePrefWrite("leashLengthDp") {
-                        prefs.leashLengthDp = intVal
-                        notifySettingsChanged()
-                    }
-                }
-            }
-        }
-
-        // 2. Camera alignment preset
-        updateAlignmentButtonsUI(prefs.cameraAlignment)
-
-        // 3. Feature Switches
-        binding.switchGyroPhysics.isChecked = prefs.isGyroPhysicsEnabled
-        binding.switchSleepiness.isChecked = prefs.isSleepinessEnabled
-        binding.switchTouchReactions.isChecked = prefs.isTouchReactionEnabled
-        updateCalibrationStatusUI()
-
         // Pet Name Header
         binding.tvPetName.text = prefs.petName
 
-        // 4. Preview Pet in Tether Stage
+        // Live Interactive Preview in Tether Stage
         binding.previewTetherStage.petView.setAnimationIntensity(prefs.animationIntensity)
         binding.previewTetherStage.petView.setMood(PixelPetView.PetMood.IDLE)
         binding.previewTetherStage.updateLeashColor()
@@ -188,14 +111,10 @@ class MainActivity : AppCompatActivity() {
         binding.btnTestDrift.setOnClickListener {
             binding.previewTetherStage.pickNextFloatingSpot()
         }
+
         // Master Switch
         binding.switchPetMaster.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) startPetOverlay() else stopPetOverlay()
-        }
-
-        // Developer / Advanced Tools Bottom Sheet
-        binding.btnDevTools.setOnClickListener {
-            showDevToolsBottomSheet()
         }
 
         // Permission Quick Fix
@@ -209,57 +128,325 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Mood preview chips (Clean Duolingo labels, no emoji clutter)
-        binding.chipMoodIdle.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.IDLE, "Idle and floating")
-        }
-        binding.chipMoodHappy.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.HAPPY, "Joyful hops and sparkles")
-        }
-        binding.chipMoodSad.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.SAD, "Teardrops crying")
-        }
-        binding.chipMoodAngry.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.ANGRY, "Rage steam tantrum")
-        }
-        binding.chipMoodNerd.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.NERD, "Glasses reading")
-        }
-        binding.chipMoodTexting.setOnClickListener {
-            setPreviewMood(PixelPetView.PetMood.TEXTING, "Chat typing")
-        }
-        // Camera Alignment Presets
-        binding.btnAlignLeft.setOnClickListener { setCameraAlignment("LEFT") }
-        binding.btnAlignCenter.setOnClickListener { setCameraAlignment("CENTER") }
-        binding.btnAlignRight.setOnClickListener { setCameraAlignment("RIGHT") }
+        // 5 Modular Bottom Menu Button Click Handlers Below Preview
+        binding.btnMenuPosition.setOnClickListener { showPositionConfigSheet() }
+        binding.btnMenuPet.setOnClickListener { showPetConfigSheet() }
+        binding.btnMenuSound.setOnClickListener { showSoundConfigSheet() }
+        binding.btnMenuReactions.setOnClickListener { showReactionsConfigSheet() }
+        binding.btnMenuDevTools.setOnClickListener { showDevToolsBottomSheet() }
+    }
 
-        // Leash Color Selector Buttons
-        binding.btnLeashRed.setOnClickListener { setLeashColor("#F43F5E") }
-        binding.btnLeashGold.setOnClickListener { setLeashColor("#F59E0B") }
-        binding.btnLeashSilver.setOnClickListener { setLeashColor("#E2E8F0") }
-        binding.btnLeashMint.setOnClickListener { setLeashColor("#34D399") }
+    private fun showPositionConfigSheet() {
+        val dialog = BottomSheetDialog(this)
+        val sheet = DialogMenuPositionBinding.inflate(layoutInflater)
+        dialog.setContentView(sheet.root)
 
-        // Behavior Switches
-        binding.switchGyroPhysics.setOnCheckedChangeListener { _, isChecked ->
-            prefs.isGyroPhysicsEnabled = isChecked
-            binding.previewTetherStage.onSettingsChanged()
-            updateCalibrationStatusUI()
+        sheet.knobCameraX.apply {
+            minValue = -150f
+            maxValue = 150f
+            stepSize = 1f
+            unitSuffix = "dp"
+            knobTitle = "CAM X"
+            value = prefs.cameraRefX.toFloat()
+            onValueChanged = { newVal, fromUser ->
+                if (fromUser) {
+                    val intVal = newVal.toInt()
+                    debouncePrefWrite("cameraRefX") {
+                        prefs.cameraRefX = intVal
+                        binding.previewTetherStage.updatePetViewLayout()
+                        binding.previewTetherStage.invalidate()
+                        notifySettingsChanged()
+                    }
+                }
+            }
+        }
+
+        sheet.knobCameraY.apply {
+            minValue = 0f
+            maxValue = 120f
+            stepSize = 1f
+            unitSuffix = "dp"
+            knobTitle = "CAM Y"
+            value = prefs.cameraRefY.toFloat()
+            onValueChanged = { newVal, fromUser ->
+                if (fromUser) {
+                    val intVal = newVal.toInt()
+                    debouncePrefWrite("cameraRefY") {
+                        prefs.cameraRefY = intVal
+                        binding.previewTetherStage.updatePetViewLayout()
+                        binding.previewTetherStage.invalidate()
+                        notifySettingsChanged()
+                    }
+                }
+            }
+        }
+
+        sheet.knobPetSize.apply {
+            minValue = 32f
+            maxValue = 96f
+            stepSize = 2f
+            unitSuffix = "dp"
+            knobTitle = "SIZE"
+            value = prefs.petSizeDp.toFloat()
+            onValueChanged = { newVal, fromUser ->
+                if (fromUser) {
+                    val intVal = newVal.toInt()
+                    debouncePrefWrite("petSizeDp") {
+                        prefs.petSizeDp = intVal
+                        binding.previewTetherStage.updatePetViewLayout()
+                        binding.previewTetherStage.invalidate()
+                        notifySettingsChanged()
+                    }
+                }
+            }
+        }
+
+        sheet.knobLeash.apply {
+            minValue = 20f
+            maxValue = 120f
+            stepSize = 2f
+            unitSuffix = "dp"
+            knobTitle = "LEASH"
+            value = prefs.leashLengthDp.toFloat()
+            onValueChanged = { newVal, fromUser ->
+                if (fromUser) {
+                    val intVal = newVal.toInt()
+                    debouncePrefWrite("leashLengthDp") {
+                        prefs.leashLengthDp = intVal
+                        binding.previewTetherStage.updatePetViewLayout()
+                        binding.previewTetherStage.invalidate()
+                        notifySettingsChanged()
+                    }
+                }
+            }
+        }
+
+        val updatePresetsUI = { alignment: String ->
+            val sel = ContextCompat.getColor(this, R.color.peach_primary)
+            val selText = ContextCompat.getColor(this, R.color.peach_dark)
+            val defBg = ContextCompat.getColor(this, R.color.peach_surface)
+            val defText = ContextCompat.getColor(this, R.color.peach_light)
+
+            sheet.btnAlignLeft.setBackgroundColor(if (alignment == "LEFT") sel else defBg)
+            sheet.btnAlignLeft.setTextColor(if (alignment == "LEFT") selText else defText)
+            sheet.btnAlignCenter.setBackgroundColor(if (alignment == "CENTER") sel else defBg)
+            sheet.btnAlignCenter.setTextColor(if (alignment == "CENTER") selText else defText)
+            sheet.btnAlignRight.setBackgroundColor(if (alignment == "RIGHT") sel else defBg)
+            sheet.btnAlignRight.setTextColor(if (alignment == "RIGHT") selText else defText)
+        }
+        updatePresetsUI(prefs.cameraAlignment)
+
+        val setAlign = { alignment: String ->
+            prefs.cameraAlignment = alignment
+            when (alignment) {
+                "LEFT" -> {
+                    prefs.cameraRefX = -110
+                    prefs.cameraRefY = 24
+                }
+                "RIGHT" -> {
+                    prefs.cameraRefX = 110
+                    prefs.cameraRefY = 24
+                }
+                else -> {
+                    prefs.cameraRefX = 0
+                    prefs.cameraRefY = 22
+                }
+            }
+            sheet.knobCameraX.value = prefs.cameraRefX.toFloat()
+            sheet.knobCameraY.value = prefs.cameraRefY.toFloat()
+            updatePresetsUI(alignment)
+            binding.previewTetherStage.updatePetViewLayout()
+            binding.previewTetherStage.invalidate()
             notifySettingsChanged()
         }
 
-        binding.switchSleepiness.setOnCheckedChangeListener { _, isChecked ->
+        sheet.btnAlignLeft.setOnClickListener { setAlign("LEFT") }
+        sheet.btnAlignCenter.setOnClickListener { setAlign("CENTER") }
+        sheet.btnAlignRight.setOnClickListener { setAlign("RIGHT") }
+
+        sheet.btnLeashRed.setOnClickListener { setLeashColor("#F43F5E") }
+        sheet.btnLeashGold.setOnClickListener { setLeashColor("#F59E0B") }
+        sheet.btnLeashSilver.setOnClickListener { setLeashColor("#E2E8F0") }
+        sheet.btnLeashMint.setOnClickListener { setLeashColor("#34D399") }
+
+        sheet.btnClosePosition.setOnClickListener { dialog.dismiss() }
+        dialog.show()
+    }
+
+    private fun showPetConfigSheet() {
+        val dialog = BottomSheetDialog(this)
+        val sheet = DialogMenuPetBinding.inflate(layoutInflater)
+        dialog.setContentView(sheet.root)
+
+        sheet.tvSheetPetName.text = prefs.petName
+        sheet.btnRenameInSheet.setOnClickListener {
+            dialog.dismiss()
+            showRenamePetDialog()
+        }
+
+        sheet.sheetSwitchGyroPhysics.isChecked = prefs.isGyroPhysicsEnabled
+        sheet.sheetSwitchGyroPhysics.setOnCheckedChangeListener { _, isChecked ->
+            prefs.isGyroPhysicsEnabled = isChecked
+            binding.previewTetherStage.onSettingsChanged()
+            updateSheetCalibrationUI(sheet)
+            notifySettingsChanged()
+        }
+
+        updateSheetCalibrationUI(sheet)
+        sheet.sheetBtnCalibrateHold.setOnClickListener {
+            dialog.dismiss()
+            showOrientationCalibrationDialog()
+        }
+
+        sheet.sheetSwitchSleepiness.isChecked = prefs.isSleepinessEnabled
+        sheet.sheetSwitchSleepiness.setOnCheckedChangeListener { _, isChecked ->
             prefs.isSleepinessEnabled = isChecked
             notifySettingsChanged()
         }
 
-        binding.switchTouchReactions.setOnCheckedChangeListener { _, isChecked ->
+        sheet.sheetSwitchTouchReactions.isChecked = prefs.isTouchReactionEnabled
+        sheet.sheetSwitchTouchReactions.setOnCheckedChangeListener { _, isChecked ->
             prefs.isTouchReactionEnabled = isChecked
             notifySettingsChanged()
         }
 
-        binding.btnCalibrateHold.setOnClickListener {
-            showOrientationCalibrationDialog()
+        sheet.sheetChipIdle.setOnClickListener { setPreviewMood(PixelPetView.PetMood.IDLE, "Idle and floating") }
+        sheet.sheetChipHappy.setOnClickListener { setPreviewMood(PixelPetView.PetMood.HAPPY, "Joyful hops and sparkles") }
+        sheet.sheetChipSad.setOnClickListener { setPreviewMood(PixelPetView.PetMood.SAD, "Teardrops crying") }
+        sheet.sheetChipAngry.setOnClickListener { setPreviewMood(PixelPetView.PetMood.ANGRY, "Rage steam tantrum") }
+        sheet.sheetChipNerd.setOnClickListener { setPreviewMood(PixelPetView.PetMood.NERD, "Glasses reading") }
+        sheet.sheetChipTexting.setOnClickListener { setPreviewMood(PixelPetView.PetMood.TEXTING, "Chat typing") }
+
+        sheet.btnClosePetConfig.setOnClickListener { dialog.dismiss() }
+        dialog.show()
+    }
+
+    private fun updateSheetCalibrationUI(sheet: DialogMenuPetBinding) {
+        if (!prefs.isGyroPhysicsEnabled) {
+            sheet.sheetTvCalibrationStatus.text = "Mode 1: Autonomous Drift (Physics OFF)"
+            sheet.sheetTvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.text_secondary))
+            sheet.sheetBtnCalibrateHold.visibility = View.GONE
+        } else {
+            sheet.sheetBtnCalibrateHold.visibility = View.VISIBLE
+            if (prefs.isOrientationCalibrated) {
+                val y = prefs.calibratedAccelY
+                val pitchDeg = Math.toDegrees(kotlin.math.asin((y / 9.8f).coerceIn(-1f, 1f).toDouble())).toInt()
+                sheet.sheetTvCalibrationStatus.text = "Gravity Mode: Calibrated (~${pitchDeg}° pitch)"
+                sheet.sheetTvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.peach_primary))
+            } else {
+                sheet.sheetTvCalibrationStatus.text = "Gravity Mode: Tap calibrate angle"
+                sheet.sheetTvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.text_secondary))
+            }
         }
+    }
+
+    private fun showSoundConfigSheet() {
+        val dialog = BottomSheetDialog(this)
+        val sheet = DialogMenuSoundBinding.inflate(layoutInflater)
+        dialog.setContentView(sheet.root)
+
+        sheet.switchSoundMaster.isChecked = prefs.isSoundEnabled
+        sheet.switchSoundMaster.setOnCheckedChangeListener { _, isChecked ->
+            prefs.isSoundEnabled = isChecked
+        }
+
+        sheet.knobSoundVolume.apply {
+            minValue = 0f
+            maxValue = 100f
+            stepSize = 5f
+            unitSuffix = "%"
+            knobTitle = "VOL"
+            value = (prefs.soundVolume * 100f).coerceIn(0f, 100f)
+            onValueChanged = { newVal, fromUser ->
+                if (fromUser) {
+                    prefs.soundVolume = (newVal / 100f).coerceIn(0f, 1f)
+                }
+            }
+        }
+
+        sheet.switchSoundTap.isChecked = prefs.isTapSoundEnabled
+        sheet.switchSoundTap.setOnCheckedChangeListener { _, isChecked ->
+            prefs.isTapSoundEnabled = isChecked
+        }
+
+        sheet.switchSoundPunch.isChecked = prefs.isPunchSoundEnabled
+        sheet.switchSoundPunch.setOnCheckedChangeListener { _, isChecked ->
+            prefs.isPunchSoundEnabled = isChecked
+        }
+
+        sheet.switchSoundAnger.isChecked = prefs.isAngerSoundEnabled
+        sheet.switchSoundAnger.setOnCheckedChangeListener { _, isChecked ->
+            prefs.isAngerSoundEnabled = isChecked
+        }
+
+        sheet.btnTestChirp.setOnClickListener {
+            PetSoundHelper.playHappyChirp(this)
+        }
+        sheet.btnTestPunch.setOnClickListener {
+            PetSoundHelper.playPunchSqueak(this)
+        }
+        sheet.btnTestAnger.setOnClickListener {
+            PetSoundHelper.playAngryTantrum(this)
+        }
+
+        sheet.btnCloseSound.setOnClickListener { dialog.dismiss() }
+        dialog.show()
+    }
+
+    private fun showReactionsConfigSheet() {
+        val dialog = BottomSheetDialog(this)
+        val sheet = DialogMenuReactionsBinding.inflate(layoutInflater)
+        dialog.setContentView(sheet.root)
+
+        sheet.sheetKnobInstagramAnger.apply {
+            minValue = 1f
+            maxValue = 15f
+            stepSize = 1f
+            unitSuffix = "m"
+            knobTitle = "ANGER"
+            value = prefs.instagramAngerMinutes.toFloat()
+            onValueChanged = { newVal, fromUser ->
+                if (fromUser) {
+                    debouncePrefWrite("angerMinutes") {
+                        prefs.instagramAngerMinutes = newVal.toInt()
+                    }
+                }
+            }
+        }
+
+        sheet.sheetSwitchGoogleNerd.isChecked = prefs.isGoogleNerdAppsEnabled
+        sheet.sheetSwitchGoogleNerd.setOnCheckedChangeListener { _, isChecked ->
+            prefs.isGoogleNerdAppsEnabled = isChecked
+        }
+
+        val nerdApps = prefs.nerdApps
+        sheet.sheetCbChatGPT.isChecked = nerdApps.contains("com.openai.chatgpt")
+        sheet.sheetCbGemini.isChecked = nerdApps.contains("com.google.android.apps.bard")
+        sheet.sheetCbWPS.isChecked = nerdApps.contains("cn.wps.moffice_eng") || nerdApps.contains("com.onlyoffice.documents")
+        sheet.sheetCbPDF.isChecked = nerdApps.contains("com.adobe.reader")
+
+        val updateNerdApps = {
+            val apps = mutableSetOf<String>()
+            if (sheet.sheetCbChatGPT.isChecked) apps.add("com.openai.chatgpt")
+            if (sheet.sheetCbGemini.isChecked) apps.add("com.google.android.apps.bard")
+            if (sheet.sheetCbWPS.isChecked) {
+                apps.add("cn.wps.moffice_eng")
+                apps.add("cn.wps.moffice")
+                apps.add("com.onlyoffice.documents")
+            }
+            if (sheet.sheetCbPDF.isChecked) {
+                apps.add("com.adobe.reader")
+                apps.add("com.google.android.apps.pdfviewer")
+            }
+            prefs.nerdApps = apps
+        }
+        sheet.sheetCbChatGPT.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
+        sheet.sheetCbGemini.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
+        sheet.sheetCbWPS.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
+        sheet.sheetCbPDF.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
+
+        sheet.btnCloseReactions.setOnClickListener { dialog.dismiss() }
+        dialog.show()
     }
 
     private fun showDevToolsBottomSheet() {
@@ -381,24 +568,8 @@ class MainActivity : AppCompatActivity() {
 
         dialog.show()
     }
-
     private fun updateCalibrationStatusUI() {
-        if (!prefs.isGyroPhysicsEnabled) {
-            binding.tvCalibrationStatus.text = "Mode 1: Autonomous Random Drift (Physics OFF)"
-            binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.duo_text_muted))
-            binding.btnCalibrateHold.visibility = View.GONE
-        } else {
-            binding.btnCalibrateHold.visibility = View.VISIBLE
-            if (prefs.isOrientationCalibrated) {
-                val y = prefs.calibratedAccelY
-                val pitchDeg = Math.toDegrees(kotlin.math.asin((y / 9.8f).coerceIn(-1f, 1f).toDouble())).toInt()
-                binding.tvCalibrationStatus.text = "Gravity Mode: Calibrated (~${pitchDeg}° pitch)"
-                binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.duo_green))
-            } else {
-                binding.tvCalibrationStatus.text = "Gravity Mode: Tap calibrate angle"
-                binding.tvCalibrationStatus.setTextColor(ContextCompat.getColor(this, R.color.duo_text_muted))
-            }
-        }
+        binding.previewTetherStage.invalidate()
     }
 
     private fun showRenamePetDialog() {
@@ -551,46 +722,6 @@ class MainActivity : AppCompatActivity() {
         prefs.leashColor = colorHex
         binding.previewTetherStage.updateLeashColor()
         notifySettingsChanged()
-    }
-
-    private fun setCameraAlignment(alignment: String) {
-        prefs.cameraAlignment = alignment
-        when (alignment) {
-            "LEFT" -> {
-                prefs.cameraRefX = -110
-                prefs.cameraRefY = 24
-            }
-            "RIGHT" -> {
-                prefs.cameraRefX = 110
-                prefs.cameraRefY = 24
-            }
-            else -> {
-                prefs.cameraRefX = 0
-                prefs.cameraRefY = 22
-            }
-        }
-        binding.knobCameraX.value = prefs.cameraRefX.toFloat()
-        binding.knobCameraY.value = prefs.cameraRefY.toFloat()
-
-        updateAlignmentButtonsUI(alignment)
-        notifySettingsChanged()
-    }
-
-    private fun updateAlignmentButtonsUI(alignment: String) {
-        val selectedColor = ContextCompat.getColor(this, R.color.peach_primary)
-        val defaultColor = ContextCompat.getColor(this, R.color.peach_surface)
-
-        val selectedText = ContextCompat.getColor(this, R.color.background_dark)
-        val defaultText = ContextCompat.getColor(this, R.color.text_primary)
-
-        binding.btnAlignLeft.setBackgroundColor(if (alignment == "LEFT") selectedColor else defaultColor)
-        binding.btnAlignLeft.setTextColor(if (alignment == "LEFT") selectedText else defaultText)
-
-        binding.btnAlignCenter.setBackgroundColor(if (alignment == "CENTER") selectedColor else defaultColor)
-        binding.btnAlignCenter.setTextColor(if (alignment == "CENTER") selectedText else defaultText)
-
-        binding.btnAlignRight.setBackgroundColor(if (alignment == "RIGHT") selectedColor else defaultColor)
-        binding.btnAlignRight.setTextColor(if (alignment == "RIGHT") selectedText else defaultText)
     }
 
     private fun notifySettingsChanged() {

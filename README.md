@@ -70,10 +70,14 @@
 * **Rapid Shake Shiver Ripples**: When you shake the phone rapidly, dynamic high-frequency standing waves ripple and shiver through the wire, naturally damping out as it settles!
 * **Duolingo-Style 2.5D Hardware**: Dual-tone depth wire styling (darker shadow under core), a rotating metallic jump-ring hinge at the camera anchor, and a golden clasp bead at the sprout knot.
 * **Expressive Secondary Motion**: The pet's head sprout flexes in counter-phase to swing velocity, with playful squishy bounce when shaken!
-* **No Scrolling Needed**: All core controls, live preview, presets, and dials fit neatly on a single non-scrolling screen.
-* **Retro Rotary Knobs**: Replaced vertical sliders with compact 270° rotary volume dials (`CAM X`, `CAM Y`, `SIZE`, `LEASH`) with tactile haptic feedback.
-* **Cute Peach Palette**: Warm peach (`#FF9F68`) and light orange accents with dark terracotta surfaces.
-* **Separated Developer Tools**: Developer features (Touch Debug Mode, Foreground App Log, Anger Timer dial, Nerd app selectors) are accessible via the **⚙️ Dev Tools** sheet.
+* **Modular Bottom Menus Architecture**: Ultra-clean, zero-clutter dashboard featuring a live hero preview with 5 dedicated configuration bottom sheets below:
+  - **Position Config**: Camera $(X, Y)$ offset, pet size, leash length ($20\text{dp}-120\text{dp}$), alignment presets, and leash colors.
+  - **Pet Config**: Pet naming ("Kiddo"), Keychain Gravity vs Drift mode, neutral calibration, sleepiness, and touch toggles.
+  - **Sound Config**: Master mute, soft volume dial, and individual toggles for tap chirps, punch squeaks, and anger rumbles.
+  - **Foreground App Reactions**: Instagram reactions, anger threshold timer, Google apps nerd toggle, custom learning apps list.
+  - **Developer Tools**: Touch debug mode, hide-and-seek, anger cooldown timer, active app log.
+* **Softened Physics & Damping**: Leash bending is smoothly saturated at sizes $>70\text{dp}$, preventing wild wobbling while retaining silky, organic rope flex.
+* **Floating Value Callout Badges**: Rotary dials pop up a tactile 3D value badge above the thumb during touch, ensuring numbers are never obscured by fingers.
 ---
 
 ## 📦 Releases & Versioning

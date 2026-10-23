@@ -77,11 +77,17 @@ graph TD
    - Compact 270° rotary dial potentiometer custom view replacing bulky vertical sliders.
    - **Floating Value Callout Badge**: Pops up above the user's thumb during touch so the range number is never obscured by fingers.
    - Tactile haptic feedback and smooth circular/vertical touch gestures.
-5. **Pet Naming & Anger Tantrum Timer**:
-   - Custom pet naming (default `"Kiddo"`) displayed in header and notifications with rename dialog.
-   - Rapid punching (4+ taps) triggers furious temper tantrum with anger cooldown timer before blushing and calming down.
-
-5. **`com.dynamicisland.app.util.TouchableRegionHelper`**:
+5. **Modular Bottom Menus Architecture**:
+   - Uncluttered main dashboard hosting an interactive hero preview, with 5 dedicated configuration bottom sheets below:
+     1. **Position Config**: `CAM X`, `CAM Y`, `SIZE`, `LEASH`, camera presets, leash colors.
+     2. **Pet Config**: Pet renaming, Keychain Gravity vs Drift, calibration, sleepiness, touch toggles, mood previews.
+     3. **Sound Config**: Master mute, volume dial, individual toggles (tap chirp, punch squeak, anger grunt).
+     4. **Foreground App Reactions**: Instagram reactions & timer, Google apps nerd toggle, custom learning apps list.
+     5. **Developer Tools**: Touch debug mode, hide-and-seek, anger cooldown timer, active app log.
+6. **`com.dynamicisland.app.util.PetSoundHelper`**:
+   - Native `AudioTrack` PCM 16-bit sine wave synthesis with zero I/O latency.
+   - Soft, gentle pet audio effects (cheerful chirp, soft plush squeak, gentle tantrum rumble) with master volume scaling.
+7. **`com.dynamicisland.app.util.TouchableRegionHelper`**:
    - Dynamically hooks Android's internal `ViewTreeObserver.OnComputeInternalInsetsListener`.
    - Supplies an `android.graphics.Region` generated from `Path.addCircle(petCenterX, petCenterY, radius)` matching the pet's exact coordinates.
    - Synchronizes touchable region in real-time as the pet drifts or is dragged.

@@ -163,13 +163,12 @@ class DynamicIslandService : Service() {
     }
 
     private val angryResetRunnable = Runnable {
-        if (isTemporarilyAngry) {
-            isTemporarilyAngry = false
-            tapCount = 0
-            petView?.setMood(savedMoodBeforeAnger)
-            petView?.triggerIdleActivity(PixelPetView.IdleActivity.BLUSHING, 1400L)
-            updateLeashAttachment(slackFactor = 1.0f)
-        }
+        isTemporarilyAngry = false
+        tapCount = 0
+        val targetMood = if (savedMoodBeforeAnger == PixelPetView.PetMood.ANGRY) PixelPetView.PetMood.IDLE else savedMoodBeforeAnger
+        petView?.setMood(targetMood)
+        petView?.triggerIdleActivity(PixelPetView.IdleActivity.BLUSHING, 1400L)
+        updateLeashAttachment(slackFactor = 1.0f)
     }
 
     private val appChangeListener: (String, Boolean) -> Unit = { packageName, _ ->
@@ -666,14 +665,13 @@ class DynamicIslandService : Service() {
 
         // 1. Rapid Multi-Taps / Punches (4+ times) -> Furious Temper Tantrum with Timer!
         if (tapCount >= 4) {
-            com.dynamicisland.app.util.PetSoundHelper.playAngryTantrum()
+            com.dynamicisland.app.util.PetSoundHelper.playAngryTantrum(this)
             triggerTemperTantrum(pet)
             return
         }
-
         // 2. Single or double punch flinch wobble
         if (tapCount in 2..3) {
-            com.dynamicisland.app.util.PetSoundHelper.playPunchSqueak()
+            com.dynamicisland.app.util.PetSoundHelper.playPunchSqueak(this)
             pet.triggerPunchReaction()
             updateLeashAttachment(slackFactor = 0.5f)
             handler.postDelayed({ updateLeashAttachment(slackFactor = 1.0f) }, 260)
@@ -702,7 +700,7 @@ class DynamicIslandService : Service() {
         }
 
         // 3. Contextual Mood Tap
-        com.dynamicisland.app.util.PetSoundHelper.playHappyChirp()
+        com.dynamicisland.app.util.PetSoundHelper.playHappyChirp(this)
         pet.handleUserTap()
         updateLeashAttachment(slackFactor = 1.6f)
         handler.postDelayed({ updateLeashAttachment(slackFactor = 1.0f) }, 300)
@@ -711,7 +709,8 @@ class DynamicIslandService : Service() {
     private fun triggerTemperTantrum(pet: PixelPetView) {
         handler.removeCallbacks(angryResetRunnable)
         if (!isTemporarilyAngry) {
-            savedMoodBeforeAnger = pet.getMood()
+            val previous = pet.getMood()
+            savedMoodBeforeAnger = if (previous == PixelPetView.PetMood.ANGRY) PixelPetView.PetMood.IDLE else previous
             isTemporarilyAngry = true
         }
 
@@ -719,10 +718,10 @@ class DynamicIslandService : Service() {
         pet.triggerExcitedHop()
         updateLeashAttachment(slackFactor = 0.2f)
 
-        val durationMs = prefs.angerDurationSeconds * 1000L
+        // Failsafe anger cooldown: 5-6 seconds maximum!
+        val durationMs = prefs.angerDurationSeconds.coerceIn(3, 8) * 1000L
         handler.postDelayed(angryResetRunnable, durationMs)
     }
-
     private fun refreshCachedSettings() {
         cachedCameraRefX = prefs.cameraRefX
         cachedCameraRefY = prefs.cameraRefY

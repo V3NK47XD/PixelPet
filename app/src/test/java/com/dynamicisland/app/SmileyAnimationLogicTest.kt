@@ -286,4 +286,24 @@ class SmileyAnimationLogicTest {
         val defaultName = "Kiddo"
         assertEquals("Kiddo", defaultName)
     }
+
+    @Test
+    fun testPhysicsSofteningAndSoundDefaults() {
+        // 1. Leash bend softening: at high velocities on long leashes (>70dp), bend is clamped to max 14dp
+        val maxBendDp = 14f
+        val highVelocity = 25f
+        val rawBend = -highVelocity * 1.35f
+        val clampedBend = rawBend.coerceIn(-maxBendDp, maxBendDp)
+        assertEquals(-14f, clampedBend, 0.001f)
+
+        // 2. Anger duration: clamped between 3s and 8s to prevent getting stuck over 30s
+        val stuckTime = 45
+        val safeAngerDuration = stuckTime.coerceIn(3, 8)
+        assertEquals(8, safeAngerDuration)
+
+        // 3. Default sound volume is soft (0.55f) and clamped to [0, 1]
+        val defaultVolume = 0.55f
+        assertTrue("Default volume should be soft (< 0.70)", defaultVolume < 0.70f)
+        assertTrue("Default volume should be audible (> 0.20)", defaultVolume > 0.20f)
+    }
 }

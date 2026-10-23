@@ -8,7 +8,7 @@
     android:orientation="vertical"
     android:padding="12dp">
 
-    <!-- 1. Top Header Bar: Pet Name, Settings & Master Switch -->
+    <!-- 1. Top Header Bar: Pet Name, Rename & Master Switch -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="44dp"
@@ -57,23 +57,7 @@
                 android:textSize="10.5sp" />
         </LinearLayout>
 
-        <!-- Centered & Crisp Settings Gear Icon -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnDevTools"
-            style="@style/Widget.Material3.Button.IconButton"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
-            android:layout_marginEnd="8dp"
-            android:backgroundTint="@color/peach_surface"
-            app:cornerRadius="19dp"
-            app:icon="@drawable/ic_settings"
-            app:iconGravity="textStart"
-            app:iconSize="20dp"
-            app:iconTint="@color/peach_cream"
-            app:strokeColor="@color/peach_surface_border"
-            app:strokeWidth="1dp" />
-
-        <!-- Clean Toggle Switch (Never fills with solid ugly block) -->
+        <!-- Clean Master Switch -->
         <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/switchPetMaster"
             android:layout_width="wrap_content"
@@ -168,12 +152,12 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- 3. Live Interactive Pet Preview Card -->
+    <!-- 3. Live Interactive Pet Preview Card (Hero Area) -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
-        android:layout_weight="1.1"
+        android:layout_weight="1"
         app:cardBackgroundColor="@color/peach_surface"
         app:cardCornerRadius="18dp"
         app:strokeColor="@color/peach_surface_border"
@@ -184,7 +168,7 @@
             android:layout_height="match_parent"
             android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:padding="10dp">
+            android:padding="12dp">
 
             <!-- Tethered Stage Live Preview -->
             <com.dynamicisland.app.view.TetheredPetStageView
@@ -207,95 +191,31 @@
                     android:fontFamily="sans-serif-bold"
                     android:text="Kiddo • Floating near camera"
                     android:textColor="@color/peach_light"
-                    android:textSize="11.5sp" />
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/btnTestDrift"
                     android:layout_width="wrap_content"
-                    android:layout_height="26dp"
+                    android:layout_height="28dp"
                     android:background="@drawable/bg_card_surface"
                     android:fontFamily="sans-serif-bold"
                     android:gravity="center"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
                     android:text="Drift"
                     android:textColor="@color/peach_primary"
-                    android:textSize="10.5sp" />
+                    android:textSize="11sp" />
             </LinearLayout>
-
-            <!-- Mood Selector Chips -->
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:scrollbars="none">
-
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/chipGroupMoods"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:singleSelection="true">
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipMoodIdle"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checked="true"
-                        android:text="Idle"
-                        android:textSize="10sp" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipMoodHappy"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Happy"
-                        android:textSize="10sp" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipMoodSad"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Sad"
-                        android:textSize="10sp" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipMoodAngry"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Angry"
-                        android:textSize="10sp" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipMoodNerd"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Nerd"
-                        android:textSize="10sp" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipMoodTexting"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Chat"
-                        android:textSize="10sp" />
-                </com.google.android.material.chip.ChipGroup>
-            </HorizontalScrollView>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- 4. Rotary Control Deck -->
+    <!-- 4. Five Modular Settings Menus Below Preview (Zero Clutter Dashboard) -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         app:cardBackgroundColor="@color/peach_surface_card"
-        app:cardCornerRadius="16dp"
+        app:cardCornerRadius="18dp"
         app:strokeColor="@color/peach_surface_border"
         app:strokeWidth="1dp">
 
@@ -303,251 +223,104 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="10dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-bold"
-                android:text="KEYCHAIN CONTROLS"
+                android:fontFamily="sans-serif-black"
+                android:text="SETTINGS &amp; CONTROLS"
                 android:textColor="@color/peach_accent"
                 android:textSize="9.5sp" />
 
+            <!-- Row 1: Position Config & Pet Config -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="84dp"
-                android:layout_marginTop="4dp"
+                android:layout_height="44dp"
+                android:layout_marginTop="6dp"
                 android:orientation="horizontal">
 
-                <com.dynamicisland.app.view.RotaryKnobView
-                    android:id="@+id/knobCameraX"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnMenuPosition"
+                    style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="1" />
-
-                <com.dynamicisland.app.view.RotaryKnobView
-                    android:id="@+id/knobCameraY"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1" />
-
-                <com.dynamicisland.app.view.RotaryKnobView
-                    android:id="@+id/knobPetSize"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1" />
-
-                <com.dynamicisland.app.view.RotaryKnobView
-                    android:id="@+id/knobLeash"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1" />
-            </LinearLayout>
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- 5. Quick Camera Alignment & Leash Colors Row -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal">
-
-        <!-- Camera Presets -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1.1"
-            android:orientation="horizontal">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAlignLeft"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_weight="1"
-                android:padding="0dp"
-                android:text="Left"
-                android:textColor="@color/peach_light"
-                android:textSize="10sp"
-                app:backgroundTint="@color/peach_surface"
-                app:cornerRadius="8dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAlignCenter"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_marginStart="4dp"
-                android:layout_weight="1"
-                android:padding="0dp"
-                android:text="Center"
-                android:textColor="@color/peach_dark"
-                android:textSize="10sp"
-                app:backgroundTint="@color/peach_primary"
-                app:cornerRadius="8dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAlignRight"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_marginStart="4dp"
-                android:layout_weight="1"
-                android:padding="0dp"
-                android:text="Right"
-                android:textColor="@color/peach_light"
-                android:textSize="10sp"
-                app:backgroundTint="@color/peach_surface"
-                app:cornerRadius="8dp" />
-        </LinearLayout>
-
-        <!-- Leash Colors -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_weight="0.9"
-            android:orientation="horizontal">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLeashRed"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_weight="1"
-                android:padding="0dp"
-                android:text="Red"
-                android:textColor="@color/duo_text_white"
-                android:textSize="10sp"
-                app:backgroundTint="#F43F5E"
-                app:cornerRadius="8dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLeashGold"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_marginStart="3dp"
-                android:layout_weight="1"
-                android:padding="0dp"
-                android:text="Gold"
-                android:textColor="@color/peach_dark"
-                android:textSize="10sp"
-                app:backgroundTint="#F59E0B"
-                app:cornerRadius="8dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLeashSilver"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_marginStart="3dp"
-                android:layout_weight="1"
-                android:padding="0dp"
-                android:text="Silver"
-                android:textColor="@color/peach_dark"
-                android:textSize="10sp"
-                app:backgroundTint="#E2E8F0"
-                app:cornerRadius="8dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLeashMint"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_marginStart="3dp"
-                android:layout_weight="1"
-                android:padding="0dp"
-                android:text="Mint"
-                android:textColor="@color/peach_dark"
-                android:textSize="10sp"
-                app:backgroundTint="#34D399"
-                app:cornerRadius="8dp" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- 6. Essential Behavior Toggles Card -->
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        app:cardBackgroundColor="@color/peach_surface_card"
-        app:cardCornerRadius="16dp"
-        app:strokeColor="@color/peach_surface_border"
-        app:strokeWidth="1dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="12dp"
-            android:paddingTop="6dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="6dp">
-
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/switchGyroPhysics"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="Keychain Gravity Mode (OFF: Drift)"
-                android:textColor="@color/peach_light"
-                android:textSize="12sp"
-                app:thumbTint="@color/switch_thumb_selector"
-                app:trackTint="@color/switch_track_selector" />
-
-            <!-- Neutral Hold Calibration Row -->
-            <LinearLayout
-                android:id="@+id/layoutCalibrationRow"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:layout_marginBottom="4dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="4dp"
-                android:paddingEnd="4dp">
-
-                <TextView
-                    android:id="@+id/tvCalibrationStatus"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Neutral Hold: Calibrated"
-                    android:textColor="@color/peach_cream"
-                    android:textSize="11sp" />
+                    android:padding="0dp"
+                    android:text="Position Config"
+                    android:textColor="@color/peach_light"
+                    android:textSize="11.5sp"
+                    android:fontFamily="sans-serif-bold"
+                    app:backgroundTint="@color/peach_surface"
+                    app:cornerRadius="10dp" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnCalibrateHold"
+                    android:id="@+id/btnMenuPet"
                     style="@style/Widget.Material3.Button.TonalButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:paddingStart="12dp"
-                    android:paddingTop="0dp"
-                    android:paddingEnd="12dp"
-                    android:paddingBottom="0dp"
-                    android:text="Calibrate Angle"
-                    android:textColor="@color/peach_dark"
-                    android:textSize="11sp"
-                    app:backgroundTint="@color/peach_primary"
-                    app:cornerRadius="8dp" />
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:padding="0dp"
+                    android:text="Pet Config"
+                    android:textColor="@color/peach_light"
+                    android:textSize="11.5sp"
+                    android:fontFamily="sans-serif-bold"
+                    app:backgroundTint="@color/peach_surface"
+                    app:cornerRadius="10dp" />
             </LinearLayout>
 
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/switchSleepiness"
+            <!-- Row 2: Sound Config & App Reactions -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="Night Sleepiness (10 PM – 7 AM)"
-                android:textColor="@color/peach_light"
-                android:textSize="12sp"
-                app:thumbTint="@color/switch_thumb_selector"
-                app:trackTint="@color/switch_track_selector" />
+                android:layout_height="44dp"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal">
 
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/switchTouchReactions"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnMenuSound"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:padding="0dp"
+                    android:text="Sound Config"
+                    android:textColor="@color/peach_light"
+                    android:textSize="11.5sp"
+                    android:fontFamily="sans-serif-bold"
+                    app:backgroundTint="@color/peach_surface"
+                    app:cornerRadius="10dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnMenuReactions"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:padding="0dp"
+                    android:text="App Reactions"
+                    android:textColor="@color/peach_light"
+                    android:textSize="11.5sp"
+                    android:fontFamily="sans-serif-bold"
+                    app:backgroundTint="@color/peach_surface"
+                    app:cornerRadius="10dp" />
+            </LinearLayout>
+
+            <!-- Row 3: Developer Tools -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnMenuDevTools"
+                style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="Touch Interactions (Drag &amp; Tap)"
-                android:textColor="@color/peach_light"
-                android:textSize="12sp"
-                app:thumbTint="@color/switch_thumb_selector"
-                app:trackTint="@color/switch_track_selector" />
+                android:layout_height="40dp"
+                android:layout_marginTop="6dp"
+                android:padding="0dp"
+                android:text="Developer Tools &amp; Debug"
+                android:textColor="@color/peach_cream"
+                android:textSize="11.5sp"
+                android:fontFamily="sans-serif-bold"
+                app:backgroundTint="@color/peach_surface"
+                app:cornerRadius="10dp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
