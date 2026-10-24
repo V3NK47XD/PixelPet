@@ -116,7 +116,70 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Camera Alignment Presets Card -->
+        <!-- Leash Motion Sensitivity & Tremor Filter Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:cardBackgroundColor="@color/peach_surface_card"
+            app:cardCornerRadius="14dp"
+            app:strokeColor="@color/peach_surface_border"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="sans-serif-bold"
+                        android:text="LEASH MOTION SENSITIVITY"
+                        android:textColor="@color/peach_accent"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/tvSensitivityValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="monospace"
+                        android:text="Deadzone: 0.6 m/s²"
+                        android:textColor="@color/peach_primary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvSensitivityDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Ignores small hand tremors and involuntary fidgeting."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp" />
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/sliderLeashSensitivity"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:stepSize="0.1"
+                    android:value="0.6"
+                    android:valueFrom="0.1"
+                    android:valueTo="2.5"
+                    app:thumbColor="@color/peach_primary"
+                    app:trackColorActive="@color/peach_primary"
+                    app:trackColorInactive="@color/peach_dark" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

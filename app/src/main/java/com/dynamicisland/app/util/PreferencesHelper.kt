@@ -50,8 +50,8 @@ class PreferencesHelper(context: Context) {
         private const val KEY_SOUND_TAP_ENABLED = "sound_tap_enabled"
         private const val KEY_SOUND_PUNCH_ENABLED = "sound_punch_enabled"
         private const val KEY_SOUND_ANGER_ENABLED = "sound_anger_enabled"
+        private const val KEY_LEASH_MOTION_THRESHOLD = "leash_motion_threshold"
         val DEFAULT_NERD_PACKAGES = setOf(
-            "com.google.android.apps.bard",
             "cn.wps.moffice_eng",
             "cn.wps.moffice",
             "com.onlyoffice.documents",
@@ -218,4 +218,8 @@ class PreferencesHelper(context: Context) {
     var isAngerSoundEnabled: Boolean
         get() = prefs.getBoolean(KEY_SOUND_ANGER_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_SOUND_ANGER_ENABLED, value).apply()
+
+    var leashMotionThreshold: Float
+        get() = prefs.getFloat(KEY_LEASH_MOTION_THRESHOLD, 0.6f)
+        set(value) = prefs.edit().putFloat(KEY_LEASH_MOTION_THRESHOLD, value.coerceIn(0.1f, 2.5f)).apply()
 }

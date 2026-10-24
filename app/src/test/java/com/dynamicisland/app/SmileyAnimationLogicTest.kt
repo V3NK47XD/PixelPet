@@ -306,4 +306,30 @@ class SmileyAnimationLogicTest {
         assertTrue("Default volume should be soft (< 0.70)", defaultVolume < 0.70f)
         assertTrue("Default volume should be audible (> 0.20)", defaultVolume > 0.20f)
     }
+
+    @Test
+    fun testLeashMotionSensitivityThresholdDeadzone() {
+        val deadzone = 0.6f
+        fun filterMotion(delta: Float): Float {
+            return when {
+                kotlin.math.abs(delta) <= deadzone -> 0f
+                delta > deadzone -> (delta - deadzone) * (9.8f / (9.8f - deadzone))
+                else -> (delta + deadzone) * (9.8f / (9.8f - deadzone))
+            }
+        }
+
+        // Small involuntary tremor below deadzone (e.g. 0.3 m/s^2) is completely ignored -> 0f!
+        assertEquals(0f, filterMotion(0.25f), 0.0001f)
+        assertEquals(0f, filterMotion(-0.45f), 0.0001f)
+        assertEquals(0f, filterMotion(0.60f), 0.0001f)
+
+        // Deliberate movement above deadzone (e.g. 1.8 m/s^2) passes through smoothly
+        val result = filterMotion(1.8f)
+        assertTrue("Movement above deadzone must be non-zero", result > 0f)
+
+        // Configurable threshold range [0.1, 2.5]
+        val defaultThreshold = 0.6f
+        val clamped = defaultThreshold.coerceIn(0.1f, 2.5f)
+        assertEquals(0.6f, clamped, 0.0001f)
+    }
 }

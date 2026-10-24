@@ -268,6 +268,31 @@ class MainActivity : AppCompatActivity() {
         sheet.btnLeashGold.setOnClickListener { setLeashColor("#F59E0B") }
         sheet.btnLeashSilver.setOnClickListener { setLeashColor("#E2E8F0") }
         sheet.btnLeashMint.setOnClickListener { setLeashColor("#34D399") }
+        // Leash Motion Sensitivity / Deadzone Threshold Slider
+        val updateSensitivityUI = { thresh: Float ->
+            val formatted = "%.1f".format(thresh)
+            sheet.tvSensitivityValue.text = "Deadzone: $formatted m/s²"
+            val desc = when {
+                thresh <= 0.3f -> "High Sensitivity: reacts to micro-movements."
+                thresh <= 0.8f -> "Balanced: ignores normal hand tremors & tiny tilts."
+                thresh <= 1.4f -> "Firm: ignores fidgeting, reacts to deliberate tilts."
+                else -> "Ultra-Firm: only moves on large deliberate phone tilts."
+            }
+            sheet.tvSensitivityDescription.text = desc
+        }
+
+        sheet.sliderLeashSensitivity.value = prefs.leashMotionThreshold.coerceIn(0.1f, 2.5f)
+        updateSensitivityUI(sheet.sliderLeashSensitivity.value)
+
+        sheet.sliderLeashSensitivity.addOnChangeListener { _, value, fromUser ->
+            if (fromUser) {
+                updateSensitivityUI(value)
+                debouncePrefWrite("leashSensitivity") {
+                    prefs.leashMotionThreshold = value
+                    notifySettingsChanged()
+                }
+            }
+        }
 
         sheet.btnClosePosition.setOnClickListener { dialog.dismiss() }
         dialog.show()

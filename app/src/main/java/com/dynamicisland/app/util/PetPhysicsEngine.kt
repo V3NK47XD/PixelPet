@@ -253,8 +253,21 @@ class PetPhysicsEngine(
                 val deltaY = ay - neutralAccelY
                 val deltaZ = az - neutralAccelZ
 
-                // Full 180° lateral tilt ratio: -deltaX / 9.8f across full [-1.0, 1.0]
-                val normalizedTiltX = (-deltaX / 9.8f).coerceIn(-1.0f, 1.0f)
+                // Configurable motion sensitivity deadzone: ignore small involuntary hand tremors/tilts
+                val deadzone = prefs.leashMotionThreshold
+                val filteredDeltaX = when {
+                    abs(deltaX) <= deadzone -> 0f
+                    deltaX > deadzone -> (deltaX - deadzone) * (9.8f / (9.8f - deadzone).coerceAtLeast(0.1f))
+                    else -> (deltaX + deadzone) * (9.8f / (9.8f - deadzone).coerceAtLeast(0.1f))
+                }
+                val filteredDeltaY = when {
+                    abs(deltaY) <= deadzone -> 0f
+                    deltaY > deadzone -> (deltaY - deadzone)
+                    else -> (deltaY + deadzone)
+                }
+
+                // Full 180° lateral tilt ratio: -filteredDeltaX / 9.8f across full [-1.0, 1.0]
+                val normalizedTiltX = (-filteredDeltaX / 9.8f).coerceIn(-1.0f, 1.0f)
                 val swingAngleRad = kotlin.math.asin(normalizedTiltX.toDouble()).toFloat()
 
                 // Circular pendulum arc of radius R = leashLengthDp centered at camera anchor:
@@ -263,20 +276,21 @@ class PetPhysicsEngine(
                 val rawTargetX = (leashR * kotlin.math.sin(swingAngleRad.toDouble()).toFloat()).coerceIn(-leashR, leashR)
                 // Circular arc lift: at 90° tilt (cos = 0), the pet rises by -leashR horizontally
                 val arcLiftDp = -leashR * (1f - kotlin.math.cos(swingAngleRad.toDouble()).toFloat())
-                val pitchSagDp = (deltaY * 1.5f).coerceIn(-14f, 24f)
+                val pitchSagDp = (filteredDeltaY * 1.5f).coerceIn(-14f, 24f)
                 val rawTargetY = (arcLiftDp + pitchSagDp).coerceIn(-leashR, 28f)
 
                 // Responsive low-pass filter
-                targetTiltXDp = (targetTiltXDp * 0.60f) + (rawTargetX * 0.40f)
-                targetTiltYDp = (targetTiltYDp * 0.60f) + (rawTargetY * 0.40f)
+                targetTiltXDp = (targetTiltXDp * 0.72f) + (rawTargetX * 0.28f)
+                targetTiltYDp = (targetTiltYDp * 0.72f) + (rawTargetY * 0.28f)
+
                 // High-pass filter for dynamic linear acceleration (inertia lag when waving phone)
                 smoothGravityX = (smoothGravityX * 0.85f) + (ax * 0.15f)
                 smoothGravityY = (smoothGravityY * 0.85f) + (ay * 0.15f)
                 val dynAccelX = ax - smoothGravityX
 
-                // Sudden lateral phone motion pushes keychain in opposite direction
-                if (abs(dynAccelX) > 0.75f) {
-                    velocityX += (-dynAccelX * 0.35f)
+                // Sudden lateral phone motion pushes keychain in opposite direction (ignores tremors below deadzone)
+                if (abs(dynAccelX) > (0.6f + deadzone * 0.6f)) {
+                    velocityX += (-dynAccelX * 0.30f)
                 }
 
                 // Shake / Jerk detection
@@ -285,8 +299,9 @@ class PetPhysicsEngine(
                 lastAccelY = ay
                 lastAccelZ = az
 
-                if (deltaAccel > 4.5f) {
-                    val addedShiver = ((deltaAccel - 4.5f) * 0.85f).coerceIn(0f, 16f)
+                val shiverThreshold = 4.2f + (deadzone * 1.8f)
+                if (deltaAccel > shiverThreshold) {
+                    val addedShiver = ((deltaAccel - shiverThreshold) * 0.80f).coerceIn(0f, 14f)
                     shiverAmplitudeDp = maxOf(shiverAmplitudeDp, addedShiver)
                 }
 
