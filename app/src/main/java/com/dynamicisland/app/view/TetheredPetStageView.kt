@@ -465,9 +465,14 @@ class TetheredPetStageView @JvmOverloads constructor(
             val nx = -dy / length
             val ny = dx / length
 
-            val baseSagPx = length * 0.22f * leashSlackFactor
-            val bendPx = (-physicsVelocityXDp * 1.8f) * density
-            val shiverPx = shiverAmplitudeDp * density
+            val baseSagPx = (length * 0.20f * leashSlackFactor).coerceAtMost(24f * density)
+            val maxBendDp = 14f
+            val rawBendDp = (-physicsVelocityXDp * 1.35f).coerceIn(-maxBendDp, maxBendDp)
+            val bendPx = rawBendDp * density
+            val shiverPx = (shiverAmplitudeDp * density).coerceAtMost(12f * density)
+
+            val verticalRatio = (1f - (kotlin.math.abs(dx) / length.coerceAtLeast(1f))).coerceIn(0f, 1f)
+            val naturalDrapePx = 4.0f * density * leashSlackFactor * verticalRatio
             val segments = 18
             leashPath.reset()
             for (i in 0..segments) {
@@ -479,15 +484,15 @@ class TetheredPetStageView @JvmOverloads constructor(
                 val sagY = envelope * baseSagPx
 
                 val arcBend = kotlin.math.sin(u * Math.PI.toFloat()) * bendPx
-                val sBend = kotlin.math.sin(u * 2f * Math.PI.toFloat()) * (bendPx * 0.40f)
+                val sBend = kotlin.math.sin(u * 2f * Math.PI.toFloat()) * (bendPx * 0.25f)
                 val wave = kotlin.math.sin(shiverPhase + u * 2.5f * Math.PI.toFloat()) +
                         0.35f * kotlin.math.sin(shiverPhase * 2f + u * 5f * Math.PI.toFloat())
                 val shiver = envelope * shiverPx * wave
+                val drape = kotlin.math.sin(u * Math.PI.toFloat()) * naturalDrapePx
 
-                val lateralDeflection = arcBend + sBend + shiver
+                val lateralDeflection = arcBend + sBend + shiver + drape
                 val ptX = bx + (lateralDeflection * nx)
                 val ptY = by + sagY + (lateralDeflection * ny)
-
                 if (i == 0) {
                     leashPath.moveTo(ptX, ptY)
                 } else {

@@ -60,6 +60,8 @@ class DynamicIslandService : Service() {
         const val ACTION_STOP = "com.dynamicisland.app.ACTION_STOP"
         const val ACTION_UPDATE_SETTINGS = "com.dynamicisland.app.ACTION_UPDATE_SETTINGS"
         const val ACTION_UPDATE_INSTAGRAM = "com.dynamicisland.app.ACTION_UPDATE_INSTAGRAM"
+        const val ACTION_SET_MOOD = "com.dynamicisland.app.ACTION_SET_MOOD"
+        const val EXTRA_MOOD = "extra_mood"
         const val EXTRA_IS_INSTAGRAM = "extra_is_instagram"
 
         fun start(context: Context) {
@@ -274,6 +276,18 @@ class DynamicIslandService : Service() {
             }
             ACTION_UPDATE_SETTINGS -> {
                 applyUpdatedSettings()
+            }
+            ACTION_SET_MOOD -> {
+                val moodName = intent.getStringExtra(EXTRA_MOOD) ?: PixelPetView.PetMood.HAPPY.name
+                val mood = try {
+                    PixelPetView.PetMood.valueOf(moodName)
+                } catch (e: Exception) {
+                    PixelPetView.PetMood.HAPPY
+                }
+                isTemporarilyAngry = false
+                angerHandler.removeCallbacks(angryResetRunnable)
+                moodManager.simulateMood(mood, "Preview Sync")
+                petView?.setMood(mood)
             }
             ACTION_UPDATE_INSTAGRAM -> {
                 val isIg = intent.getBooleanExtra(EXTRA_IS_INSTAGRAM, false)

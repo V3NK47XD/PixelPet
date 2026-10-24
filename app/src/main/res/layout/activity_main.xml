@@ -157,8 +157,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
-        android:layout_weight="1"
-        app:cardBackgroundColor="@color/peach_surface"
+        android:layout_weight="0.75"
         app:cardCornerRadius="18dp"
         app:strokeColor="@color/peach_surface_border"
         app:strokeWidth="1dp">
@@ -324,4 +323,30 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- 5. Future Monetization Ad Banner Container (Standard 50dp / 320x50 Banner Slot) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardAdBannerContainer"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="8dp"
+        app:cardBackgroundColor="@color/peach_surface"
+        app:cardCornerRadius="12dp"
+        app:strokeColor="@color/peach_surface_border"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-bold"
+                android:text="Ad Space Reserved (50dp Banner Slot)"
+                android:textColor="#5A433A"
+                android:textSize="10.5sp" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 </LinearLayout>

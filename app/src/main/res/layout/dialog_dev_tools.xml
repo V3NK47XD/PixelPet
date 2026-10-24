@@ -110,18 +110,6 @@
                     app:trackTint="@color/switch_track_selector" />
 
                 <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/switchGoogleNerd"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:checked="true"
-                    android:text="Google Apps Trigger Nerd Mode"
-                    android:textColor="@color/peach_light"
-                    android:textSize="12sp"
-                    app:thumbTint="@color/switch_thumb_selector"
-                    app:trackTint="@color/switch_track_selector" />
-
-                <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/switchPhoneEvents"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -132,54 +120,6 @@
                     android:textSize="12sp"
                     app:thumbTint="@color/switch_thumb_selector"
                     app:trackTint="@color/switch_track_selector" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Dev Section 3: Instagram Anger Timer Dial -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            app:cardBackgroundColor="@color/peach_surface_card"
-            app:cardCornerRadius="14dp"
-            app:strokeColor="@color/peach_surface_border"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="14dp">
-
-                <com.dynamicisland.app.view.RotaryKnobView
-                    android:id="@+id/knobAngerTimer"
-                    android:layout_width="72dp"
-                    android:layout_height="72dp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Instagram Anger Timer 😡"
-                        android:textColor="@color/peach_light"
-                        android:textSize="13sp"
-                        android:fontFamily="sans-serif-bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Continuous Instagram minutes before pet gets furious and vents steam."
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp" />
-                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -230,64 +170,6 @@
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
-        <!-- Dev Section 4: Nerd Mode Apps List -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            app:cardBackgroundColor="@color/peach_surface_card"
-            app:cardCornerRadius="14dp"
-            app:strokeColor="@color/peach_surface_border"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="14dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Nerd Mode App Triggers 🤓"
-                    android:textColor="@color/peach_light"
-                    android:textSize="13sp"
-                    android:fontFamily="sans-serif-bold" />
-
-                <com.google.android.material.checkbox.MaterialCheckBox
-                    android:id="@+id/cbChatGPT"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="ChatGPT (OpenAI)"
-                    android:textColor="@color/peach_light" />
-
-                <com.google.android.material.checkbox.MaterialCheckBox
-                    android:id="@+id/cbGemini"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="Google Gemini / Bard"
-                    android:textColor="@color/peach_light" />
-
-                <com.google.android.material.checkbox.MaterialCheckBox
-                    android:id="@+id/cbWPS"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="WPS Office / ONLYOFFICE"
-                    android:textColor="@color/peach_light" />
-
-                <com.google.android.material.checkbox.MaterialCheckBox
-                    android:id="@+id/cbPDF"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="PDF Readers &amp; E-Books"
-                    android:textColor="@color/peach_light" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
         <!-- Dev Section 5: Buttons -->
         <LinearLayout
             android:layout_width="match_parent"

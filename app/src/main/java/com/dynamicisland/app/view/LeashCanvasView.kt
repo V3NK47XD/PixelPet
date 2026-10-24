@@ -166,14 +166,19 @@ class LeashCanvasView @JvmOverloads constructor(
                 val nx = -dy / length
                 val ny = dx / length
 
-                // Catenary sag droop (flexible & rich)
-                val baseSagPx = length * 0.22f * leashSlackFactor
-                // Swing inertia flex (middle of wire flexes opposing velocity)
                 val density = context.resources.displayMetrics.density
-                val bendPx = (-velocityXDp * 1.8f) * density
+                // Catenary sag droop (flexible & rich)
+                val baseSagPx = (length * 0.20f * leashSlackFactor).coerceAtMost(24f * density)
+                // Swing inertia flex (middle of wire flexes opposing velocity, softened above size 70)
+                val maxBendDp = 14f
+                val rawBendDp = (-velocityXDp * 1.35f).coerceIn(-maxBendDp, maxBendDp)
+                val bendPx = rawBendDp * density
                 // Rapid shake shiver vibration
-                val shiverPx = (shiverAmplitudeDp * density)
+                val shiverPx = (shiverAmplitudeDp * density).coerceAtMost(12f * density)
 
+                // Organic resting drape: when hanging vertically, real cords naturally bow slightly
+                val verticalRatio = (1f - (kotlin.math.abs(dx) / length.coerceAtLeast(1f))).coerceIn(0f, 1f)
+                val naturalDrapePx = 4.0f * density * leashSlackFactor * verticalRatio
                 val segments = 18
                 leashPath.reset()
 
@@ -186,18 +191,17 @@ class LeashCanvasView @JvmOverloads constructor(
                     val envelope = 4f * u * (1f - u)
                     val sagY = envelope * baseSagPx
 
-                    // Inertia flex & secondary S-curve counter-wave
+                    // Inertia flex, S-curve counter-wave, and natural resting drape
                     val arcBend = kotlin.math.sin(u * Math.PI.toFloat()) * bendPx
-                    val sBend = kotlin.math.sin(u * 2f * Math.PI.toFloat()) * (bendPx * 0.40f)
-                    // Standing wave harmonic shiver (shivers and ripples when phone is shaken)
+                    val sBend = kotlin.math.sin(u * 2f * Math.PI.toFloat()) * (bendPx * 0.25f)
                     val wave = kotlin.math.sin(shiverPhase + u * 2.5f * Math.PI.toFloat()) +
                             0.35f * kotlin.math.sin(shiverPhase * 2f + u * 5f * Math.PI.toFloat())
                     val shiver = envelope * shiverPx * wave
+                    val drape = kotlin.math.sin(u * Math.PI.toFloat()) * naturalDrapePx
 
-                    val lateralDeflection = arcBend + sBend + shiver
+                    val lateralDeflection = arcBend + sBend + shiver + drape
                     val ptX = bx + (lateralDeflection * nx)
                     val ptY = by + sagY + (lateralDeflection * ny)
-
                     if (i == 0) {
                         leashPath.moveTo(ptX, ptY)
                     } else {

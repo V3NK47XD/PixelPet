@@ -85,6 +85,13 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         checkAndHandlePermissions(autoLaunch = false)
+        if (prefs.isIslandEnabled && OverlayPermissionHelper.hasOverlayPermission(this)) {
+            val intent = Intent(this, DynamicIslandService::class.java).apply {
+                action = DynamicIslandService.ACTION_SET_MOOD
+                putExtra(DynamicIslandService.EXTRA_MOOD, PixelPetView.PetMood.HAPPY.name)
+            }
+            try { startService(intent) } catch (ignored: Exception) {}
+        }
     }
 
     private fun setupUI() {
@@ -493,40 +500,17 @@ class MainActivity : AppCompatActivity() {
             notifySettingsChanged()
         }
 
-        sheetBinding.switchGoogleNerd.isChecked = prefs.isGoogleNerdAppsEnabled
-        sheetBinding.switchGoogleNerd.setOnCheckedChangeListener { _, isChecked ->
-            prefs.isGoogleNerdAppsEnabled = isChecked
-            notifySettingsChanged()
-        }
-
         sheetBinding.switchPhoneEvents.isChecked = prefs.isPhoneEventsEnabled
         sheetBinding.switchPhoneEvents.setOnCheckedChangeListener { _, isChecked ->
             prefs.isPhoneEventsEnabled = isChecked
         }
 
-        // Anger Timer Dial
-        sheetBinding.knobAngerTimer.apply {
-            minValue = 1f
-            maxValue = 15f
-            stepSize = 1f
-            unitSuffix = "m"
-            knobTitle = "ANGER"
-            value = prefs.instagramAngerMinutes.toFloat()
-            onValueChanged = { newVal, fromUser ->
-                if (fromUser) {
-                    debouncePrefWrite("angerMinutes") {
-                        prefs.instagramAngerMinutes = newVal.toInt()
-                    }
-                }
-            }
-        }
-
         sheetBinding.knobTantrumDuration.apply {
-            minValue = 3f
-            maxValue = 30f
+            minValue = 1f
+            maxValue = 60f
             stepSize = 1f
             unitSuffix = "s"
-            knobTitle = "COOL"
+            knobTitle = "ANGER"
             value = prefs.angerDurationSeconds.toFloat()
             onValueChanged = { newVal, fromUser ->
                 if (fromUser) {
@@ -535,33 +519,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        // Nerd Apps Checkboxes
-        val nerdApps = prefs.nerdApps
-        sheetBinding.cbChatGPT.isChecked = nerdApps.contains("com.openai.chatgpt")
-        sheetBinding.cbGemini.isChecked = nerdApps.contains("com.google.android.apps.bard")
-        sheetBinding.cbWPS.isChecked = nerdApps.contains("cn.wps.moffice_eng") || nerdApps.contains("com.onlyoffice.documents")
-        sheetBinding.cbPDF.isChecked = nerdApps.contains("com.adobe.reader")
-
-        val updateNerdApps = {
-            val apps = mutableSetOf<String>()
-            if (sheetBinding.cbChatGPT.isChecked) apps.add("com.openai.chatgpt")
-            if (sheetBinding.cbGemini.isChecked) apps.add("com.google.android.apps.bard")
-            if (sheetBinding.cbWPS.isChecked) {
-                apps.add("cn.wps.moffice_eng")
-                apps.add("cn.wps.moffice")
-                apps.add("com.onlyoffice.documents")
-            }
-            if (sheetBinding.cbPDF.isChecked) {
-                apps.add("com.adobe.reader")
-                apps.add("com.google.android.apps.pdfviewer")
-            }
-            prefs.nerdApps = apps
-        }
-        sheetBinding.cbChatGPT.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
-        sheetBinding.cbGemini.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
-        sheetBinding.cbWPS.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
-        sheetBinding.cbPDF.setOnCheckedChangeListener { _, _ -> updateNerdApps() }
-
         // Action Buttons
         sheetBinding.btnOpenActiveLog.setOnClickListener {
             dialog.dismiss()
@@ -742,6 +699,14 @@ class MainActivity : AppCompatActivity() {
     private fun setPreviewMood(mood: PixelPetView.PetMood, description: String) {
         binding.previewTetherStage.petView.setMood(mood)
         binding.tvPreviewMoodDesc.text = "${prefs.petName} • $description"
+
+        if (prefs.isIslandEnabled && OverlayPermissionHelper.hasOverlayPermission(this)) {
+            val intent = Intent(this, DynamicIslandService::class.java).apply {
+                action = DynamicIslandService.ACTION_SET_MOOD
+                putExtra(DynamicIslandService.EXTRA_MOOD, mood.name)
+            }
+            try { startService(intent) } catch (ignored: Exception) {}
+        }
     }
     private fun setLeashColor(colorHex: String) {
         prefs.leashColor = colorHex
