@@ -76,7 +76,16 @@ class PhoneEventManager(
             addAction(Intent.ACTION_SCREEN_OFF)
             addAction(Intent.ACTION_SCREEN_ON)
         }
-        isRegistered = true
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+            } else {
+                context.registerReceiver(receiver, filter)
+            }
+            isRegistered = true
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun stop() {

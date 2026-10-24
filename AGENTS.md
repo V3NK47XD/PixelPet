@@ -94,14 +94,14 @@ graph TD
 
 6. **`com.dynamicisland.app.util.PetMoodManager`**:
    - Resolves pet emotional state according to a strict priority hierarchy:
-     1. `CRITICAL_BATTERY` ($<5\%$)
-     2. `CHARGING` (Power connected)
-     3. `LOW_BATTERY` ($<15\%$)
-     4. `ANGRY` (Instagram open continuously $\ge 5\text{ min}$)
-     5. `SAD` (Instagram in foreground)
-     6. `TEXTING` (Messaging apps: WhatsApp, Discord, Messages, LinkedIn, Telegram, Signal, Slack)
-     7. `NERD` (Learning apps: ChatGPT, Gemini, WPS, ONLYOFFICE, PDF readers, Google apps)
-     8. `SLEEPY` (Local time curve $\ge 22:00$ / $10\text{ PM}$)
+     1. `CRITICAL_BATTERY` ($<5\%$ when not charging)
+     2. `ANGRY` (Instagram open continuously $\ge 5\text{ min}$)
+     3. `SAD` (Instagram in foreground)
+     4. `TEXTING` (Messaging apps: WhatsApp, Discord, Messages, LinkedIn, Telegram, Signal, Slack)
+     5. `NERD` (Learning apps: ChatGPT, Gemini, WPS, ONLYOFFICE, PDF readers, Google apps, Duolingo)
+     6. `CHARGING` (Power connected, when on Home/Launcher/other non-reaction apps)
+     7. `LOW_BATTERY` ($<15\%$ when not charging)
+     8. `SLEEPY` (Late-night local time curve $\ge 22:00$ / $10\text{ PM}$)
      9. `HAPPY` (Pet app open or tap interaction)
      10. `IDLE` (Default)
    - Tracks continuous session time for Instagram and resets to zero the instant the user exits.

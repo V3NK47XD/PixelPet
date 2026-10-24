@@ -293,21 +293,24 @@ object ForegroundAppDetector {
     private fun detectTopPackage(context: Context): String? {
         val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager ?: return null
         val now = System.currentTimeMillis()
-        val startTime = now - 25000 // Look back 25s
+        // Look back 2 minutes for recent activity resume events
+        val startTime = now - 120000L
+        val myPkg = context.packageName
 
         val events = usageStatsManager.queryEvents(startTime, now) ?: return null
         var lastResumedPackage: String? = null
         val event = reusableUsageEvent
         while (events.hasNextEvent()) {
             events.getNextEvent(event)
-            val isResumed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                event.eventType == UsageEvents.Event.ACTIVITY_RESUMED
-            } else {
-                @Suppress("DEPRECATION")
-                event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND
-            }
-            if (isResumed && !event.packageName.isNullOrBlank()) {
-                lastResumedPackage = event.packageName
+            val isResumed = event.eventType == UsageEvents.Event.ACTIVITY_RESUMED ||
+                    event.eventType == 1 // MOVE_TO_FOREGROUND
+            val pkg = event.packageName
+
+            // Exclude our own app overlay and system UI overlays from blocking app reactions
+            if (isResumed && !pkg.isNullOrBlank() && pkg != myPkg) {
+                if (pkg != "com.android.systemui" && pkg != "android") {
+                    lastResumedPackage = pkg
+                }
             }
         }
 
@@ -315,14 +318,22 @@ object ForegroundAppDetector {
             return lastResumedPackage
         }
 
-        // Secondary fallback via queryUsageStats
+        // If user is still in the same active app (e.g. scrolling feeds for minutes without a new resume event)
+        if (currentForegroundPackage.isNotBlank() && currentForegroundPackage != myPkg) {
+            return currentForegroundPackage
+        }
+
+        // Fallback: query usage stats with INTERVAL_BEST (excluding own app and system UI)
         try {
             val stats = usageStatsManager.queryUsageStats(
-                UsageStatsManager.INTERVAL_DAILY,
-                now - 60000,
+                UsageStatsManager.INTERVAL_BEST,
+                now - 300000L,
                 now
             )
-            val mostRecent = stats?.maxByOrNull { it.lastTimeUsed }
+            val mostRecent = stats?.filter {
+                val p = it.packageName
+                p != myPkg && p != "com.android.systemui" && p != "android" && p != "com.google.android.gms"
+            }?.maxByOrNull { it.lastTimeUsed }
             if (mostRecent != null && mostRecent.lastTimeUsed > 0) {
                 return mostRecent.packageName
             }

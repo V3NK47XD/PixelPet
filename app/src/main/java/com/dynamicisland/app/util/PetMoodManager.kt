@@ -89,15 +89,11 @@ class PetMoodManager(private val context: Context) {
 
     fun recalculateMood() {
         when {
-            isBatteryCritical -> {
+            // Critical battery (only when NOT on charger): pet faints
+            isBatteryCritical && !isCharging -> {
                 updateMood(PixelPetView.PetMood.CRITICAL_BATTERY, "Critical battery (<5%) • Fainting")
             }
-            isCharging -> {
-                updateMood(PixelPetView.PetMood.CHARGING, "Charging • Mint energy particles")
-            }
-            isBatteryLow -> {
-                updateMood(PixelPetView.PetMood.LOW_BATTERY, "Low battery (<15%) • Looking worried")
-            }
+            // Active foreground app reactions: ALWAYS react to what the user is doing!
             isInstagram(currentPackageName) -> {
                 evaluateInstagramDuration()
             }
@@ -107,8 +103,16 @@ class PetMoodManager(private val context: Context) {
             isNerdApp(currentPackageName) || isGoogleNerdApp(currentPackageName) -> {
                 updateMood(PixelPetView.PetMood.NERD, "Learning / Google App ($currentPackageName)")
             }
+            // Companion app active
             currentPackageName == context.packageName -> {
                 updateMood(PixelPetView.PetMood.HAPPY, "Companion App Active")
+            }
+            // Ambient / Idle states (Home screen, launcher, non-reaction apps)
+            isCharging -> {
+                updateMood(PixelPetView.PetMood.CHARGING, "Charging • Mint energy particles")
+            }
+            isBatteryLow && !isCharging -> {
+                updateMood(PixelPetView.PetMood.LOW_BATTERY, "Low battery (<15%) • Looking worried")
             }
             isNighttimeSleepy() -> {
                 updateMood(PixelPetView.PetMood.SLEEPY, "Late-night sleepiness • Zzz")
@@ -120,7 +124,9 @@ class PetMoodManager(private val context: Context) {
     }
 
     private fun evaluateInstagramDuration() {
-        if (instagramSessionStartMs == 0L) return
+        if (instagramSessionStartMs == 0L) {
+            instagramSessionStartMs = System.currentTimeMillis()
+        }
 
         val elapsedMs = System.currentTimeMillis() - instagramSessionStartMs
         val angerThresholdMs = prefs.instagramAngerMinutes * 60 * 1000L

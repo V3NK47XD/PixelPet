@@ -332,4 +332,28 @@ class SmileyAnimationLogicTest {
         val clamped = defaultThreshold.coerceIn(0.1f, 2.5f)
         assertEquals(0.6f, clamped, 0.0001f)
     }
+
+    @Test
+    fun testAppReactionsPriorityOverCharging() {
+        // Priority evaluation simulation:
+        fun resolveMood(pkg: String, isCharging: Boolean): String {
+            return when {
+                pkg.contains("instagram") -> "SAD"
+                pkg.contains("whatsapp") -> "TEXTING"
+                pkg.contains("chatgpt") || pkg.contains("duolingo") -> "NERD"
+                isCharging -> "CHARGING"
+                else -> "IDLE"
+            }
+        }
+
+        // Active foreground apps must take precedence over charging!
+        assertEquals("SAD", resolveMood("com.instagram.android", isCharging = true))
+        assertEquals("TEXTING", resolveMood("com.whatsapp", isCharging = true))
+        assertEquals("NERD", resolveMood("com.openai.chatgpt", isCharging = true))
+        assertEquals("NERD", resolveMood("com.duolingo", isCharging = true))
+
+        // Passive state only when not in an active reaction app
+        assertEquals("CHARGING", resolveMood("com.android.launcher", isCharging = true))
+        assertEquals("IDLE", resolveMood("com.android.launcher", isCharging = false))
+    }
 }

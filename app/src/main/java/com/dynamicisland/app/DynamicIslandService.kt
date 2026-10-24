@@ -288,6 +288,9 @@ class DynamicIslandService : Service() {
                 showOverlay()
                 physicsEngine?.start()
                 prefs.isIslandEnabled = true
+                com.dynamicisland.app.util.ForegroundAppDetector.addListener(appChangeListener)
+                com.dynamicisland.app.util.ForegroundAppDetector.startMonitoring(this)
+                moodManager.recalculateMood()
                 petView?.setMood(moodManager.currentMood)
             }
         }
