@@ -40,7 +40,10 @@ graph TD
      - `CHARGING`: Soft mint green (`#A7F3D0`), gentle energy sparkles, peaceful expression.
      - `LOW_BATTERY`: Amber body (`#FB923C`), wide worried eyes glancing at battery indicator.
      - `CRITICAL_BATTERY`: Pale red body (`#F87171`), dramatic fainting collapse ($55^\circ$ tilt) with `X X` eyes.
-     - `TEXTING`: Cheerful teal body (`#2DD4BF`), animated speech bubble (`💬`) with cycling typing dots (`• • •`), rapid typing hands tapping in front of body.
+    - `TEXTING`: Cheerful teal body (`#2DD4BF`), animated speech bubble (`💬`) with cycling typing dots (`• • •`), rapid typing hands tapping in front of body.
+   - **Task Reminder Thought Cloud Hook (Future Architecture)**:
+     - Built-in extensible hook `showThoughtCloud(text, durationMs)` and `drawThoughtCloud()` rendering pixelated thought bubble (`☁️`) above pet.
+     - Zero runtime overhead when idle; reserves window clearance for future product expansion.
 2. **`com.dynamicisland.app.view.TetheredPetStageView`**:
    - Transparent overlay container positioned over the front camera reference coordinate $(cameraRefX, cameraRefY)$.
    - **Duolingo-Style Virtual Keychain Physics**:
@@ -53,7 +56,7 @@ graph TD
    - **Elastic Snap-Back**: Upon drag release, pet springs back with `OvershootInterpolator(2.2f)` damped oscillation.
    - **Tap Interactions**:
      - *Sleep/Wake Toggle*: Tapping sleepy pet wakes it up; tapping again nods it off to sleep.
-     - *Rapid Multi-Tap Temper Tantrum*: $3+$ taps within $650\text{ms}$ triggers a $3.8\text{s}$ furious angry tantrum with steam puffs, followed by an embarrassed blush.
+     - *Rapid Multi-Tap Temper Tantrum*: $4+$ rapid taps triggers furious angry tantrum with anger timer ($1\text{s}-60\text{s}$, default $6\text{s}$), followed by embarrassed blush and return to app default mood.
      - *Single Tap*: Contextual reactions (happy wink, wave, giggle, or glasses adjust).
    - **Shape-Matched Touch Detection (`TouchableRegionHelper.kt`)**:
      - Registers an `OnComputeInternalInsetsListener` via dynamic proxy with `TOUCHABLE_INSETS_REGION`.

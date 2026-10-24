@@ -188,9 +188,12 @@ class PetMoodManager(private val context: Context) {
 
     fun isNerdApp(packageName: String?): Boolean {
         if (packageName.isNullOrBlank()) return false
-        val configuredApps = prefs.nerdApps
         val lower = packageName.lowercase()
 
+        // Exclude system launchers, keyboards, and system UI
+        if (isLauncherOrSystem(lower)) return false
+
+        val configuredApps = prefs.nerdApps
         if (configuredApps.any { it.equals(lower, ignoreCase = true) }) {
             return true
         }
@@ -204,20 +207,48 @@ class PetMoodManager(private val context: Context) {
                 lower.contains("pdfviewer") ||
                 lower.contains("reader") ||
                 lower.contains("coursera") ||
-                lower.contains("duolingo")
+                lower.contains("duolingo") ||
+                lower.contains("wikipedia") ||
+                lower.contains("notion") ||
+                lower.contains("obsidian")
     }
 
     fun isGoogleNerdApp(packageName: String?): Boolean {
         if (packageName.isNullOrBlank() || !prefs.isGoogleNerdAppsEnabled) return false
         val lower = packageName.lowercase()
 
+        // Never treat launchers, keyboards, or background Google services as Nerd apps
+        if (isLauncherOrSystem(lower)) return false
+
         if (prefs.excludedGooglePackages.any { it.equals(lower, ignoreCase = true) }) {
             return false
         }
 
-        return lower.startsWith("com.google.") ||
-                lower == "com.android.chrome" ||
-                lower.contains("google")
+        // Google reading, productivity, search, learning, and YouTube
+        return lower == "com.android.chrome" ||
+                lower.contains("chrome") ||
+                lower.contains("youtube") ||
+                lower.contains("docs") ||
+                lower.contains("sheets") ||
+                lower.contains("slides") ||
+                lower.contains("classroom") ||
+                lower.contains("keep") ||
+                lower.contains("books") ||
+                lower.contains("googlequicksearchbox") ||
+                lower == "com.google.android.gm"
+    }
+
+    private fun isLauncherOrSystem(lower: String): Boolean {
+        return lower.contains("launcher") ||
+                lower.contains("home") ||
+                lower.contains("quickstep") ||
+                lower.contains("inputmethod") ||
+                lower.contains("gboard") ||
+                lower.contains("systemui") ||
+                lower.endsWith(".gms") ||
+                lower == "android" ||
+                lower.contains("dialer") ||
+                lower.contains("telecom")
     }
 
     fun isNighttimeSleepy(): Boolean {

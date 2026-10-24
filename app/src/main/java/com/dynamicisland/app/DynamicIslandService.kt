@@ -153,6 +153,8 @@ class DynamicIslandService : Service() {
     private var isTemporarilyAngry = false
     private var savedMoodBeforeAnger = PixelPetView.PetMood.IDLE
     private var isManuallyAwoken = false
+    private val angerHandler = Handler(Looper.getMainLooper())
+    private var tantrumEndTimeMs = 0L
 
     private val driftRunnable = object : Runnable {
         override fun run() {
@@ -165,7 +167,9 @@ class DynamicIslandService : Service() {
     private val angryResetRunnable = Runnable {
         isTemporarilyAngry = false
         tapCount = 0
-        val targetMood = if (savedMoodBeforeAnger == PixelPetView.PetMood.ANGRY) PixelPetView.PetMood.IDLE else savedMoodBeforeAnger
+        tantrumEndTimeMs = 0L
+        // Return directly to the foreground app's default mood!
+        val targetMood = moodManager.currentMood
         petView?.setMood(targetMood)
         petView?.triggerIdleActivity(PixelPetView.IdleActivity.BLUSHING, 1400L)
         updateLeashAttachment(slackFactor = 1.0f)
@@ -379,7 +383,7 @@ class DynamicIslandService : Service() {
 
     private fun stopDriftEngine() {
         isDriftEngineRunning = false
-        handler.removeCallbacksAndMessages(null)
+        handler.removeCallbacks(driftRunnable)
         driftAnimator?.cancel()
         snapBackAnimator?.cancel()
         floatBobAnimator?.cancel()
@@ -710,21 +714,26 @@ class DynamicIslandService : Service() {
     }
 
     private fun triggerTemperTantrum(pet: PixelPetView) {
-        handler.removeCallbacks(angryResetRunnable)
-        if (!isTemporarilyAngry) {
-            val previous = pet.getMood()
-            savedMoodBeforeAnger = if (previous == PixelPetView.PetMood.ANGRY) PixelPetView.PetMood.IDLE else previous
-            isTemporarilyAngry = true
+        val now = System.currentTimeMillis()
+        if (isTemporarilyAngry && now < tantrumEndTimeMs) {
+            pet.triggerExcitedHop()
+            return
         }
+
+        isTemporarilyAngry = true
+        angerHandler.removeCallbacks(angryResetRunnable)
 
         pet.setMood(PixelPetView.PetMood.ANGRY)
         pet.triggerExcitedHop()
         updateLeashAttachment(slackFactor = 0.2f)
 
-        // Failsafe anger cooldown: 5-6 seconds maximum!
-        val durationMs = prefs.angerDurationSeconds.coerceIn(3, 8) * 1000L
-        handler.postDelayed(angryResetRunnable, durationMs)
+        // User configurable duration from 1s to 60s
+        val durationSec = prefs.angerDurationSeconds.coerceIn(1, 60)
+        val durationMs = durationSec * 1000L
+        tantrumEndTimeMs = now + durationMs
+        angerHandler.postDelayed(angryResetRunnable, durationMs)
     }
+
     private fun refreshCachedSettings() {
         cachedCameraRefX = prefs.cameraRefX
         cachedCameraRefY = prefs.cameraRefY
@@ -733,7 +742,6 @@ class DynamicIslandService : Service() {
         cachedIntensity = prefs.animationIntensity
         cachedTouchReaction = prefs.isTouchReactionEnabled
     }
-
     private fun updatePetWindowLayout() {
         petParams?.let { params ->
             val density = resources.displayMetrics.density

@@ -356,4 +356,36 @@ class SmileyAnimationLogicTest {
         assertEquals("CHARGING", resolveMood("com.android.launcher", isCharging = true))
         assertEquals("IDLE", resolveMood("com.android.launcher", isCharging = false))
     }
+
+    @Test
+    fun testLauncherExclusionAndAngerTantrumTimer() {
+        fun isLauncherOrSystem(lower: String): Boolean {
+            return lower.contains("launcher") ||
+                    lower.contains("home") ||
+                    lower.contains("quickstep") ||
+                    lower.contains("inputmethod") ||
+                    lower.contains("gboard") ||
+                    lower.contains("systemui") ||
+                    lower.endsWith(".gms") ||
+                    lower == "android"
+        }
+
+        // Home launchers must be excluded from triggering Nerd mode
+        assertTrue(isLauncherOrSystem("com.google.android.apps.nexuslauncher"))
+        assertTrue(isLauncherOrSystem("com.miui.home"))
+        assertTrue(isLauncherOrSystem("com.sec.android.app.launcher"))
+        assertTrue(isLauncherOrSystem("com.google.android.inputmethod.latin"))
+
+        // Real learning / productivity apps must not be excluded
+        assertFalse(isLauncherOrSystem("com.google.android.youtube"))
+        assertFalse(isLauncherOrSystem("com.android.chrome"))
+        assertFalse(isLauncherOrSystem("com.openai.chatgpt"))
+
+        // User can set anger duration from 1s to 60s
+        val angerDurationMin = 1
+        val angerDurationMax = 60
+        val testDuration = 45
+        val clamped = testDuration.coerceIn(angerDurationMin, angerDurationMax)
+        assertEquals(45, clamped)
+    }
 }

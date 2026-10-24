@@ -104,6 +104,26 @@ class PixelPetView @JvmOverloads constructor(
     private var animationIntensity: Float = 1.0f
     private val prefs = PreferencesHelper(context)
 
+    // Future Expansion: Thought Cloud Task Reminder State
+    var thoughtCloudText: String? = null
+        private set
+    var isThoughtCloudVisible: Boolean = false
+        private set
+
+    private val thoughtCloudPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = Color.WHITE
+    }
+    private val thoughtCloudOutline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 2f
+        color = Color.parseColor("#374E5B")
+    }
+    private val thoughtCloudTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#1B272C")
+        textAlign = Paint.Align.CENTER
+        isFakeBoldText = true
+    }
     // Touch Debug Paints
     private val debugWindowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
@@ -615,6 +635,54 @@ class PixelPetView @JvmOverloads constructor(
         }
         invalidate()
     }
+
+    /**
+     * Future Expansion Hook: Display a cute pixelated thought cloud bubble above the pet
+     * reminding the user of their pending tasks.
+     * (Zero runtime overhead when idle/hidden).
+     */
+    fun showThoughtCloud(text: String, durationMs: Long = 4000L) {
+        thoughtCloudText = text
+        isThoughtCloudVisible = true
+        invalidate()
+        postDelayed({
+            isThoughtCloudVisible = false
+            thoughtCloudText = null
+            invalidate()
+        }, durationMs)
+    }
+
+    fun hideThoughtCloud() {
+        isThoughtCloudVisible = false
+        thoughtCloudText = null
+        invalidate()
+    }
+
+    private fun drawThoughtCloud(canvas: Canvas, pixelSize: Float) {
+        val text = thoughtCloudText ?: return
+        // Ascending thought connector bubbles
+        canvas.drawCircle(22f * pixelSize, 3f * pixelSize, 1.8f * pixelSize, thoughtCloudPaint)
+        canvas.drawCircle(22f * pixelSize, 3f * pixelSize, 1.8f * pixelSize, thoughtCloudOutline)
+
+        canvas.drawCircle(25f * pixelSize, 0f * pixelSize, 2.6f * pixelSize, thoughtCloudPaint)
+        canvas.drawCircle(25f * pixelSize, 0f * pixelSize, 2.6f * pixelSize, thoughtCloudOutline)
+
+        // Main thought cloud pill
+        thoughtCloudTextPaint.textSize = 3.6f * pixelSize
+        val textWidth = thoughtCloudTextPaint.measureText(text)
+        val cloudW = maxOf(textWidth + (8f * pixelSize), 24f * pixelSize)
+        val cloudH = 12f * pixelSize
+        val cloudLeft = (25f * pixelSize) - (cloudW / 2f)
+        val cloudTop = -14f * pixelSize
+        val cloudRect = RectF(cloudLeft, cloudTop, cloudLeft + cloudW, cloudTop + cloudH)
+
+        canvas.drawRoundRect(cloudRect, 6f * pixelSize, 6f * pixelSize, thoughtCloudPaint)
+        canvas.drawRoundRect(cloudRect, 6f * pixelSize, 6f * pixelSize, thoughtCloudOutline)
+
+        val textY = (cloudTop + cloudH / 2f) - ((thoughtCloudTextPaint.descent() + thoughtCloudTextPaint.ascent()) / 2f)
+        canvas.drawText(text, cloudLeft + (cloudW / 2f), textY, thoughtCloudTextPaint)
+    }
+
     fun pauseAnimations() {
         bobAnimator?.pause()
         blinkAnimator?.pause()
@@ -738,9 +806,13 @@ class PixelPetView @JvmOverloads constructor(
             currentMood == PetMood.SLEEPY -> drawZzz(canvas, pixelSize)
             currentMood == PetMood.TEXTING -> drawSpeechBubble(canvas, pixelSize)
         }
-
         if (currentActivity == IdleActivity.LIGHTBULB) {
             drawLightbulb(canvas, pixelSize)
+        }
+
+        // Hook for Future Task Reminder Thought Cloud
+        if (isThoughtCloudVisible && !thoughtCloudText.isNullOrBlank()) {
+            drawThoughtCloud(canvas, pixelSize)
         }
 
         canvas.restore()

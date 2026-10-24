@@ -108,7 +108,8 @@ class TetheredPetStageView @JvmOverloads constructor(
     private var isTemporarilyAngry = false
     private var savedMoodBeforeAnger = PixelPetView.PetMood.IDLE
     private var isManuallyAwoken = false
-
+    private val angerHandler = Handler(Looper.getMainLooper())
+    private var tantrumEndTimeMs = 0L
     // Autonomous drift scheduler (every 4 to 8 seconds)
     private val driftRunnable = object : Runnable {
         override fun run() {
@@ -121,6 +122,7 @@ class TetheredPetStageView @JvmOverloads constructor(
     private val angryResetRunnable = Runnable {
         isTemporarilyAngry = false
         tapCount = 0
+        tantrumEndTimeMs = 0L
         val targetMood = if (savedMoodBeforeAnger == PixelPetView.PetMood.ANGRY) PixelPetView.PetMood.IDLE else savedMoodBeforeAnger
         petView.setMood(targetMood)
         petView.triggerIdleActivity(PixelPetView.IdleActivity.BLUSHING, 1400L) // Cute embarrassed blush
@@ -202,7 +204,7 @@ class TetheredPetStageView @JvmOverloads constructor(
 
     fun stopDriftEngine() {
         isDriftEngineRunning = false
-        handler.removeCallbacksAndMessages(null)
+        handler.removeCallbacks(driftRunnable)
         driftAnimator?.cancel()
         snapBackAnimator?.cancel()
         continuousFloatAnimator?.cancel()
@@ -674,12 +676,16 @@ class TetheredPetStageView @JvmOverloads constructor(
      * Turns furious red, vents steam, trembles with rage for 3.8 seconds, then blushes and calms down!
      */
     private fun triggerTemperTantrum() {
-        handler.removeCallbacks(angryResetRunnable)
-        if (!isTemporarilyAngry) {
-            val previous = petView.getMood()
-            savedMoodBeforeAnger = if (previous == PixelPetView.PetMood.ANGRY) PixelPetView.PetMood.IDLE else previous
-            isTemporarilyAngry = true
+        val now = System.currentTimeMillis()
+        if (isTemporarilyAngry && now < tantrumEndTimeMs) {
+            petView.triggerExcitedHop()
+            return
         }
+
+        isTemporarilyAngry = true
+        val previous = petView.getMood()
+        savedMoodBeforeAnger = if (previous == PixelPetView.PetMood.ANGRY) PixelPetView.PetMood.IDLE else previous
+        angerHandler.removeCallbacks(angryResetRunnable)
 
         petView.setMood(PixelPetView.PetMood.ANGRY)
         petView.triggerExcitedHop()
@@ -688,9 +694,11 @@ class TetheredPetStageView @JvmOverloads constructor(
         leashSlackFactor = 0.2f
         invalidate()
 
-        // Failsafe anger cooldown: 5-6 seconds
-        val durationMs = prefs.angerDurationSeconds.coerceIn(3, 8) * 1000L
-        handler.postDelayed(angryResetRunnable, durationMs)
+        // User configurable duration from 1s to 60s
+        val durationSec = prefs.angerDurationSeconds.coerceIn(1, 60)
+        val durationMs = durationSec * 1000L
+        tantrumEndTimeMs = now + durationMs
+        angerHandler.postDelayed(angryResetRunnable, durationMs)
     }
 
     private fun Number.dpToPx(): Int =

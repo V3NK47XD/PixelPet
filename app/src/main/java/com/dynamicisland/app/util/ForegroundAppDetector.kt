@@ -306,9 +306,9 @@ object ForegroundAppDetector {
                     event.eventType == 1 // MOVE_TO_FOREGROUND
             val pkg = event.packageName
 
-            // Exclude our own app overlay and system UI overlays from blocking app reactions
-            if (isResumed && !pkg.isNullOrBlank() && pkg != myPkg) {
-                if (pkg != "com.android.systemui" && pkg != "android") {
+            // Allow app detection: exclude system UI, keyboard, and background services
+            if (isResumed && !pkg.isNullOrBlank()) {
+                if (pkg != "com.android.systemui" && pkg != "android" && !pkg.endsWith(".gms") && !pkg.contains("inputmethod")) {
                     lastResumedPackage = pkg
                 }
             }
